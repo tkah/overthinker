@@ -9,18 +9,17 @@ public class HelloJME3 extends SimpleApplication
   public static void main(String[] args)
   {
     HelloJME3 app = new HelloJME3();
-    app.start(); // start the game
+    app.start();
   }
 
   @Override
   public void simpleInitApp()
   {
-    Box b = new Box(1, 1, 1); // create cube shape
-    Geometry geom = new Geometry("Box", b);  // create cube geometry from the shape
-    Material mat = new Material(assetManager,
-                                "Common/MatDefs/Misc/Unshaded.j3md");  // create a simple material
-    mat.setColor("Color", ColorRGBA.Blue);   // set color of material to blue
-    geom.setMaterial(mat);                   // set the cube's material
-    rootNode.attachChild(geom);              // make the cube appear in the scene
+    Box b = new Box(1, 1, 1);
+    Geometry geom = new Geometry("Box", b);
+    Material mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
+    mat.setColor("Color", ColorRGBA.Blue);
+    geom.setMaterial(mat);
+    rootNode.attachChild(geom);
   }
 }
