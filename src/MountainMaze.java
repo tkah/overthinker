@@ -35,7 +35,7 @@ public class MountainMaze extends SimpleApplication
     private FilterPostProcessor fpp;
     private WaterFilter water;
     private Vector3f lightDir = new Vector3f(-4.9f, -1.3f, 5.9f);
-    private float initialWaterHeight = -1.5f;
+    private float initialWaterHeight = 20.0f;
     private TerrainQuad terrain;
     Material mat_terrain;
     private BulletAppState bulletAppState;
@@ -107,7 +107,7 @@ public class MountainMaze extends SimpleApplication
         /** 2. Create the height map */
         AbstractHeightMap heightmap = null;
         Texture heightMapImage = assetManager.loadTexture(
-                "assets/terrains/maze1.png");
+                "assets/terrains/maze1.jpg");
         heightmap = new ImageBasedHeightMap(heightMapImage.getImage());
 
         /*HillHeightMap heightmap = null;
@@ -158,7 +158,7 @@ public class MountainMaze extends SimpleApplication
         player.setJumpSpeed(20);
         player.setFallSpeed(30);
         player.setGravity(30);
-        player.setPhysicsLocation(new Vector3f(-340, 20, -400));
+        player.setPhysicsLocation(new Vector3f(-340, 50, -400));
 
         // We attach the scene and the player to the rootnode and the physics space,
         // to make them appear in the game world.
