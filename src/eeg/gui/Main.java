@@ -2,10 +2,10 @@ package eeg.gui;
 
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
-import eeg.examples.Edk;
-import eeg.examples.EdkErrorCode;
-import eeg.examples.EmoProfileManagement;
-import eeg.examples.EmoState;
+import eeg.util.Edk;
+import eeg.util.EdkErrorCode;
+import eeg.util.EmoProfileManagement;
+import eeg.util.EmoState;
 
 import javax.swing.*;
 import java.awt.*;
@@ -18,7 +18,8 @@ import java.awt.event.ActionListener;
 public class Main  extends JFrame {
     public static JButton trainBtt,saveBtt,loadBtt;
     public static JComboBox comboBox;
-    public static int[] cognitivActionList ={EmoState.EE_CognitivAction_t.COG_NEUTRAL.ToInt(),
+    public static int[] cognitivActionList ={
+            EmoState.EE_CognitivAction_t.COG_NEUTRAL.ToInt(),
             EmoState.EE_CognitivAction_t.COG_PUSH.ToInt(),
             EmoState.EE_CognitivAction_t.COG_PULL.ToInt(),
             EmoState.EE_CognitivAction_t.COG_LIFT.ToInt(),
