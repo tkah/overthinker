@@ -1,8 +1,10 @@
-package eeg.examples;
+package eeg.util;
+
 import com.sun.jna.Library;
 import com.sun.jna.Native;
 import com.sun.jna.Pointer;
-import com.sun.jna.ptr.*;
+import com.sun.jna.ptr.FloatByReference;
+import com.sun.jna.ptr.IntByReference;
 
 public interface EmoState extends Library  
 {

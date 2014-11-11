@@ -1,4 +1,4 @@
-package eeg.examples;
+package eeg.util;
 public enum EdkErrorCode {
 	 EDK_OK								(0x0000),
 	//! An internal error occurred

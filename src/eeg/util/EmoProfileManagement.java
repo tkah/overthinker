@@ -1,16 +1,14 @@
-package eeg.examples;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FilenameFilter;
-import java.util.ArrayList;
-
-import javax.swing.JFileChooser;
+package eeg.util;
 
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 import com.sun.jna.ptr.NativeLongByReference;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FilenameFilter;
+import java.util.ArrayList;
 
 class Profile {
 	Pointer hProfile;
@@ -20,9 +18,9 @@ class Profile {
 	{
 		hProfile = Edk.INSTANCE.EE_ProfileEventCreate();
 		Edk.INSTANCE.EE_GetBaseProfile(hProfile);
-		
+
 	}
-	
+
 	protected void finalize ()
 	{
 		if (hProfile != null)
@@ -43,6 +41,7 @@ class Profile {
 		return hProfile;
 	}
 }
+
 ///////////////////////////////////////////////////////
 class UserProfile
 {
@@ -54,6 +53,7 @@ class UserProfile
         profileName = "";
     }
 }
+
 //////////////////////////////////////////////////////
 public class EmoProfileManagement {
 	public static int currentIndex = 0;
@@ -207,9 +207,9 @@ public class EmoProfileManagement {
     	Edk.INSTANCE.EE_GetUserProfile(0,tmpProfile.getProfile());
     	return tmpProfile;
     }
-    
+
     /// <summary>
-    /// Find index of profile in arraylist 
+    /// Find index of profile in arraylist
     /// </summary>
     /// <param name="prName">Profile Name</param>
     /// <returns></returns>
@@ -222,13 +222,13 @@ public class EmoProfileManagement {
             UserProfile tmp = userProfiles.get(i);
             if (prName == tmp.profileName)
             {
-                IsFound = true;            
+                IsFound = true;
                 break;
             }else i++;
         }
 		return i;
     }
-    
+
     /// <summary>
     /// Set user profile , remember to save current profile before or lose it
     /// </summary>
@@ -237,7 +237,7 @@ public class EmoProfileManagement {
     public static Boolean SetUserProfile(String prName)
     {
         int i = FindProfileName(prName)-1;
-     
+
         if (i != userProfiles.size())
         {
             UserProfile tmp = (UserProfile)userProfiles.get(i);
@@ -245,12 +245,12 @@ public class EmoProfileManagement {
             currentIndex = i;
             return true;
         }
-        else 
+        else
         {
-            return false; 
+            return false;
         }// have no profile with this name
     }
-    
+
     private static void SetUserProfileTmp(int userId, Profile profile)
 	{
 		if (profile == null)
@@ -263,7 +263,7 @@ public class EmoProfileManagement {
 		}
 		byte[] profileBytes = profile.getBytes();
 		Edk.INSTANCE.EE_SetUserProfile(userId, profileBytes, (int)profileBytes.length);
-		
+
 	}
     private static void SetUserProfileTmp(int userId, byte[] profileBytes)
 	{
@@ -275,9 +275,9 @@ public class EmoProfileManagement {
 			}
 			catch(Exception e){}
 		}
-		
+
 		Edk.INSTANCE.EE_SetUserProfile(userId, profileBytes, (int)profileBytes.length);
-		
+
 	}
     /// <summary>
     /// Add new profile into arraylist , set this profile to current user
@@ -302,7 +302,7 @@ public class EmoProfileManagement {
             return false;//Already have this profile name
         }
     }
-    
+
     /// <summary>
     /// Back up current profile of current user into arraylist
     /// </summary>
@@ -310,10 +310,10 @@ public class EmoProfileManagement {
     {
         UserProfile tmp = (UserProfile)userProfiles.get(currentIndex);
         tmp.profile = GetUserProfile();
-        userProfiles.remove(currentIndex);  
+        userProfiles.remove(currentIndex);
         userProfiles.add(currentIndex, tmp);
     }
-    
+
     /// <summary>
     /// Delete a profile in arraylist
     /// </summary>
@@ -348,7 +348,7 @@ public class EmoProfileManagement {
             UserProfile tmp = (UserProfile)userProfiles.get(profileIndex);
             return tmp.profileName;
         }
-        else return null;        
+        else return null;
     }
     /// <summary>
     /// Get number of profile in arraylist
@@ -363,7 +363,7 @@ public class EmoProfileManagement {
         userProfiles.clear();
         currentIndex = 0;
     }
-    
+
     /// <summary>
     /// Check Cognitiv Actions That Enabled In The Profile
     /// </summary>
@@ -371,7 +371,7 @@ public class EmoProfileManagement {
 	public static String CheckCurrentProfile()
     {
         NativeLongByReference temp = new NativeLongByReference();
-        Edk.INSTANCE.EE_CognitivGetActiveActions(0,temp);        
+        Edk.INSTANCE.EE_CognitivGetActiveActions(0,temp);
         String test = temp.getValue().toString();
         return test;        
     }

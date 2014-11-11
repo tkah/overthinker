@@ -1,10 +1,12 @@
-package eeg.examples;
+package eeg.util;
+
 import com.sun.jna.Library;
 import com.sun.jna.Native;
 import com.sun.jna.Pointer;
-import com.sun.jna.ptr.*;
-import com.sun.jna.NativeLong;
 import com.sun.jna.Structure;
+import com.sun.jna.ptr.FloatByReference;
+import com.sun.jna.ptr.IntByReference;
+import com.sun.jna.ptr.NativeLongByReference;
 
 public interface Edk extends Library  
 {
@@ -634,8 +636,8 @@ public interface Edk extends Library
     	*/
     	int 
     		EE_CognitivSetCurrentLevel(int userId, int level,
-    									int level1Action, int level2Action,
-    									int level3Action, int level4Action);
+									   int level1Action, int level2Action,
+									   int level3Action, int level4Action);
 
     	
     	//! Query the current Cognitiv level and corresponding action types
@@ -654,8 +656,8 @@ public interface Edk extends Library
     	*/
     	int 
     		EE_CognitivGetCurrentLevel(int userId, IntByReference pLevelOut,
-    									IntByReference pLevel1ActionOut, IntByReference pLevel2ActionOut,
-    									IntByReference pLevel3ActionOut, IntByReference pLevel4ActionOut);
+									   IntByReference pLevel1ActionOut, IntByReference pLevel2ActionOut,
+									   IntByReference pLevel3ActionOut, IntByReference pLevel4ActionOut);
 
     //DEPLOYMENT::STABLE_RELEASE::REMOVE_END
 
@@ -823,8 +825,8 @@ public interface Edk extends Library
     	*/
     	int 
     		EE_CognitivSetActionSensitivity(int userId,
-    										int action1Sensitivity, int action2Sensitivity,
-    										int action3Sensitivity, int action4Sensitivity);
+											int action1Sensitivity, int action2Sensitivity,
+											int action3Sensitivity, int action4Sensitivity);
 
     	
     	//! Get the overall sensitivity for all Cognitiv actions
@@ -856,8 +858,8 @@ public interface Edk extends Library
     	*/
     	int 
     		EE_CognitivGetActionSensitivity(int userId,
-    										IntByReference pAction1SensitivityOut, IntByReference pAction2SensitivityOut,
-    										IntByReference pAction3SensitivityOut, IntByReference pAction4SensitivityOut);
+											IntByReference pAction1SensitivityOut, IntByReference pAction2SensitivityOut,
+											IntByReference pAction3SensitivityOut, IntByReference pAction4SensitivityOut);
 
     	
     	//! Start the sampling of Neutral state in Cognitiv
