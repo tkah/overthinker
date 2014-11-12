@@ -81,7 +81,7 @@ public class MountainMaze extends SimpleApplication
 
         /** 1.1) Add ALPHA map (for red-blue-green coded splat textures) */
         mat_terrain.setTexture("Alpha", assetManager.loadTexture(
-                "assets/terrains/maze1color.png"));
+                "overthinker/assets/terrains/maze1color.png"));
 
         /** 1.2) Add GRASS texture into the red layer (Tex1). */
         Texture grass = assetManager.loadTexture(
@@ -107,7 +107,7 @@ public class MountainMaze extends SimpleApplication
         /** 2. Create the height map */
         AbstractHeightMap heightmap = null;
         Texture heightMapImage = assetManager.loadTexture(
-                "assets/terrains/maze1.jpg");
+                "overthinker/assets/terrains/maze1.jpg");
         heightmap = new ImageBasedHeightMap(heightMapImage.getImage());
 
         /*HillHeightMap heightmap = null;
