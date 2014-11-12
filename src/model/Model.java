@@ -3,7 +3,7 @@ package model;
 import java.util.ArrayList;
 
 /**
- * Created by sidholman on 11/11/14.
+ * Created by sidholman on 11/11/14, probably needlessly.
  */
 public class Model {
 
@@ -23,6 +23,12 @@ public class Model {
     public static void Model() {
     }
 
+    public static void init() {
+        playerLocations = new ArrayList<float[]>(playerCount);
+        resourceLocations = new ArrayList<float[]>(resourceCount);
+        obstacleLocations = new ArrayList<float[]>(obstacleCount);
+    }
+
     public static synchronized void setDistortionValue(int val) {
         distortionValue = val;
     }
@@ -40,4 +46,19 @@ public class Model {
     public static float[] getClientPosition(int playerNumber) {
         return playerLocations.get(playerNumber);
     }
+
+
+    public static ArrayList<float[]> getResourceLocations() { return resourceLocations; }
+
+    public static float[] getResourceLocation(int index) {return resourceLocations.get(index); }
+
+    public static void setResourceLocations(ArrayList<float[]> val) { resourceLocations = val; }
+
+
+    private static ArrayList<float[]> getObstacleLocations() { return obstacleLocations; }
+
+    private static float[] getObstacleLocation(int index) { return obstacleLocations.get(index); }
+
+    private static void setObstacleLocations(ArrayList<float[]> val) { obstacleLocations = val;}
+
 }
