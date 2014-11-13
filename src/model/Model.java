@@ -5,9 +5,17 @@ import java.util.ArrayList;
 /**
  * Created by sidholman on 11/11/14, probably needlessly.
  */
+
+
+//Every time the model updates, increment timestamp and broadcast update to all clients.
+    //Create method that takes the GameData held by a client, and compares it to what
+    //the Model is--sending only info tha has changed.
+
+    //Create method that will send all the model data, for initial connection
 public class Model {
 
     private static int distortionValue = 0;
+    private static int gameMap = 0;
     private static int gameMode = 0;
     private static ArrayList<float[]> playerLocations;
     private static int playerCount = 0;
