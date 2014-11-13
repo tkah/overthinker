@@ -1,9 +1,10 @@
 package overthinker.server.gui;
 
-import overthinker.net.message.ActionMessage;
+
+import overthinker.net.message.NewClientRequestMessage;
+import overthinker.net.message.NewClientResponseMessage;
 import overthinker.net.message.PingMessage;
 import com.jme3.app.SimpleApplication;
-import com.jme3.network.Message;
 import com.jme3.network.Network;
 import com.jme3.network.Server;
 import com.jme3.network.serializing.Serializer;
@@ -16,7 +17,7 @@ import java.io.IOException;
  * Created by Peter on 11/11/2014.
  */
 public class ServerMain extends SimpleApplication {
-    private Server myServer = null;
+    private Server netServer = null;
     private static final boolean DEBUG = true;
 
     public static void main(String[] args) {
@@ -26,40 +27,25 @@ public class ServerMain extends SimpleApplication {
     @Override
     public void simpleInitApp() {
         try {
-            myServer = Network.createServer(6143);
+            netServer = Network.createServer(6143);
         } catch (IOException e) {
             e.printStackTrace();
         }
         initNetServer();
-        myServer.start();
-
-        startPing();
+        netServer.start();
     }
 
-    private void startPing() {
-
-        while(true)
-        {
-            Message message = new PingMessage("Hey!");
-            myServer.broadcast(message);
-
-            if(DEBUG)System.out.println("Broadcasting ping");
-
-            try {
-                Thread.sleep(2000);                 //1000 milliseconds is one second.
-            } catch(InterruptedException ex) {
-                Thread.currentThread().interrupt();
-            }
-        }
+    public Server getNetServer()
+    {
+        return netServer;
     }
 
     private void initNetServer() {
-        ServerListener listener = new ServerListener();
+        ServerListener listener = new ServerListener(this);
 
-        Serializer.registerClass(PingMessage.class);
-        Serializer.registerClass(ActionMessage.class);
+        Serializer.registerClass(NewClientRequestMessage.class);
+        Serializer.registerClass(NewClientResponseMessage.class);
 
-        myServer.addMessageListener(listener, PingMessage.class);
-        myServer.addMessageListener(listener, ActionMessage.class);
+        netServer.addMessageListener(listener, NewClientRequestMessage.class);
     }
 }

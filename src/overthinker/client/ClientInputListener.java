@@ -6,24 +6,24 @@ import com.jme3.input.controls.ActionListener;
  * Created by Peter on 11/12/2014.
  */
 public class ClientInputListener implements ActionListener {
-    private GameData gameData;
+    private ClientMain client;
 
-    public ClientInputListener(GameData gameData)
+    public ClientInputListener(ClientMain clientGameData)
     {
-        this.gameData = gameData;
+        this.client = client;
     }
     @Override
     public void onAction(String binding, boolean isPressed, float tpf) {
         if (binding.equals("Left")) {
-            gameData.setLeft(isPressed);
+            client.left = isPressed;
         } else if (binding.equals("Right")) {
-            gameData.setRight(isPressed);
+            client.right = isPressed;
         } else if (binding.equals("Up")) {
-            gameData.setUp(isPressed);
+            client.up = isPressed;
         } else if (binding.equals("Down")) {
-            gameData.setDown(isPressed);
+            client.down = isPressed;
         } else if (binding.equals("Jump")) {
-            if (isPressed) { gameData.getPlayer().jump(); }
+            if (isPressed) { client.getPlayer().jump(); }
         }
     }
 }
