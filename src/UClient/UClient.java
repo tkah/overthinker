@@ -38,6 +38,7 @@ import com.jme3.terrain.heightmap.AbstractHeightMap;
 import com.jme3.terrain.heightmap.ImageBasedHeightMap;
 import com.jme3.texture.Texture;
 import com.jme3.texture.Texture.WrapMode;
+import com.jme3.util.TangentBinormalGenerator;
 import com.jme3.water.WaterFilter;
 
 import java.util.ArrayList;
@@ -84,6 +85,7 @@ public class UClient extends SimpleApplication
 
   private boolean left = false, right = false, up = false, down = false;
   private ArrayList<SphereResource> sphereResourceArrayList = new ArrayList<SphereResource>();
+  private ArrayList<SphereResource> sphereResourcesToShrink = new ArrayList<SphereResource>();
 
   /** Server Communcation - Not yet implemented **/
   private Vector3f myLoc = new Vector3f(); // Might replace with 'walkDirection' from above
@@ -192,13 +194,37 @@ public class UClient extends SimpleApplication
     camDir.set(cam.getDirection()).multLocal(0.6f);
     camLeft.set(cam.getLeft()).multLocal(0.4f);
     walkDirection.set(0, 0, 0);
-    if (left) walkDirection.addLocal(camLeft);
-    if (right) walkDirection.addLocal(camLeft.negate());
-    if (up) walkDirection.addLocal(camDir);
-    if (down) walkDirection.addLocal(camDir.negate());
+    if (left)
+    {
+      playerG.rotate(0,0,-0.1f);
+      walkDirection.addLocal(camLeft);
+    }
+    if (right)
+    {
+      playerG.rotate(0,0,0.1f);
+      walkDirection.addLocal(camLeft.negate());
+    }
+    if (up)
+    {
+      playerG.rotate(0.1f,0,0);
+      walkDirection.addLocal(camDir);
+    }
+    if (down)
+    {
+      playerG.rotate(-0.1f,0,0);
+      walkDirection.addLocal(camDir.negate());
+    }
     playerControl.setWalkDirection(walkDirection);
 
     if (playerNeedsScaling) scalePlayer();
+    boolean clear = true;
+    for (SphereResource s : sphereResourcesToShrink)
+    {
+      clear = false;
+      if (s.getShrink()) s.setSphereToDisappear();
+      else s.getGeometry().removeFromParent();
+    }
+    if (clear) sphereResourcesToShrink.clear();
 
     CollisionResults results = new CollisionResults();
     resources.collideWith(playerG.getWorldBound(), results);
@@ -207,11 +233,18 @@ public class UClient extends SimpleApplication
       CollisionResult closest = results.getClosestCollision();
       System.out.println("What was hit? " + closest.getGeometry().getName());
 
-      int sResId = closest.getGeometry().getUserData("id");
-      sphereResourceArrayList.get(sResId).setSphereToDisappear();
-      scaleStartTime = Globals.getTotSecs();
-      playerNeedsScaling = true;
-      scalePlayer();
+      boolean isHit = closest.getGeometry().getUserData("isHit");
+      if (!isHit)
+      {
+        int sResId = closest.getGeometry().getUserData("id");
+        closest.getGeometry().setUserData("isHit", true);
+        SphereResource s = sphereResourceArrayList.get(sResId);
+        s.setShrink(true);
+        sphereResourcesToShrink.add(s);
+        scaleStartTime = Globals.getTotSecs();
+        playerNeedsScaling = true;
+        scalePlayer();
+      }
     }
   }
 
@@ -253,6 +286,23 @@ public class UClient extends SimpleApplication
   private void setUpPlayer()
   {
     playerSphere = new Sphere(32, 32, PLAYER_SPHERE_START_RADIUS);
+
+    // Tutorial pond ball
+    playerG = new Geometry("Shiny rock", playerSphere);
+    playerSphere.setTextureMode(Sphere.TextureMode.Projected);
+    TangentBinormalGenerator.generate(playerSphere);
+    Material mat = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
+    mat.setTexture("DiffuseMap", assetManager.loadTexture("Textures/Terrain/Pond/Pond.jpg"));
+    mat.setTexture("NormalMap", assetManager.loadTexture("Textures/Terrain/Pond/Pond_normal.png"));
+    mat.setBoolean("UseMaterialColors", true);
+    mat.setColor("Diffuse", ColorRGBA.White);
+    mat.setColor("Specular", ColorRGBA.White);
+    mat.setFloat("Shininess", 64f);
+    playerG.setMaterial(mat);
+    playerNode.attachChild(playerG);
+
+
+    /* Red Balls
     playerG = new Geometry("Sphere", playerSphere);
     Material mat = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
     mat.setBoolean("UseMaterialColors", true);
@@ -261,6 +311,7 @@ public class UClient extends SimpleApplication
     mat.setFloat("Shininess", 64f);
     playerG.setMaterial(mat);
     playerNode.attachChild(playerG);
+    */
 
     sphereShape = new SphereCollisionShape(PLAYER_SPHERE_START_RADIUS);
     playerControl = new CharacterControl(sphereShape, 0.05f); //PlayerControl(sphereShape, 0.05f, bulletAppState);

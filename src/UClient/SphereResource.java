@@ -17,6 +17,7 @@ public class SphereResource
   private int z;
   private int x;
   private int id;
+  private boolean shrink = false;
   private Sphere sphere;
   private Geometry geom;
   private int startShrinkTime;
@@ -36,6 +37,7 @@ public class SphereResource
     geom = new Geometry("Sphere_" + id, sphere);
     geom.setLocalTranslation(new Vector3f(x, 80, z));
     geom.setUserData("id", id);
+    geom.setUserData("isHit", false);
     Material mat = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
     mat.setBoolean("UseMaterialColors", true);
     mat.setColor("Diffuse", ColorRGBA.Red);
@@ -61,21 +63,22 @@ public class SphereResource
     return sphereResource_phy;
   }
 
+  public boolean getShrink()
+  {
+    return shrink;
+  }
+
+  public void setShrink(boolean s)
+  {
+    shrink = s;
+  }
+
   public void setSphereToDisappear()
   {
-    startShrinkTime = Globals.getTotSecs();
-    int curTime = Globals.getTotSecs();
-
-    while(curTime - startShrinkTime >= Globals.SCALE_ANIM_TIME)
-    {
-      geom.scale(.9f);
-      sphere.updateBound();
-      sphereResource_phy.getCollisionShape().setScale(new Vector3f(.9f,.9f,.9f));
-      curTime = Globals.getTotSecs();
-    }
-    sphereResource_phy.getCollisionShape().setScale(new Vector3f(.1f,.1f,.1f));
+    geom.scale(.9f);
     sphere.updateBound();
-    //geom.removeFromParent();
+    sphereResource_phy.getCollisionShape().setScale(new Vector3f(.9f,.9f,.9f));
+    if(geom.getLocalScale().getY() <= .01) shrink = false;
   }
 
   public void setSphereToReappear()
