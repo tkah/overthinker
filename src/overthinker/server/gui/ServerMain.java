@@ -1,6 +1,7 @@
 package overthinker.server.gui;
 
-import overthinker.net.HelloMessage;
+import overthinker.net.message.ActionMessage;
+import overthinker.net.message.PingMessage;
 import com.jme3.app.SimpleApplication;
 import com.jme3.network.Message;
 import com.jme3.network.Network;
@@ -22,24 +23,6 @@ public class ServerMain extends SimpleApplication {
         ServerMain app = new ServerMain();
         app.start(JmeContext.Type.Headless); // headless type for servers!
     }
-
-    private void startEngine() {
-
-        while(true)
-        {
-            Message message = new HelloMessage("Hey!");
-            myServer.broadcast(message);
-            if(DEBUG)System.out.println("Broadcasting message");
-
-            try {
-                Thread.sleep(5000);                 //1000 milliseconds is one second.
-            } catch(InterruptedException ex) {
-                Thread.currentThread().interrupt();
-            }
-        }
-
-    }
-
     @Override
     public void simpleInitApp() {
         try {
@@ -47,11 +30,36 @@ public class ServerMain extends SimpleApplication {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
+        initNetServer();
         myServer.start();
-        Serializer.registerClass(HelloMessage.class);
-        myServer.addMessageListener(new ServerListener(), HelloMessage.class);
-        startEngine();
 
+        startPing();
+    }
+
+    private void startPing() {
+
+        while(true)
+        {
+            Message message = new PingMessage("Hey!");
+            myServer.broadcast(message);
+
+            if(DEBUG)System.out.println("Broadcasting ping");
+
+            try {
+                Thread.sleep(2000);                 //1000 milliseconds is one second.
+            } catch(InterruptedException ex) {
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
+
+    private void initNetServer() {
+        ServerListener listener = new ServerListener();
+
+        Serializer.registerClass(PingMessage.class);
+        Serializer.registerClass(ActionMessage.class);
+
+        myServer.addMessageListener(listener, PingMessage.class);
+        myServer.addMessageListener(listener, ActionMessage.class);
     }
 }

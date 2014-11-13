@@ -1,4 +1,4 @@
-package overthinker.net;
+package overthinker;
 
 import com.jme3.network.serializing.Serializer;
 

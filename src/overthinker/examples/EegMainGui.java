@@ -1,4 +1,4 @@
-package overthinker.client.eeg.examples;
+package overthinker.examples;
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.FlowLayout;
@@ -19,7 +19,7 @@ import com.sun.jna.ptr.IntByReference;
 
 //import statements
 //Check if window closes automatically. Otherwise add suitable code
-public class MainGui extends JFrame   {
+public class EegMainGui extends JFrame   {
 	public static JButton trainBtt,saveBtt,loadBtt;
 	public static JComboBox comboBox;
 	public static int[] cognitivActionList ={EmoState.EE_CognitivAction_t.COG_NEUTRAL.ToInt(),
@@ -99,7 +99,7 @@ public class MainGui extends JFrame   {
         
     }
 	public static void main(String args[]) {
-		new MainGui();
+		new EegMainGui();
 		Pointer eEvent			= Edk.INSTANCE.EE_EmoEngineEventCreate();
     	Pointer eState			= Edk.INSTANCE.EE_EmoStateCreate();
     	IntByReference userID 	= null;
@@ -208,7 +208,7 @@ public class MainGui extends JFrame   {
 	    	System.out.println("Disconnected!");
 	    }
 	
-	MainGui() {
+	EegMainGui() {
 		cognitivActionsEnabled[0] = true;
         for (int i = 1; i < cognitivActionList.length; i++)
         {
