@@ -51,6 +51,9 @@ public class UClient extends SimpleApplication
   private static final int SPHERE_RESOURCE_COUNT = 100;
   private static final float SPHERE_RESOURCE_RADIUS = 1.0f;
   private static final float PLAYER_SPHERE_START_RADIUS = 2.0f;
+  private static final float WATER_HEIGHT_DEFAULT_RATE = 0.005f;
+  private static final float WATER_HEIGHT_PLAYER_RATE = 0.001f; // Should be somewhat lower than the DEFAULT_RATE,
+                                                                // but water height should continue increase no matter what
 
   private float waterHeight = 20.0f;
   private float verticalAngle = 30 * FastMath.DEG_TO_RAD;
@@ -85,14 +88,11 @@ public class UClient extends SimpleApplication
   private boolean playerNeedsScaling;
   private int scaleStartTime;
 
-  private boolean left = false, right = false, up = false, down = false;
+  private boolean left = false, right = false, up = false, down = false, slowWater = false;
+  private boolean mapLeft = false, mapRight = false, mapUp = false, mapDown = false;
   private ArrayList<SphereResource> sphereResourceArrayList = new ArrayList<SphereResource>();
   private ArrayList<SphereResource> sphereResourcesToShrink = new ArrayList<SphereResource>();
 
-  float lRotation;
-  float rRotation;
-  float uRotation;
-  float dRotation;
   float rotation;
 
   /** Server Communcation - Not yet implemented **/
@@ -185,6 +185,7 @@ public class UClient extends SimpleApplication
     else if (binding.equals("Right")) right = isPressed;
     else if (binding.equals("Up")) up = isPressed;
     else if (binding.equals("Down")) down = isPressed;
+    else if (binding.equals("SlowWater")) slowWater = isPressed;
     else if (binding.equals("Jump"))
     {
       if (isPressed) playerControl.jump();
@@ -199,8 +200,11 @@ public class UClient extends SimpleApplication
   @Override
   public void simpleUpdate(float tpf)
   {
-    Quaternion lQ = new Quaternion();
-    Quaternion rQ = new Quaternion();
+    // Raise Water Level
+    if (!slowWater) water.setWaterHeight(water.getWaterHeight() + WATER_HEIGHT_DEFAULT_RATE);
+    else water.setWaterHeight(water.getWaterHeight()+WATER_HEIGHT_PLAYER_RATE);
+
+    // Control Movement and Player Rotation
     camDir.set(cam.getDirection()).multLocal(0.6f); //20f for BetterCharacterControl
     camDir.setY(0); // Keep from flying into space when camera angle looking skyward
     camLeft.set(cam.getLeft()).multLocal(0.4f); //20f for BetterCharacterControl
@@ -210,14 +214,14 @@ public class UClient extends SimpleApplication
 
     if (left)
     {
-      lQ = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * rotation, new Vector3f(0,0,-1.0f));//Vector3f.UNIT_Z);
+      Quaternion lQ = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * rotation, new Vector3f(0,0,-1.0f));//Vector3f.UNIT_Z);
       playerG.setLocalRotation(lQ);
       //playerG.rotate(0,0,-0.1f);
       walkDirection.addLocal(camLeft);
     }
     if (right)
     {
-      rQ = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * rotation, new Vector3f(0,0,1.0f));//Vector3f.UNIT_Z);
+      Quaternion rQ = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * rotation, new Vector3f(0,0,1.0f));//Vector3f.UNIT_Z);
       playerG.setLocalRotation(rQ);
       //playerG.rotate(0,0,0.1f);
       walkDirection.addLocal(camLeft.negate());
@@ -256,9 +260,9 @@ public class UClient extends SimpleApplication
         playerG.setLocalRotation(diagQ);
       }
     }
-
     playerControl.setWalkDirection(walkDirection);
 
+    // Collision Scaling
     if (playerNeedsScaling) scalePlayer();
     boolean clear = true;
     for (SphereResource s : sphereResourcesToShrink)
@@ -489,6 +493,7 @@ public class UClient extends SimpleApplication
     inputManager.addListener(this, "MouseDown");
     inputManager.addListener(this, "MouseUp");
 
+    // Basic character movement
     inputManager.addMapping("Left", new KeyTrigger(KeyInput.KEY_A));
     inputManager.addMapping("Right", new KeyTrigger(KeyInput.KEY_D));
     inputManager.addMapping("Up", new KeyTrigger(KeyInput.KEY_W));
@@ -499,6 +504,20 @@ public class UClient extends SimpleApplication
     inputManager.addListener(this, "Up");
     inputManager.addListener(this, "Down");
     inputManager.addListener(this, "Jump");
+
+    // Tilting map, to be replaced by headset commands
+    inputManager.addMapping("MapUp", new KeyTrigger(KeyInput.KEY_I));
+    inputManager.addMapping("MapLeft", new KeyTrigger(KeyInput.KEY_J));
+    inputManager.addMapping("MapRight", new KeyTrigger(KeyInput.KEY_L));
+    inputManager.addMapping("MapDown", new KeyTrigger(KeyInput.KEY_K));
+    inputManager.addListener(this, "MapUp");
+    inputManager.addListener(this, "MapLeft");
+    inputManager.addListener(this, "MapRight");
+    inputManager.addListener(this, "MapDown");
+
+    // Lower water level, to be replaced by headset commands
+    inputManager.addMapping("SlowWater", new KeyTrigger(KeyInput.KEY_LSHIFT));
+    inputManager.addListener(this, "SlowWater");
   }
 
   private void createSphereResources()
