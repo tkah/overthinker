@@ -8,6 +8,7 @@ import com.jme3.app.SimpleApplication;
 import com.jme3.bullet.BulletAppState;
 import com.jme3.bullet.collision.shapes.CollisionShape;
 import com.jme3.bullet.collision.shapes.SphereCollisionShape;
+import com.jme3.bullet.control.BetterCharacterControl;
 import com.jme3.bullet.control.CharacterControl;
 import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.bullet.util.CollisionShapeFactory;
@@ -49,7 +50,7 @@ public class UClient extends SimpleApplication
 {
   private static final int SPHERE_RESOURCE_COUNT = 100;
   private static final float SPHERE_RESOURCE_RADIUS = 1.0f;
-  private static final float PLAYER_SPHERE_START_RADIUS = 3.0f;
+  private static final float PLAYER_SPHERE_START_RADIUS = 2.0f;
 
   private float waterHeight = 20.0f;
   private float verticalAngle = 30 * FastMath.DEG_TO_RAD;
@@ -69,6 +70,7 @@ public class UClient extends SimpleApplication
   private BulletAppState bulletAppState;
   private RigidBodyControl landscape;
   private CharacterControl playerControl;
+  //private BetterCharacterControl playerControl;
 
 
   private SphereCollisionShape sphereShape;
@@ -86,6 +88,12 @@ public class UClient extends SimpleApplication
   private boolean left = false, right = false, up = false, down = false;
   private ArrayList<SphereResource> sphereResourceArrayList = new ArrayList<SphereResource>();
   private ArrayList<SphereResource> sphereResourcesToShrink = new ArrayList<SphereResource>();
+
+  float lRotation;
+  float rRotation;
+  float uRotation;
+  float dRotation;
+  float rotation;
 
   /** Server Communcation - Not yet implemented **/
   private Vector3f myLoc = new Vector3f(); // Might replace with 'walkDirection' from above
@@ -191,29 +199,64 @@ public class UClient extends SimpleApplication
   @Override
   public void simpleUpdate(float tpf)
   {
-    camDir.set(cam.getDirection()).multLocal(0.6f);
-    camLeft.set(cam.getLeft()).multLocal(0.4f);
+    Quaternion lQ = new Quaternion();
+    Quaternion rQ = new Quaternion();
+    camDir.set(cam.getDirection()).multLocal(0.6f); //20f for BetterCharacterControl
+    camDir.setY(0); // Keep from flying into space when camera angle looking skyward
+    camLeft.set(cam.getLeft()).multLocal(0.4f); //20f for BetterCharacterControl
     walkDirection.set(0, 0, 0);
+
+    rotation += 3;
+
     if (left)
     {
-      playerG.rotate(0,0,-0.1f);
+      lQ = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * rotation, new Vector3f(0,0,-1.0f));//Vector3f.UNIT_Z);
+      playerG.setLocalRotation(lQ);
+      //playerG.rotate(0,0,-0.1f);
       walkDirection.addLocal(camLeft);
     }
     if (right)
     {
-      playerG.rotate(0,0,0.1f);
+      rQ = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * rotation, new Vector3f(0,0,1.0f));//Vector3f.UNIT_Z);
+      playerG.setLocalRotation(rQ);
+      //playerG.rotate(0,0,0.1f);
       walkDirection.addLocal(camLeft.negate());
     }
     if (up)
     {
-      playerG.rotate(0.1f,0,0);
+      Quaternion uQ = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * rotation, new Vector3f(0.1f,0,0));//Vector3f.UNIT_Z);
+      playerG.setLocalRotation(uQ);
+      //playerG.rotate(0.1f,0,0);
       walkDirection.addLocal(camDir);
+      if (right)
+      {
+        Quaternion diagQ = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * rotation, new Vector3f(1.0f, 0, 1.0f));
+        playerG.setLocalRotation(diagQ);
+      }
+      if (left)
+      {
+        Quaternion diagQ = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * rotation, new Vector3f(1.0f,0,-1.0f));
+        playerG.setLocalRotation(diagQ);
+      }
     }
     if (down)
     {
-      playerG.rotate(-0.1f,0,0);
+      Quaternion dQ = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * rotation, new Vector3f(-1.0f,0,0));//Vector3f.UNIT_Z);
+      playerG.setLocalRotation(dQ);
+      //playerG.rotate(-0.1f,0,0);
       walkDirection.addLocal(camDir.negate());
+      if (right)
+      {
+        Quaternion diagQ = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * rotation, new Vector3f(-1.0f, 0, 1.0f));
+        playerG.setLocalRotation(diagQ);
+      }
+      if (left)
+      {
+        Quaternion diagQ = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * rotation, new Vector3f(-1.0f, 0, -1.0f));
+        playerG.setLocalRotation(diagQ);
+      }
     }
+
     playerControl.setWalkDirection(walkDirection);
 
     if (playerNeedsScaling) scalePlayer();
@@ -270,7 +313,7 @@ public class UClient extends SimpleApplication
     mouseInput.setCursorVisible(false);
     camNode = new CameraNode("Camera Node", cam);
     camNode.setControlDir(CameraControl.ControlDirection.SpatialToCamera);
-    camNode.setLocalTranslation(new Vector3f(0, 4, -20));
+    camNode.setLocalTranslation(new Vector3f(0, 4, -18));
     pivot.attachChild(camNode);
     Quaternion quat = new Quaternion();
     quat.lookAt(Vector3f.UNIT_Z, Vector3f.UNIT_Y);
@@ -314,7 +357,14 @@ public class UClient extends SimpleApplication
     */
 
     sphereShape = new SphereCollisionShape(PLAYER_SPHERE_START_RADIUS);
-    playerControl = new CharacterControl(sphereShape, 0.05f); //PlayerControl(sphereShape, 0.05f, bulletAppState);
+
+    // BetterCharacteControl moves, but bounces and falls through ground
+    //playerControl = new BetterCharacterControl(PLAYER_SPHERE_START_RADIUS, PLAYER_SPHERE_START_RADIUS, 1.0f);
+    //playerControl.setJumpForce(new Vector3f(0,0,0));
+    //playerControl.setGravity(new Vector3f(0,-10,0));
+    //playerControl.setApplyPhysicsLocal(true);
+    //playerControl.setSpatial(playerG);
+    playerControl = new CharacterControl(sphereShape, 0.05f);
     playerControl.setJumpSpeed(20);
     playerControl.setFallSpeed(30);
     playerControl.setGravity(30);
