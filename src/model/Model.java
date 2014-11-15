@@ -45,6 +45,21 @@ public class Model {
         return distortionValue;
     }
 
+
+    public static void setGameMap(int val) {
+        gameMap = val;
+    }
+    public static int getGameMap() {
+        return gameMap;
+    }
+
+
+    public static void setGameMode(int val) {
+        gameMode = val;
+    }
+    public static int getGameMode() { return gameMode; }
+
+
     public static synchronized void setClientPosition(int playerNumber, float[] position) {
         float[] toSet = playerLocations.get(playerNumber);
         for (int i = 0; i < 3; i++)
