@@ -41,6 +41,7 @@ import com.jme3.texture.Texture;
 import com.jme3.texture.Texture.WrapMode;
 import com.jme3.util.TangentBinormalGenerator;
 import com.jme3.water.WaterFilter;
+import org.lwjgl.Sys;
 
 import java.util.ArrayList;
 import java.util.Random;
@@ -51,6 +52,7 @@ public class UClient extends SimpleApplication
   private static final int SPHERE_RESOURCE_COUNT = 100;
   private static final float SPHERE_RESOURCE_RADIUS = 1.0f;
   private static final float PLAYER_SPHERE_START_RADIUS = 2.0f;
+  private static final float MAP_TILT_RATE = 0.008f;
   private static final float WATER_HEIGHT_DEFAULT_RATE = 0.005f;
   private static final float WATER_HEIGHT_PLAYER_RATE = 0.001f; // Should be somewhat lower than the DEFAULT_RATE,
                                                                 // but water height should continue increase no matter what
@@ -93,8 +95,10 @@ public class UClient extends SimpleApplication
   private ArrayList<SphereResource> sphereResourceArrayList = new ArrayList<SphereResource>();
   private ArrayList<SphereResource> sphereResourcesToShrink = new ArrayList<SphereResource>();
 
+  private Quaternion mapTilt = new Quaternion();
   float rotation; // Save rotation levels for each direction
   float tiltRotationBack, tiltRotationForward, tiltRotationLeft, tiltRotationRight;
+  float tiltMapX, tiltMapY = 0;
 
   /** Server Communcation - Not yet implemented **/
   private Vector3f myLoc = new Vector3f(); // Might replace with 'walkDirection' from above
@@ -207,37 +211,62 @@ public class UClient extends SimpleApplication
   {
     // Raise Water Level, to be controlled by EEG
     if (!slowWater) water.setWaterHeight(water.getWaterHeight() + WATER_HEIGHT_DEFAULT_RATE);
-    else water.setWaterHeight(water.getWaterHeight()+WATER_HEIGHT_PLAYER_RATE);
+    else water.setWaterHeight(water.getWaterHeight() + WATER_HEIGHT_PLAYER_RATE);
 
-    // Tilt Map, to be controlled by EEG
-    if (mapTiltLeft)
+    // Tilt Map, to be controlled by EEG gyroscope
+    if (!mapTiltLeft && !mapTiltRight && !mapTiltBack && !mapTiltForward) // EEG not rotating, move back to normal
     {
-      tiltRotationLeft += 0.008f;
-      Quaternion lQ = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * tiltRotationLeft, new Vector3f(0,0,1.0f));
-      terrain.setLocalRotation(lQ);
-      landscape.setPhysicsRotation(lQ);
+      if (tiltMapX < 0 && tiltMapY > 0)
+      {
+        tiltMapX += MAP_TILT_RATE;
+        tiltMapY -= MAP_TILT_RATE;
+      }
+      if (tiltMapX < 0 && tiltMapY < 0)
+      {
+        tiltMapX += MAP_TILT_RATE;
+        tiltMapY += MAP_TILT_RATE;
+      }
+      else if (tiltMapX > 0 && tiltMapY < 0)
+      {
+        tiltMapX -= MAP_TILT_RATE;
+        tiltMapY += MAP_TILT_RATE;
+      }
+      else if (tiltMapX > 0 && tiltMapY > 0)
+      {
+        tiltMapX -= MAP_TILT_RATE;
+        tiltMapY -= MAP_TILT_RATE;
+      }
+      else if (tiltMapX < 0) tiltMapX += MAP_TILT_RATE;
+      else if (tiltMapX > 0) tiltMapX -= MAP_TILT_RATE;
+      else if (tiltMapY > 0) tiltMapY -= MAP_TILT_RATE;
+      else if (tiltMapY < 0) tiltMapY += MAP_TILT_RATE;
     }
-    if (mapTiltRight)
+
+    if (mapTiltForward&&mapTiltLeft)
     {
-      tiltRotationRight += 0.008f;
-      Quaternion lQ = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * tiltRotationRight, new Vector3f(0,0,-1.0f));
-      terrain.setLocalRotation(lQ);
-      landscape.setPhysicsRotation(lQ);
+      tiltMapY += MAP_TILT_RATE;
+      tiltMapX -= MAP_TILT_RATE;
     }
-    if (mapTiltForward)
+    else if (mapTiltForward&&mapTiltRight)
     {
-      tiltRotationForward += 0.008f;
-      Quaternion lQ = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * tiltRotationForward, new Vector3f(1.0f,0,0));
-      terrain.setLocalRotation(lQ);
-      landscape.setPhysicsRotation(lQ);
+      tiltMapY += MAP_TILT_RATE;
+      tiltMapX += MAP_TILT_RATE;
     }
-    if (mapTiltBack)
+    else if (mapTiltBack&&mapTiltLeft)
     {
-      tiltRotationBack += 0.008f;
-      Quaternion lQ = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * tiltRotationBack, new Vector3f(-1.0f,0,0));
-      terrain.setLocalRotation(lQ);
-      landscape.setPhysicsRotation(lQ);
+      tiltMapY -= MAP_TILT_RATE;
+      tiltMapX -= MAP_TILT_RATE;
     }
+    else if (mapTiltBack&&mapTiltRight)
+    {
+      tiltMapY -= MAP_TILT_RATE;
+      tiltMapX += MAP_TILT_RATE;
+    }
+    else if (mapTiltLeft) tiltMapX -= MAP_TILT_RATE;
+    else if (mapTiltRight) tiltMapX += MAP_TILT_RATE;
+    else if (mapTiltForward) tiltMapY += MAP_TILT_RATE;
+    else if (mapTiltBack) tiltMapY -= MAP_TILT_RATE;
+    tiltMap();
 
     // Control Movement and Player Rotation
     camDir.set(cam.getDirection()).multLocal(0.6f); //20f for BetterCharacterControl
@@ -245,60 +274,16 @@ public class UClient extends SimpleApplication
     camLeft.set(cam.getLeft()).multLocal(0.4f); //20f for BetterCharacterControl
     walkDirection.set(0, 0, 0);
 
+    if (left || right || up || down) rotation += 3;
+    if (left) moveBall(0, -1.0f, camLeft);
+    if (right) moveBall(0, 1.0f, camLeft.negate());
+    if (up) moveBall(1.0f, 0, camDir);
+    if (down) moveBall(-1.0f,0, camDir.negate());
+    if (up&&right) moveBall(1.0f, 1.0f, null);
+    if (up&&left) moveBall(1.0f, -1.0f, null);
+    if (down&&right) moveBall(-1.0f, 1.0f, null);
+    if (down&&left) moveBall(-1.0f, -1.0f, null);
 
-
-    if (left)
-    {
-      rotation += 3;
-      Quaternion lQ = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * rotation, new Vector3f(0,0,-1.0f));
-      playerG.setLocalRotation(lQ);
-      //playerG.rotate(0,0,-0.1f);
-      walkDirection.addLocal(camLeft);
-    }
-    if (right)
-    {
-      rotation += 3;
-      Quaternion rQ = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * rotation, new Vector3f(0,0,1.0f));//Vector3f.UNIT_Z);
-      playerG.setLocalRotation(rQ);
-      //playerG.rotate(0,0,0.1f);
-      walkDirection.addLocal(camLeft.negate());
-    }
-    if (up)
-    {
-      rotation += 3;
-      Quaternion uQ = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * rotation, new Vector3f(0.1f,0,0));//Vector3f.UNIT_Z);
-      playerG.setLocalRotation(uQ);
-      //playerG.rotate(0.1f,0,0);
-      walkDirection.addLocal(camDir);
-      if (right)
-      {
-        Quaternion diagQ = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * rotation, new Vector3f(1.0f, 0, 1.0f));
-        playerG.setLocalRotation(diagQ);
-      }
-      if (left)
-      {
-        Quaternion diagQ = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * rotation, new Vector3f(1.0f,0,-1.0f));
-        playerG.setLocalRotation(diagQ);
-      }
-    }
-    if (down)
-    {
-      rotation += 3;
-      Quaternion dQ = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * rotation, new Vector3f(-1.0f,0,0));//Vector3f.UNIT_Z);
-      playerG.setLocalRotation(dQ);
-      //playerG.rotate(-0.1f,0,0);
-      walkDirection.addLocal(camDir.negate());
-      if (right)
-      {
-        Quaternion diagQ = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * rotation, new Vector3f(-1.0f, 0, 1.0f));
-        playerG.setLocalRotation(diagQ);
-      }
-      if (left)
-      {
-        Quaternion diagQ = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * rotation, new Vector3f(-1.0f, 0, -1.0f));
-        playerG.setLocalRotation(diagQ);
-      }
-    }
     playerControl.setWalkDirection(walkDirection);
 
     // Collision Scaling
@@ -332,6 +317,22 @@ public class UClient extends SimpleApplication
         scalePlayer();
       }
     }
+  }
+
+  private void tiltMap ()
+  {
+    mapTilt = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * tiltMapX, new Vector3f(1.0f, 0, 0));
+    Quaternion q = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * tiltMapY, new Vector3f(0, 0, 1.0f));
+    Quaternion m = mapTilt.mult(q);
+    terrain.setLocalRotation(m);
+    landscape.setPhysicsRotation(m);
+  }
+
+  private void moveBall(float x, float z, Vector3f c)
+  {
+    Quaternion ballRotate = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * rotation, new Vector3f(x, 0,z));
+    playerG.setLocalRotation(ballRotate);
+    if (c != null) walkDirection.addLocal(c);
   }
 
   private void scalePlayer()
