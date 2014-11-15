@@ -142,8 +142,8 @@ Listener that is notified about the connection state of
 <TD><CODE><B><A HREF="../../../com/jme3/network/ClientStateListener.html#clientConnected(com.jme3.network.Client)">clientConnected</A></B>(<A HREF="../../../com/jme3/network/Client.html" title="interface in com.jme3.network">Client</A>&nbsp;c)</CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Called when the specified client is fully connected to
-  the remote server.</TD>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Called when the specified overthinker.client is fully connected to
+  the remote overthinker.server.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -152,8 +152,8 @@ Listener that is notified about the connection state of
                    <A HREF="../../../com/jme3/network/ClientStateListener.DisconnectInfo.html" title="class in com.jme3.network">ClientStateListener.DisconnectInfo</A>&nbsp;info)</CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Called when the client has disconnected from the remote
-  server.</TD>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Called when the overthinker.client has disconnected from the remote
+  overthinker.server.</TD>
 </TR>
 </TABLE>
 &nbsp;
@@ -174,8 +174,8 @@ clientConnected</H3>
 <PRE>
 void <B>clientConnected</B>(<A HREF="../../../com/jme3/network/Client.html" title="interface in com.jme3.network">Client</A>&nbsp;c)</PRE>
 <DL>
-<DD>Called when the specified client is fully connected to
-  the remote server.
+<DD>Called when the specified overthinker.client is fully connected to
+  the remote overthinker.server.
 <P>
 <DD><DL>
 </DL>
@@ -189,8 +189,8 @@ clientDisconnected</H3>
 void <B>clientDisconnected</B>(<A HREF="../../../com/jme3/network/Client.html" title="interface in com.jme3.network">Client</A>&nbsp;c,
                         <A HREF="../../../com/jme3/network/ClientStateListener.DisconnectInfo.html" title="class in com.jme3.network">ClientStateListener.DisconnectInfo</A>&nbsp;info)</PRE>
 <DL>
-<DD>Called when the client has disconnected from the remote
-  server.  If info is null then the client shut down the
+<DD>Called when the overthinker.client has disconnected from the remote
+  overthinker.server.  If info is null then the overthinker.client shut down the
   connection normally, otherwise the info object contains
   additional information about the disconnect.
 <P>

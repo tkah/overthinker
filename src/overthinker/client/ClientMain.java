@@ -1,6 +1,4 @@
-/**
- * Created by Torran on 11/9/14.
- */
+package overthinker.client;
 
 import com.jme3.app.SimpleApplication;
 import com.jme3.bullet.BulletAppState;
@@ -17,46 +15,68 @@ import com.jme3.light.DirectionalLight;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
+import com.jme3.network.Client;
+import com.jme3.network.Network;
+import com.jme3.network.serializing.Serializer;
 import com.jme3.post.FilterPostProcessor;
 import com.jme3.scene.Node;
+import com.jme3.system.JmeContext;
 import com.jme3.terrain.geomipmap.TerrainLodControl;
 import com.jme3.terrain.geomipmap.TerrainQuad;
 import com.jme3.terrain.heightmap.AbstractHeightMap;
+import com.jme3.terrain.heightmap.HillHeightMap;
 import com.jme3.terrain.heightmap.ImageBasedHeightMap;
 import com.jme3.texture.Texture;
-import com.jme3.texture.Texture.WrapMode;
 import com.jme3.water.WaterFilter;
+import overthinker.net.message.NewClientRequestMessage;
+import overthinker.net.message.NewClientResponseMessage;
 
-/** Sample 10 - How to create fast-rendering terrains from heightmaps,
- and how to use texture splatting to make the terrain look good.  */
-public class MountainMaze extends SimpleApplication
-        implements ActionListener {
 
-    private FilterPostProcessor fpp;
+
+import java.io.IOException;
+
+/**
+ * Created by Peter on 11/12/2014.
+ */
+public class ClientMain extends SimpleApplication implements ActionListener {
+    private Client netClient = null;
+    private ClientGameData clientGameData;
     private WaterFilter water;
-    private Vector3f lightDir = new Vector3f(-4.9f, -1.3f, 5.9f);
-    private float initialWaterHeight = 20.0f;
+    private FilterPostProcessor fpp;
     private TerrainQuad terrain;
-    Material mat_terrain;
+    private Material mat_terrain;
     private BulletAppState bulletAppState;
     private RigidBodyControl landscape;
     private CharacterControl player;
+    private ClientInputListener inputListener = new ClientInputListener(this);
     private Vector3f walkDirection = new Vector3f();
-    private boolean left = false, right = false, up = false, down = false;
-
-    //Temporary vectors used on each frame.
-    //They here to avoid instanciating new vectors on each frame
+    public boolean left = false, right = false, up = false, down = false;
     private Vector3f camDir = new Vector3f();
     private Vector3f camLeft = new Vector3f();
 
     public static void main(String[] args) {
-        MountainMaze app = new MountainMaze();
-        app.start();
+        ClientMain app = new ClientMain();
+        app.start(); // standard display type
     }
 
-    @Override
     public void simpleInitApp() {
-        /** Set up Physics */
+        initNetClient();
+        setUpClient();
+    }
+
+    private void setUpClient() {
+
+        netClient.send(new NewClientRequestMessage());
+        while(clientGameData == null)
+        {
+            System.out.println("Waiting For Game Data...");
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        System.out.println("Received game data");
         bulletAppState = new BulletAppState();
         stateManager.attach(bulletAppState);
         //bulletAppState.getPhysicsSpace().enableDebug(assetManager);
@@ -68,8 +88,8 @@ public class MountainMaze extends SimpleApplication
         setUpLight();
 
         fpp = new FilterPostProcessor(assetManager);
-        water = new WaterFilter(rootNode, lightDir);
-        water.setWaterHeight(initialWaterHeight);
+        water = new WaterFilter(rootNode, clientGameData.getLightDir());
+        water.setWaterHeight(clientGameData.getWaterHeight());
         fpp.addFilter(water);
         viewPort.addProcessor(fpp);
 
@@ -81,33 +101,33 @@ public class MountainMaze extends SimpleApplication
 
         /** 1.1) Add ALPHA map (for red-blue-green coded splat textures) */
         mat_terrain.setTexture("Alpha", assetManager.loadTexture(
-                "assets/terrains/maze1color.png"));
+                "overthinker/assets/terrains/maze1color.png"));
 
         /** 1.2) Add GRASS texture into the red layer (Tex1). */
         Texture grass = assetManager.loadTexture(
                 "Textures/Terrain/splat/grass.jpg");
-        grass.setWrap(WrapMode.Repeat);
+        grass.setWrap(Texture.WrapMode.Repeat);
         mat_terrain.setTexture("Tex1", grass);
         mat_terrain.setFloat("Tex1Scale", 64f);
 
         /** 1.3) Add DIRT texture into the green layer (Tex2) */
         Texture dirt = assetManager.loadTexture(
                 "Textures/Terrain/splat/dirt.jpg");
-        dirt.setWrap(WrapMode.Repeat);
+        dirt.setWrap(Texture.WrapMode.Repeat);
         mat_terrain.setTexture("Tex2", dirt);
         mat_terrain.setFloat("Tex2Scale", 32f);
 
         /** 1.4) Add ROAD texture into the blue layer (Tex3) */
         Texture rock = assetManager.loadTexture(
                 "Textures/Terrain/splat/road.jpg");
-        rock.setWrap(WrapMode.Repeat);
+        rock.setWrap(Texture.WrapMode.Repeat);
         mat_terrain.setTexture("Tex3", rock);
         mat_terrain.setFloat("Tex3Scale", 128f);
 
         /** 2. Create the height map */
         AbstractHeightMap heightmap = null;
         Texture heightMapImage = assetManager.loadTexture(
-                "assets/terrains/maze1.jpg");
+                "overthinker/assets/terrains/maze1.jpg");
         heightmap = new ImageBasedHeightMap(heightMapImage.getImage());
 
         /*HillHeightMap heightmap = null;
@@ -164,6 +184,23 @@ public class MountainMaze extends SimpleApplication
         // to make them appear in the game world.
         bulletAppState.getPhysicsSpace().add(landscape);
         bulletAppState.getPhysicsSpace().add(player);
+    }
+
+    private void initNetClient() {
+        try {
+            netClient = Network.connectToServer("localhost", 6143);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        ClientNetListener listener = new ClientNetListener(this);
+
+        Serializer.registerClass(NewClientRequestMessage.class);
+        Serializer.registerClass(NewClientResponseMessage.class);
+
+        netClient.addMessageListener(listener, NewClientResponseMessage.class);
+
+        netClient.start();
     }
 
     private void setUpLight() {
@@ -235,5 +272,13 @@ public class MountainMaze extends SimpleApplication
         }
         player.setWalkDirection(walkDirection);
         cam.setLocation(player.getPhysicsLocation());
+    }
+
+    public void setClientGameData(ClientGameData clientGameData) {
+        this.clientGameData = clientGameData;
+    }
+
+    public CharacterControl getPlayer() {
+        return player;
     }
 }

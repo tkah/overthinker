@@ -180,7 +180,7 @@ A default implementation of the Server interface that delegates
 <TD><CODE><B><A HREF="../../../../com/jme3/network/base/DefaultServer.html#addChannel(int)">addChannel</A></B>(int&nbsp;port)</CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Adds an alternate channel to the server, using the specified port.</TD>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Adds an alternate channel to the overthinker.server, using the specified port.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -253,7 +253,7 @@ A default implementation of the Server interface that delegates
 <TD><CODE><B><A HREF="../../../../com/jme3/network/base/DefaultServer.html#close()">close</A></B>()</CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Closes all client connections, stops and running processing threads, and
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Closes all overthinker.client connections, stops and running processing threads, and
   closes the host connection.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
@@ -327,7 +327,7 @@ A default implementation of the Server interface that delegates
 <TD><CODE><B><A HREF="../../../../com/jme3/network/base/DefaultServer.html#getGameName()">getGameName</A></B>()</CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns the 'game name' for this server.</TD>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns the 'game name' for this overthinker.server.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -335,7 +335,7 @@ A default implementation of the Server interface that delegates
 <TD><CODE><B><A HREF="../../../../com/jme3/network/base/DefaultServer.html#getVersion()">getVersion</A></B>()</CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns the game-specific version of this server used for detecting
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns the game-specific version of this overthinker.server used for detecting
   mismatched clients.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
@@ -344,7 +344,7 @@ A default implementation of the Server interface that delegates
 <TD><CODE><B><A HREF="../../../../com/jme3/network/base/DefaultServer.html#hasConnections()">hasConnections</A></B>()</CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns true if the server has active connections at the time of this
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns true if the overthinker.server has active connections at the time of this
   call.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
@@ -353,7 +353,7 @@ A default implementation of the Server interface that delegates
 <TD><CODE><B><A HREF="../../../../com/jme3/network/base/DefaultServer.html#isRunning()">isRunning</A></B>()</CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns true if the server has been started.</TD>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns true if the overthinker.server has been started.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -397,7 +397,7 @@ A default implementation of the Server interface that delegates
 <TD><CODE><B><A HREF="../../../../com/jme3/network/base/DefaultServer.html#start()">start</A></B>()</CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Start the server so that it will began accepting new connections
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Start the overthinker.server so that it will began accepting new connections
   and processing messages.</TD>
 </TR>
 </TABLE>
@@ -449,7 +449,7 @@ getGameName</H3>
 public java.lang.String <B>getGameName</B>()</PRE>
 <DL>
 <DD><B>Description copied from interface: <CODE><A HREF="../../../../com/jme3/network/Server.html#getGameName()">Server</A></CODE></B></DD>
-<DD>Returns the 'game name' for this server.  This should match the
+<DD>Returns the 'game name' for this overthinker.server.  This should match the
   'game name' set on connecting clients or they will be turned away.
 <P>
 <DD><DL>
@@ -467,7 +467,7 @@ getVersion</H3>
 public int <B>getVersion</B>()</PRE>
 <DL>
 <DD><B>Description copied from interface: <CODE><A HREF="../../../../com/jme3/network/Server.html#getVersion()">Server</A></CODE></B></DD>
-<DD>Returns the game-specific version of this server used for detecting
+<DD>Returns the game-specific version of this overthinker.server used for detecting
   mismatched clients.
 <P>
 <DD><DL>
@@ -485,7 +485,7 @@ addChannel</H3>
 public int <B>addChannel</B>(int&nbsp;port)</PRE>
 <DL>
 <DD><B>Description copied from interface: <CODE><A HREF="../../../../com/jme3/network/Server.html#addChannel(int)">Server</A></CODE></B></DD>
-<DD>Adds an alternate channel to the server, using the specified port.  This is an 
+<DD>Adds an alternate channel to the overthinker.server, using the specified port.  This is an
   entirely separate connection where messages are sent and received in parallel 
   to the two primary default channels.  All channels must be added before the connection
   is started.
@@ -522,7 +522,7 @@ start</H3>
 public void <B>start</B>()</PRE>
 <DL>
 <DD><B>Description copied from interface: <CODE><A HREF="../../../../com/jme3/network/Server.html#start()">Server</A></CODE></B></DD>
-<DD>Start the server so that it will began accepting new connections
+<DD>Start the overthinker.server so that it will began accepting new connections
   and processing messages.
 <P>
 <DD><DL>
@@ -540,7 +540,7 @@ isRunning</H3>
 public boolean <B>isRunning</B>()</PRE>
 <DL>
 <DD><B>Description copied from interface: <CODE><A HREF="../../../../com/jme3/network/Server.html#isRunning()">Server</A></CODE></B></DD>
-<DD>Returns true if the server has been started.
+<DD>Returns true if the overthinker.server has been started.
 <P>
 <DD><DL>
 <DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/jme3/network/Server.html#isRunning()">isRunning</A></CODE> in interface <CODE><A HREF="../../../../com/jme3/network/Server.html" title="interface in com.jme3.network">Server</A></CODE></DL>
@@ -557,7 +557,7 @@ close</H3>
 public void <B>close</B>()</PRE>
 <DL>
 <DD><B>Description copied from interface: <CODE><A HREF="../../../../com/jme3/network/Server.html#close()">Server</A></CODE></B></DD>
-<DD>Closes all client connections, stops and running processing threads, and
+<DD>Closes all overthinker.client connections, stops and running processing threads, and
   closes the host connection.
 <P>
 <DD><DL>
@@ -600,10 +600,10 @@ public void <B>broadcast</B>(<A HREF="../../../../com/jme3/network/Filter.html" 
   <p>Examples:</p>
   <pre>
     // Broadcast to connections: conn1, conn2, and conn3
-    server.broadcast( Filters.in( conn1, conn2, conn3 ), message );
+    overthinker.server.broadcast( Filters.in( conn1, conn2, conn3 ), message );
 
     // Broadcast to all connections exception source
-    server.broadcast( Filters.notEqualTo( source ), message );
+    overthinker.server.broadcast( Filters.notEqualTo( source ), message );
   </pre>
 <P>
 <DD><DL>
@@ -630,10 +630,10 @@ public void <B>broadcast</B>(int&nbsp;channel,
   <p>Examples:</p>
   <pre>
     // Broadcast to connections: conn1, conn2, and conn3
-    server.broadcast( Filters.in( conn1, conn2, conn3 ), message );
+    overthinker.server.broadcast( Filters.in( conn1, conn2, conn3 ), message );
 
     // Broadcast to all connections exception source
-    server.broadcast( Filters.notEqualTo( source ), message );
+    overthinker.server.broadcast( Filters.notEqualTo( source ), message );
   </pre>
 <P>
 <DD><DL>
@@ -668,7 +668,7 @@ hasConnections</H3>
 public boolean <B>hasConnections</B>()</PRE>
 <DL>
 <DD><B>Description copied from interface: <CODE><A HREF="../../../../com/jme3/network/Server.html#hasConnections()">Server</A></CODE></B></DD>
-<DD>Returns true if the server has active connections at the time of this
+<DD>Returns true if the overthinker.server has active connections at the time of this
   call.
 <P>
 <DD><DL>
@@ -741,15 +741,15 @@ public void <B>addMessageListener</B>(<A HREF="../../../../com/jme3/network/Mess
 <DD>Adds a listener that will be notified when any message or object
   is received from one of the clients.
 
-  <p>Note about MessageListener multithreading: on the server, message events may
-  be delivered by more than one thread depending on the server
+  <p>Note about MessageListener multithreading: on the overthinker.server, message events may
+  be delivered by more than one thread depending on the overthinker.server
   implementation used.  Listener implementations should treat their
   shared data structures accordingly and set them up for multithreaded 
   access.  The only threading guarantee is that for a single
   HostedConnection, there will only ever be one thread at a time
   and the messages will always be delivered to that connection in the 
   order that they were delivered.  This is the only restriction placed
-  upon server message dispatch pool implementations.</p>
+  upon overthinker.server message dispatch pool implementations.</p>
 <P>
 <DD><DL>
 <DT><B>Specified by:</B><DD><CODE><A HREF="../../../../com/jme3/network/Server.html#addMessageListener(com.jme3.network.MessageListener)">addMessageListener</A></CODE> in interface <CODE><A HREF="../../../../com/jme3/network/Server.html" title="interface in com.jme3.network">Server</A></CODE></DL>

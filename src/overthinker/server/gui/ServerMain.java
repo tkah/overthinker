@@ -23,6 +23,7 @@ public class ServerMain extends SimpleApplication {
 
     public static void main(String[] args) {
         ServerMain app = new ServerMain(6143);
+
         app.start(JmeContext.Type.Headless); // headless type for servers!
     }
     @Override

@@ -1,4 +1,4 @@
-package eeg.util;
+package overthinker.client.eeg;
 public enum EdkErrorCode {
 	 EDK_OK								(0x0000),
 	//! An internal error occurred

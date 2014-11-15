@@ -1,7 +1,6 @@
-package eeg.examples;
+package overthinker.examples;
 import java.awt.Color;
 import java.awt.Container;
-import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -9,20 +8,18 @@ import java.awt.event.ActionListener;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JOptionPane;
-import javax.xml.soap.MessageFactory;
 
+import overthinker.client.eeg.Edk;
+import overthinker.client.eeg.EdkErrorCode;
+import overthinker.client.eeg.EmoProfileManagement;
+import overthinker.client.eeg.EmoState;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
-import eeg.util.Edk;
-import eeg.util.EdkErrorCode;
-import eeg.util.EmoProfileManagement;
-import eeg.util.EmoState;
 
 //import statements
 //Check if window closes automatically. Otherwise add suitable code
-public class MainGui extends JFrame   {
+public class EegMainGui extends JFrame   {
 	public static JButton trainBtt,saveBtt,loadBtt;
 	public static JComboBox comboBox;
 	public static int[] cognitivActionList ={EmoState.EE_CognitivAction_t.COG_NEUTRAL.ToInt(),
@@ -102,7 +99,7 @@ public class MainGui extends JFrame   {
         
     }
 	public static void main(String args[]) {
-		new MainGui();
+		new EegMainGui();
 		Pointer eEvent			= Edk.INSTANCE.EE_EmoEngineEventCreate();
     	Pointer eState			= Edk.INSTANCE.EE_EmoStateCreate();
     	IntByReference userID 	= null;
@@ -211,7 +208,7 @@ public class MainGui extends JFrame   {
 	    	System.out.println("Disconnected!");
 	    }
 	
-	MainGui() {
+	EegMainGui() {
 		cognitivActionsEnabled[0] = true;
         for (int i = 1; i < cognitivActionList.length; i++)
         {

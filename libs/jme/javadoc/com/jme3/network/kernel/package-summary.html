@@ -168,7 +168,7 @@ different transport implementations.
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD WIDTH="15%"><B><A HREF="../../../../com/jme3/network/kernel/ConnectorException.html" title="class in com.jme3.network.kernel">ConnectorException</A></B></TD>
-<TD>Represents a client-side connection error, usually encapsulating
+<TD>Represents a overthinker.client-side connection error, usually encapsulating
   an IOException as its cause.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
@@ -189,10 +189,10 @@ The kernel package is the heart of the JME networking module
 and controls the routing and dispatch of message data over
 different transport implementations.  Most users will never 
 have to deal with these classes unless they are writing their own 
-client and server implementations that diverge from the standard 
+overthinker.client and overthinker.server implementations that diverge from the standard
 classes that are provided.
 
-<p><A HREF="../../../../com/jme3/network/kernel/Kernel.html" title="interface in com.jme3.network.kernel"><CODE>Kernel</CODE></A> defines the core of a server-side message
+<p><A HREF="../../../../com/jme3/network/kernel/Kernel.html" title="interface in com.jme3.network.kernel"><CODE>Kernel</CODE></A> defines the core of a overthinker.server-side message
 broker that abstracts away the specific transport and underlying
 threading model used.  For example, it might use NIO selectors
 in a single threaded model or straight multithreaded socket
@@ -200,9 +200,9 @@ model.  Or it might implement SSL connections.  Once created,
 <A HREF="../../../../com/jme3/network/kernel/Kernel.html" title="interface in com.jme3.network.kernel"><CODE>Kernel</CODE></A> users don't need to care about the details.</p>
 
 <p><A HREF="../../../../com/jme3/network/kernel/Endpoint.html" title="interface in com.jme3.network.kernel"><CODE>Endpoint</CODE></A> is a managed connection within a 
-<A HREF="../../../../com/jme3/network/kernel/Kernel.html" title="interface in com.jme3.network.kernel"><CODE>Kernel</CODE></A> providing kernel to client connectivity.</p>
+<A HREF="../../../../com/jme3/network/kernel/Kernel.html" title="interface in com.jme3.network.kernel"><CODE>Kernel</CODE></A> providing kernel to overthinker.client connectivity.</p>
 
-<p><A HREF="../../../../com/jme3/network/kernel/Connector.html" title="interface in com.jme3.network.kernel"><CODE>Connector</CODE></A> defines the basic client-side message sender
+<p><A HREF="../../../../com/jme3/network/kernel/Connector.html" title="interface in com.jme3.network.kernel"><CODE>Connector</CODE></A> defines the basic overthinker.client-side message sender
 and these objects are typically used to connect to a <A HREF="../../../../com/jme3/network/kernel/Kernel.html" title="interface in com.jme3.network.kernel"><CODE>Kernel</CODE></A> 
 though they can connect to any network port that supports the implementation's
 protocol.  Implementations are provided for straight TCP and UDP communication

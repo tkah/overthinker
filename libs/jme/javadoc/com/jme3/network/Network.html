@@ -103,7 +103,7 @@ java.lang.Object
 
 <P>
 The main service provider for conveniently creating
-  server and client instances.
+  overthinker.server and overthinker.client instances.
 <P>
 
 <P>
@@ -229,7 +229,7 @@ The main service provider for conveniently creating
 <TD><CODE><B><A HREF="../../../com/jme3/network/Network.html#createClient()">createClient</A></B>()</CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Creates a client that can be connected at a later time.</TD>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Creates a overthinker.client that can be connected at a later time.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -238,7 +238,7 @@ The main service provider for conveniently creating
              int&nbsp;version)</CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Creates a client that can be connected at a later time.</TD>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Creates a overthinker.client that can be connected at a later time.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -393,9 +393,9 @@ public static <A HREF="../../../com/jme3/network/Server.html" title="interface i
 <DD><DL>
 <DT><B>Parameters:</B><DD><CODE>gameName</CODE> - This is the name that identifies the game.  Connecting clients
                   must use this name or be turned away.<DD><CODE>version</CODE> - This is a game-specific verison that helps detect when out-of-date
-                  clients have connected to an incompatible server.<DD><CODE>tcpPort</CODE> - The port upon which the TCP hosting will listen for new connections.<DD><CODE>udpPort</CODE> - The port upon which the UDP hosting will listen for new 'fast' UDP 
+                  clients have connected to an incompatible overthinker.server.<DD><CODE>tcpPort</CODE> - The port upon which the TCP hosting will listen for new connections.<DD><CODE>udpPort</CODE> - The port upon which the UDP hosting will listen for new 'fast' UDP
                   messages.  Set to -1 if 'fast' traffic should go over TCP.  This will
-                  completely disable UDP traffic for this server.
+                  completely disable UDP traffic for this overthinker.server.
 <DT><B>Throws:</B>
 <DD><CODE>java.io.IOException</CODE></DL>
 </DD>
@@ -407,7 +407,7 @@ createClient</H3>
 <PRE>
 public static <A HREF="../../../com/jme3/network/NetworkClient.html" title="interface in com.jme3.network">NetworkClient</A> <B>createClient</B>()</PRE>
 <DL>
-<DD>Creates a client that can be connected at a later time.
+<DD>Creates a overthinker.client that can be connected at a later time.
 <P>
 <DD><DL>
 </DL>
@@ -421,8 +421,8 @@ createClient</H3>
 public static <A HREF="../../../com/jme3/network/NetworkClient.html" title="interface in com.jme3.network">NetworkClient</A> <B>createClient</B>(java.lang.String&nbsp;gameName,
                                          int&nbsp;version)</PRE>
 <DL>
-<DD>Creates a client that can be connected at a later time.  The specified
-  game name and version must match the server or the client will be turned
+<DD>Creates a overthinker.client that can be connected at a later time.  The specified
+  game name and version must match the overthinker.server or the overthinker.client will be turned
   away.
 <P>
 <DD><DL>
@@ -503,13 +503,13 @@ public static <A HREF="../../../com/jme3/network/Client.html" title="interface i
 <P>
 <DD><DL>
 <DT><B>Parameters:</B><DD><CODE>gameName</CODE> - This is the name that identifies the game.  This must match
-                  the target server's name or this client will be turned away.<DD><CODE>version</CODE> - This is a game-specific verison that helps detect when out-of-date
-                  clients have connected to an incompatible server.  This must match
-                  the server's version of this client will be turned away.<DD><CODE>hostPort</CODE> - The remote TCP port on the server to which this client should
-                  send reliable messages.<DD><CODE>remoteUdpPort</CODE> - The remote UDP port on the server to which this client should
+                  the target overthinker.server's name or this overthinker.client will be turned away.<DD><CODE>version</CODE> - This is a game-specific verison that helps detect when out-of-date
+                  clients have connected to an incompatible overthinker.server.  This must match
+                  the overthinker.server's version of this overthinker.client will be turned away.<DD><CODE>hostPort</CODE> - The remote TCP port on the overthinker.server to which this overthinker.client should
+                  send reliable messages.<DD><CODE>remoteUdpPort</CODE> - The remote UDP port on the overthinker.server to which this overthinker.client should
                   send 'fast'/unreliable messages.   Set to -1 if 'fast' traffic should 
                   go over TCP.  This will completely disable UDP traffic for this
-                  client.
+                  overthinker.client.
 <DT><B>Throws:</B>
 <DD><CODE>java.io.IOException</CODE></DL>
 </DD>
