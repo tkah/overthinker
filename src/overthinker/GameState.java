@@ -8,10 +8,10 @@ import java.util.ArrayList;
 
 
 //Every time the model updates, increment timestamp and broadcast update to all clients.
-    //Create method that takes the GameData held by a client, and compares it to what
-    //the Model is--sending only info tha has changed.
+//Create method that takes the GameData held by a client, and compares it to what
+//the Model is--sending only info tha has changed.
 
-    //Create method that will send all the model data, for initial connection
+//Create method that will send all the model data, for initial connection
 public class GameState {
 
     private static int distortionValue = 0;
@@ -44,6 +44,21 @@ public class GameState {
     public static int getDistortionValue() {
         return distortionValue;
     }
+
+
+    public static void setGameMap(int val) {
+        gameMap = val;
+    }
+    public static int getGameMap() {
+        return gameMap;
+    }
+
+
+    public static void setGameMode(int val) {
+        gameMode = val;
+    }
+    public static int getGameMode() { return gameMode; }
+
 
     public static synchronized void setClientPosition(int playerNumber, float[] position) {
         float[] toSet = playerLocations.get(playerNumber);
