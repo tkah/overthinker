@@ -89,11 +89,12 @@ public class UClient extends SimpleApplication
   private int scaleStartTime;
 
   private boolean left = false, right = false, up = false, down = false, slowWater = false;
-  private boolean mapLeft = false, mapRight = false, mapUp = false, mapDown = false;
+  private boolean mapTiltLeft = false, mapTiltRight = false, mapTiltForward = false, mapTiltBack = false;
   private ArrayList<SphereResource> sphereResourceArrayList = new ArrayList<SphereResource>();
   private ArrayList<SphereResource> sphereResourcesToShrink = new ArrayList<SphereResource>();
 
-  float rotation;
+  float rotation; // Save rotation levels for each direction
+  float tiltRotationBack, tiltRotationForward, tiltRotationLeft, tiltRotationRight;
 
   /** Server Communcation - Not yet implemented **/
   private Vector3f myLoc = new Vector3f(); // Might replace with 'walkDirection' from above
@@ -186,6 +187,10 @@ public class UClient extends SimpleApplication
     else if (binding.equals("Up")) up = isPressed;
     else if (binding.equals("Down")) down = isPressed;
     else if (binding.equals("SlowWater")) slowWater = isPressed;
+    else if (binding.equals("MapTiltBack")) mapTiltBack = isPressed;
+    else if (binding.equals("MapTiltForward")) mapTiltForward = isPressed;
+    else if (binding.equals("MapTiltLeft")) mapTiltLeft = isPressed;
+    else if (binding.equals("MapTiltRight")) mapTiltRight = isPressed;
     else if (binding.equals("Jump"))
     {
       if (isPressed) playerControl.jump();
@@ -200,9 +205,39 @@ public class UClient extends SimpleApplication
   @Override
   public void simpleUpdate(float tpf)
   {
-    // Raise Water Level
+    // Raise Water Level, to be controlled by EEG
     if (!slowWater) water.setWaterHeight(water.getWaterHeight() + WATER_HEIGHT_DEFAULT_RATE);
     else water.setWaterHeight(water.getWaterHeight()+WATER_HEIGHT_PLAYER_RATE);
+
+    // Tilt Map, to be controlled by EEG
+    if (mapTiltLeft)
+    {
+      tiltRotationLeft += 0.008f;
+      Quaternion lQ = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * tiltRotationLeft, new Vector3f(0,0,1.0f));
+      terrain.setLocalRotation(lQ);
+      landscape.setPhysicsRotation(lQ);
+    }
+    if (mapTiltRight)
+    {
+      tiltRotationRight += 0.008f;
+      Quaternion lQ = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * tiltRotationRight, new Vector3f(0,0,-1.0f));
+      terrain.setLocalRotation(lQ);
+      landscape.setPhysicsRotation(lQ);
+    }
+    if (mapTiltForward)
+    {
+      tiltRotationForward += 0.008f;
+      Quaternion lQ = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * tiltRotationForward, new Vector3f(1.0f,0,0));
+      terrain.setLocalRotation(lQ);
+      landscape.setPhysicsRotation(lQ);
+    }
+    if (mapTiltBack)
+    {
+      tiltRotationBack += 0.008f;
+      Quaternion lQ = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * tiltRotationBack, new Vector3f(-1.0f,0,0));
+      terrain.setLocalRotation(lQ);
+      landscape.setPhysicsRotation(lQ);
+    }
 
     // Control Movement and Player Rotation
     camDir.set(cam.getDirection()).multLocal(0.6f); //20f for BetterCharacterControl
@@ -210,17 +245,19 @@ public class UClient extends SimpleApplication
     camLeft.set(cam.getLeft()).multLocal(0.4f); //20f for BetterCharacterControl
     walkDirection.set(0, 0, 0);
 
-    rotation += 3;
+
 
     if (left)
     {
-      Quaternion lQ = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * rotation, new Vector3f(0,0,-1.0f));//Vector3f.UNIT_Z);
+      rotation += 3;
+      Quaternion lQ = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * rotation, new Vector3f(0,0,-1.0f));
       playerG.setLocalRotation(lQ);
       //playerG.rotate(0,0,-0.1f);
       walkDirection.addLocal(camLeft);
     }
     if (right)
     {
+      rotation += 3;
       Quaternion rQ = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * rotation, new Vector3f(0,0,1.0f));//Vector3f.UNIT_Z);
       playerG.setLocalRotation(rQ);
       //playerG.rotate(0,0,0.1f);
@@ -228,6 +265,7 @@ public class UClient extends SimpleApplication
     }
     if (up)
     {
+      rotation += 3;
       Quaternion uQ = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * rotation, new Vector3f(0.1f,0,0));//Vector3f.UNIT_Z);
       playerG.setLocalRotation(uQ);
       //playerG.rotate(0.1f,0,0);
@@ -245,6 +283,7 @@ public class UClient extends SimpleApplication
     }
     if (down)
     {
+      rotation += 3;
       Quaternion dQ = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * rotation, new Vector3f(-1.0f,0,0));//Vector3f.UNIT_Z);
       playerG.setLocalRotation(dQ);
       //playerG.rotate(-0.1f,0,0);
@@ -506,14 +545,14 @@ public class UClient extends SimpleApplication
     inputManager.addListener(this, "Jump");
 
     // Tilting map, to be replaced by headset commands
-    inputManager.addMapping("MapUp", new KeyTrigger(KeyInput.KEY_I));
-    inputManager.addMapping("MapLeft", new KeyTrigger(KeyInput.KEY_J));
-    inputManager.addMapping("MapRight", new KeyTrigger(KeyInput.KEY_L));
-    inputManager.addMapping("MapDown", new KeyTrigger(KeyInput.KEY_K));
-    inputManager.addListener(this, "MapUp");
-    inputManager.addListener(this, "MapLeft");
-    inputManager.addListener(this, "MapRight");
-    inputManager.addListener(this, "MapDown");
+    inputManager.addMapping("MapTiltBack", new KeyTrigger(KeyInput.KEY_I));
+    inputManager.addMapping("MapTiltLeft", new KeyTrigger(KeyInput.KEY_J));
+    inputManager.addMapping("MapTiltRight", new KeyTrigger(KeyInput.KEY_L));
+    inputManager.addMapping("MapTiltForward", new KeyTrigger(KeyInput.KEY_K));
+    inputManager.addListener(this, "MapTiltBack");
+    inputManager.addListener(this, "MapTiltLeft");
+    inputManager.addListener(this, "MapTiltRight");
+    inputManager.addListener(this, "MapTiltForward");
 
     // Lower water level, to be replaced by headset commands
     inputManager.addMapping("SlowWater", new KeyTrigger(KeyInput.KEY_LSHIFT));
