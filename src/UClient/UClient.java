@@ -412,8 +412,8 @@ public class UClient extends SimpleApplication
     playerControl.setJumpSpeed(20);
     playerControl.setFallSpeed(30);
     playerControl.setGravity(30);
-    playerControl.setPhysicsLocation(new Vector3f(-340, 50, -400));
-    playerNode.setLocalTranslation(new Vector3f(-340, 50, -400));
+    playerControl.setPhysicsLocation(new Vector3f(-340, 80, -400));
+    playerNode.setLocalTranslation(new Vector3f(-340, 80, -400));
     playerNode.addControl(playerControl);
     rootNode.attachChild(playerNode);
     bulletAppState.getPhysicsSpace().add(playerControl);
@@ -427,7 +427,7 @@ public class UClient extends SimpleApplication
 
     /** Add ALPHA map (for red-blue-green coded splat textures) */
     mat_terrain.setTexture("Alpha", assetManager.loadTexture(
-      "assets/terrains/maze1color.png"));
+      "assets/terrains/tieredmaze1color.png"));
 
     /** Add GRASS texture into the red layer (Tex1). */
     Texture grass = assetManager.loadTexture(
@@ -453,7 +453,7 @@ public class UClient extends SimpleApplication
     /** Create the height map */
     AbstractHeightMap heightmap = null;
     Texture heightMapImage = assetManager.loadTexture(
-      "assets/terrains/maze1.jpg");
+      "assets/terrains/tieredmaze1.png");
     heightmap = new ImageBasedHeightMap(heightMapImage.getImage());
 
     // Height Map Randomization
