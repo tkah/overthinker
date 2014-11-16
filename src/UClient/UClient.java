@@ -245,25 +245,25 @@ public class UClient extends SimpleApplication
     if (mapTiltForward&&mapTiltLeft)
     {
       tiltMapY += MAP_TILT_RATE;
-      tiltMapX -= MAP_TILT_RATE;
+      tiltMapX += MAP_TILT_RATE;
     }
     else if (mapTiltForward&&mapTiltRight)
     {
       tiltMapY += MAP_TILT_RATE;
-      tiltMapX += MAP_TILT_RATE;
+      tiltMapX -= MAP_TILT_RATE;
     }
     else if (mapTiltBack&&mapTiltLeft)
     {
       tiltMapY -= MAP_TILT_RATE;
-      tiltMapX -= MAP_TILT_RATE;
+      tiltMapX += MAP_TILT_RATE;
     }
     else if (mapTiltBack&&mapTiltRight)
     {
       tiltMapY -= MAP_TILT_RATE;
-      tiltMapX += MAP_TILT_RATE;
+      tiltMapX -= MAP_TILT_RATE;
     }
-    else if (mapTiltLeft) tiltMapX -= MAP_TILT_RATE;
-    else if (mapTiltRight) tiltMapX += MAP_TILT_RATE;
+    else if (mapTiltLeft) tiltMapX += MAP_TILT_RATE;
+    else if (mapTiltRight) tiltMapX -= MAP_TILT_RATE;
     else if (mapTiltForward) tiltMapY += MAP_TILT_RATE;
     else if (mapTiltBack) tiltMapY -= MAP_TILT_RATE;
     tiltMap();
@@ -321,8 +321,8 @@ public class UClient extends SimpleApplication
 
   private void tiltMap ()
   {
-    mapTilt = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * tiltMapX, new Vector3f(1.0f, 0, 0));
-    Quaternion q = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * tiltMapY, new Vector3f(0, 0, 1.0f));
+    mapTilt = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * tiltMapX, new Vector3f(0, 0, 1.0f));
+    Quaternion q = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * tiltMapY, new Vector3f(1.0f, 0, 0));
     Quaternion m = mapTilt.mult(q);
     terrain.setLocalRotation(m);
     landscape.setPhysicsRotation(m);
