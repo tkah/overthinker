@@ -306,15 +306,16 @@ public class UClient extends SimpleApplication
     CollisionResults results = new CollisionResults();
     resources.collideWith(playerG.getWorldBound(), results);
 
+
     if (results.size() > 0)
     {
+      audio_collect.play();
       CollisionResult closest = results.getClosestCollision();
       System.out.println("What was hit? " + closest.getGeometry().getName());
 
       boolean isHit = closest.getGeometry().getUserData("isHit");
       if (!isHit)
       {
-        //audio_collect.play();
         int sResId = closest.getGeometry().getUserData("id");
         closest.getGeometry().setUserData("isHit", true);
         SphereResource s = sphereResourceArrayList.get(sResId);
@@ -593,7 +594,6 @@ public class UClient extends SimpleApplication
     //collect object
     audio_collect = new AudioNode(assetManager, "assets/sounds/collect.ogg",false);
     audio_collect.setPositional(false);
-    audio_collect.setLooping(false);
     audio_collect.setVolume(2);
     rootNode.attachChild(audio_collect);
 
