@@ -288,7 +288,7 @@ public class UClient extends SimpleApplication
     if (down&&right) moveBall(-1.0f, 1.0f, null);
     if (down&&left) moveBall(-1.0f, -1.0f, null);
 
-    addMovementSound((up || down || left || right ? true : false));
+    addMovementSound((up || down || left || right ));
 
     playerControl.setWalkDirection(walkDirection);
 
@@ -314,6 +314,7 @@ public class UClient extends SimpleApplication
       boolean isHit = closest.getGeometry().getUserData("isHit");
       if (!isHit)
       {
+        //audio_collect.play();
         int sResId = closest.getGeometry().getUserData("id");
         closest.getGeometry().setUserData("isHit", true);
         SphereResource s = sphereResourceArrayList.get(sResId);
@@ -321,8 +322,8 @@ public class UClient extends SimpleApplication
         sphereResourcesToShrink.add(s);
         scaleStartTime = Globals.getTotSecs();
         playerNeedsScaling = true;
-        audio_collect.playInstance();
         scalePlayer();
+
       }
     }
     //move the audio with the camera
