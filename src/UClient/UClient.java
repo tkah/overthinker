@@ -3,6 +3,7 @@ package UClient; /**
  */
 
 import com.jme3.app.SimpleApplication;
+import com.jme3.audio.AudioNode;
 import com.jme3.bullet.BulletAppState;
 import com.jme3.bullet.collision.shapes.CollisionShape;
 import com.jme3.bullet.collision.shapes.SphereCollisionShape;
@@ -42,14 +43,10 @@ import com.jme3.texture.Texture;
 import com.jme3.texture.Texture.WrapMode;
 import com.jme3.util.TangentBinormalGenerator;
 import com.jme3.water.WaterFilter;
-import jme3utilities.Misc;
 import jme3utilities.sky.SkyControl;
 import jme3utilities.sky.Updater;
-
-import java.awt.*;
 import java.util.Calendar;
 import java.util.ArrayList;
-import java.util.List;
 
 public class UClient extends SimpleApplication
   implements ActionListener, AnalogListener
@@ -114,6 +111,12 @@ public class UClient extends SimpleApplication
   private Vector3f myLoc = new Vector3f(); // Might replace with 'walkDirection' from above
   private ArrayList<Vector3f> playerLocs = new ArrayList<Vector3f>();
   Integer distortionVal;  //Might consider waterHeight as a possible "distortion"
+
+  /** Create AudioNodes **/
+  private AudioNode audio_ocean;
+  private AudioNode audio_footsteps;
+  private AudioNode audio_jump;
+  private AudioNode audio_collect;
 
   /**
    * Class entry point
@@ -193,6 +196,7 @@ public class UClient extends SimpleApplication
 
     Globals.setUpTimer();
     Globals.startTimer();
+    initAudio();
   }
 
   /**
@@ -335,6 +339,8 @@ public class UClient extends SimpleApplication
     if (down&&right) moveBall(-1.0f, 1.0f, null);
     if (down&&left) moveBall(-1.0f, -1.0f, null);
 
+    addMovementSound((up || down || left || right ));
+
     playerControl.setWalkDirection(walkDirection);
 
     // Collision Scaling
@@ -350,8 +356,11 @@ public class UClient extends SimpleApplication
 
     CollisionResults results = new CollisionResults();
     resources.collideWith(playerG.getWorldBound(), results);
+
+
     if (results.size() > 0)
     {
+      audio_collect.play();
       CollisionResult closest = results.getClosestCollision();
       System.out.println("What was hit? " + closest.getGeometry().getName());
 
@@ -366,6 +375,7 @@ public class UClient extends SimpleApplication
         scaleStartTime = Globals.getTotSecs();
         playerNeedsScaling = true;
         scalePlayer();
+
       }
     }
 
@@ -389,6 +399,9 @@ public class UClient extends SimpleApplication
       float terDist = landColl.getClosestCollision().getDistance();
       System.out.println("landDist: " + terDist);
     }*/
+    //move the audio with the camera
+    listener.setLocation(cam.getLocation());
+    listener.setRotation(cam.getRotation());
   }
 
   private void tiltMap ()
@@ -407,12 +420,12 @@ public class UClient extends SimpleApplication
     System.out.println((float)tiltMapX/100 + ", " + tiltY + ", " + (float)tiltMapZ/100);
     if (tiltY > 0) tiltY = 0;
     //if (tiltX)
-    playerControl.setGravity(new Vector3f(tiltMapX/10,
+    playerControl.setGravity(new Vector3f(tiltMapX / 10,
       tiltY,
-      tiltMapZ/10));
-    bulletAppState.getPhysicsSpace().setGravity(new Vector3f(tiltMapX/100,
-                                                             tiltY,
-                                                             tiltMapZ/100));
+      tiltMapZ / 10));
+    bulletAppState.getPhysicsSpace().setGravity(new Vector3f(tiltMapX / 100,
+      tiltY,
+      tiltMapZ / 100));
   }
 
   private void moveBall(float x, float z, Vector3f c)
@@ -644,6 +657,8 @@ public class UClient extends SimpleApplication
     inputManager.addListener(this, "Up");
     inputManager.addListener(this, "Down");
     inputManager.addListener(this, "Jump");
+    inputManager.addListener(jumpActionListener,"Jump");
+
 
     // Tilting map, to be replaced by headset commands
     inputManager.addMapping("MapTiltBack", new KeyTrigger(KeyInput.KEY_I));
@@ -672,4 +687,54 @@ public class UClient extends SimpleApplication
       resources.attachChild(sRes.getGeometry());
     }
   }
+
+
+  private void initAudio(){
+
+    //collect object
+    audio_collect = new AudioNode(assetManager, "assets/sounds/collect.ogg",false);
+    audio_collect.setPositional(false);
+    audio_collect.setVolume(2);
+    rootNode.attachChild(audio_collect);
+
+    //walking sounds
+    audio_footsteps = new AudioNode(assetManager, "assets/sounds/footsteps.ogg",true);
+    audio_footsteps.setPositional(false);
+    audio_footsteps.setLooping(true);
+    audio_footsteps.setVolume(2);
+    rootNode.attachChild(audio_footsteps);
+
+
+    //jumping sound
+    audio_jump = new AudioNode(assetManager, "assets/sounds/pop.ogg",false);
+    audio_jump.setPositional(false);
+    audio_jump.setLooping(false);
+    audio_jump.setVolume(2);
+    rootNode.attachChild(audio_jump);
+
+    //ambient map sounds
+    audio_ocean = new AudioNode(assetManager,"assets/sounds/wavesLoop.ogg",true);
+    audio_ocean.setLooping(true);
+    audio_ocean.setPositional(true);
+    audio_ocean.setVolume(1);
+    rootNode.attachChild(audio_ocean);
+    audio_ocean.play();
+  }
+  /** Method to add sounds when buttons are pressed **/
+  private void addMovementSound(boolean emmit){
+    if(emmit){
+      audio_footsteps.play();
+    }else{
+      audio_footsteps.stop();
+    }
+  }
+
+  private ActionListener jumpActionListener = new ActionListener() {
+    @Override
+    public void onAction(String name, boolean keyPressed, float v) {
+      if (name.equals("Jump") && keyPressed)
+        audio_jump.playInstance();
+
+    }
+  };
 }
