@@ -2,14 +2,13 @@ package UClient; /**
  * Created by Torran on 11/9/14.
  */
 
-import com.jme3.animation.AnimControl;
-import com.jme3.animation.AnimationFactory;
 import com.jme3.app.SimpleApplication;
 import com.jme3.bullet.BulletAppState;
 import com.jme3.bullet.collision.shapes.CollisionShape;
 import com.jme3.bullet.collision.shapes.SphereCollisionShape;
 import com.jme3.bullet.control.BetterCharacterControl;
 import com.jme3.bullet.control.CharacterControl;
+import com.jme3.bullet.control.GhostControl;
 import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.bullet.util.CollisionShapeFactory;
 import com.jme3.collision.CollisionResult;
@@ -23,16 +22,18 @@ import com.jme3.input.controls.MouseAxisTrigger;
 import com.jme3.light.AmbientLight;
 import com.jme3.light.DirectionalLight;
 import com.jme3.material.Material;
-import com.jme3.math.ColorRGBA;
-import com.jme3.math.FastMath;
-import com.jme3.math.Quaternion;
-import com.jme3.math.Vector3f;
+import com.jme3.light.Light;
+import com.jme3.math.*;
 import com.jme3.post.FilterPostProcessor;
+import com.jme3.post.filters.BloomFilter;
 import com.jme3.scene.CameraNode;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.control.CameraControl;
 import com.jme3.scene.shape.Sphere;
+import com.jme3.shadow.DirectionalLightShadowFilter;
+import com.jme3.shadow.DirectionalLightShadowRenderer;
+import com.jme3.shadow.EdgeFilteringMode;
 import com.jme3.terrain.geomipmap.TerrainLodControl;
 import com.jme3.terrain.geomipmap.TerrainQuad;
 import com.jme3.terrain.heightmap.AbstractHeightMap;
@@ -41,10 +42,14 @@ import com.jme3.texture.Texture;
 import com.jme3.texture.Texture.WrapMode;
 import com.jme3.util.TangentBinormalGenerator;
 import com.jme3.water.WaterFilter;
-import org.lwjgl.Sys;
+import jme3utilities.Misc;
+import jme3utilities.sky.SkyControl;
+import jme3utilities.sky.Updater;
 
+import java.awt.*;
+import java.util.Calendar;
 import java.util.ArrayList;
-import java.util.Random;
+import java.util.List;
 
 public class UClient extends SimpleApplication
   implements ActionListener, AnalogListener
@@ -52,7 +57,7 @@ public class UClient extends SimpleApplication
   private static final int SPHERE_RESOURCE_COUNT = 100;
   private static final float SPHERE_RESOURCE_RADIUS = 1.0f;
   private static final float PLAYER_SPHERE_START_RADIUS = 2.0f;
-  private static final float MAP_TILT_RATE = 0.008f;
+  private static final int MAP_TILT_RATE = 5;
   private static final float WATER_HEIGHT_DEFAULT_RATE = 0.005f;
   private static final float WATER_HEIGHT_PLAYER_RATE = 0.001f; // Should be somewhat lower than the DEFAULT_RATE,
                                                                 // but water height should continue increase no matter what
@@ -63,6 +68,10 @@ public class UClient extends SimpleApplication
   private float minVerticalAngle = -85 * FastMath.DEG_TO_RAD;
 
   private Vector3f lightDir = new Vector3f(-4.9f, -2.3f, 5.9f);
+  private AmbientLight ambientLight = null;
+  private DirectionalLight mainLight = null;
+  SkyControl sc = null;
+
   private Vector3f walkDirection = new Vector3f();
   private Vector3f camDir = new Vector3f();
   private Vector3f camLeft = new Vector3f();
@@ -72,10 +81,11 @@ public class UClient extends SimpleApplication
   private Node pivot;
   private CameraNode camNode;
 
+  private GhostControl camControl;
   private BulletAppState bulletAppState;
   private RigidBodyControl landscape;
-  private CharacterControl playerControl;
-  //private BetterCharacterControl playerControl;
+  //private CharacterControl playerControl;
+  private BetterCharacterControl playerControl;
 
 
   private SphereCollisionShape sphereShape;
@@ -98,7 +108,7 @@ public class UClient extends SimpleApplication
   private Quaternion mapTilt = new Quaternion();
   float rotation; // Save rotation levels for each direction
   float tiltRotationBack, tiltRotationForward, tiltRotationLeft, tiltRotationRight;
-  float tiltMapX, tiltMapY = 0;
+  int tiltMapX, tiltMapZ = 0;
 
   /** Server Communcation - Not yet implemented **/
   private Vector3f myLoc = new Vector3f(); // Might replace with 'walkDirection' from above
@@ -130,15 +140,56 @@ public class UClient extends SimpleApplication
     playerNode = new Node("player");
     pivot = new Node("Pivot");
 
-    viewPort.setBackgroundColor(new ColorRGBA(0.7f, 0.8f, 1f, 1f));
+    //viewPort.setBackgroundColor(new ColorRGBA(0.7f, 0.8f, 1f, 1f));
 
     setUpKeys();
-    setUpLight();
-    setUpLandscape();
-    setUpWater();
+    //setUpLight();
+
+
     setUpPlayer();
     setUpCamera();
     createSphereResources();
+
+    mainLight = new DirectionalLight();
+    mainLight.setName("main");
+    mainLight.setColor(ColorRGBA.White);
+    //mainLight.setDirection(lightDir);
+    ambientLight = new AmbientLight();
+    ambientLight.setName("ambient");
+
+    SkyControl sc = new SkyControl(assetManager, cam, 0.9f, true, true);
+    sc.getSunAndStars().setHour(15f);
+    sc.getSunAndStars().setObserverLatitude(37.4046f * FastMath.DEG_TO_RAD);
+    sc.getSunAndStars().setSolarLongitude(Calendar.FEBRUARY, 10);
+    sc.setCloudiness(0.3f);
+    for (Light light : rootNode.getLocalLightList())
+    {
+      if (light.getName().equals("ambient")) sc.getUpdater().setAmbientLight((AmbientLight) light);
+      else if (light.getName().equals("main")) sc.getUpdater().setMainLight((DirectionalLight) light);
+    }
+    rootNode.addLight(mainLight);
+    rootNode.addLight(ambientLight);
+    rootNode.addControl(sc);
+    setUpWater();
+    setUpLandscape();
+
+    /* Bloom is nice, but burns through walls
+    BloomFilter bloom = new BloomFilter(BloomFilter.GlowMode.Objects);
+    bloom.setBlurScale(2.5f);
+    bloom.setExposurePower(1f);
+    Misc.getFpp(viewPort, assetManager).addFilter(bloom);
+    sc.getUpdater().addBloomFilter(bloom);*/
+
+    sc.setEnabled(true);
+
+    Updater updater = sc.getUpdater();
+      DirectionalLightShadowRenderer dlsr =
+        new DirectionalLightShadowRenderer(assetManager,
+          Globals.MAP_WIDTH, 2);
+      dlsr.setEdgeFilteringMode(EdgeFilteringMode.PCF8);
+      dlsr.setLight(mainLight);
+      updater.addShadowRenderer(dlsr);
+      viewPort.addProcessor(dlsr);
 
     Globals.setUpTimer();
     Globals.startTimer();
@@ -197,6 +248,7 @@ public class UClient extends SimpleApplication
     else if (binding.equals("MapTiltRight")) mapTiltRight = isPressed;
     else if (binding.equals("Jump"))
     {
+      System.out.println("jump");
       if (isPressed) playerControl.jump();
     }
   }
@@ -216,65 +268,64 @@ public class UClient extends SimpleApplication
     // Tilt Map, to be controlled by EEG gyroscope
     if (!mapTiltLeft && !mapTiltRight && !mapTiltBack && !mapTiltForward) // EEG not rotating, move back to normal
     {
-      if (tiltMapX < 0 && tiltMapY > 0)
+      if (tiltMapX < 0 && tiltMapZ > 0)
       {
         tiltMapX += MAP_TILT_RATE;
-        tiltMapY -= MAP_TILT_RATE;
+        tiltMapZ -= MAP_TILT_RATE;
       }
-      if (tiltMapX < 0 && tiltMapY < 0)
+      else if (tiltMapX < 0 && tiltMapZ < 0)
       {
         tiltMapX += MAP_TILT_RATE;
-        tiltMapY += MAP_TILT_RATE;
+        tiltMapZ += MAP_TILT_RATE;
       }
-      else if (tiltMapX > 0 && tiltMapY < 0)
+      else if (tiltMapX > 0 && tiltMapZ < 0)
       {
         tiltMapX -= MAP_TILT_RATE;
-        tiltMapY += MAP_TILT_RATE;
+        tiltMapZ += MAP_TILT_RATE;
       }
-      else if (tiltMapX > 0 && tiltMapY > 0)
+      else if (tiltMapX > 0 && tiltMapZ > 0)
       {
         tiltMapX -= MAP_TILT_RATE;
-        tiltMapY -= MAP_TILT_RATE;
+        tiltMapZ -= MAP_TILT_RATE;
       }
       else if (tiltMapX < 0) tiltMapX += MAP_TILT_RATE;
       else if (tiltMapX > 0) tiltMapX -= MAP_TILT_RATE;
-      else if (tiltMapY > 0) tiltMapY -= MAP_TILT_RATE;
-      else if (tiltMapY < 0) tiltMapY += MAP_TILT_RATE;
+      else if (tiltMapZ > 0) tiltMapZ -= MAP_TILT_RATE;
+      else if (tiltMapZ < 0) tiltMapZ += MAP_TILT_RATE;
     }
-
-    if (mapTiltForward&&mapTiltLeft)
+    else if (mapTiltForward&&mapTiltLeft)
     {
-      tiltMapY += MAP_TILT_RATE;
+      tiltMapZ += MAP_TILT_RATE;
       tiltMapX += MAP_TILT_RATE;
     }
     else if (mapTiltForward&&mapTiltRight)
     {
-      tiltMapY += MAP_TILT_RATE;
+      tiltMapZ += MAP_TILT_RATE;
       tiltMapX -= MAP_TILT_RATE;
     }
     else if (mapTiltBack&&mapTiltLeft)
     {
-      tiltMapY -= MAP_TILT_RATE;
+      tiltMapZ -= MAP_TILT_RATE;
       tiltMapX += MAP_TILT_RATE;
     }
     else if (mapTiltBack&&mapTiltRight)
     {
-      tiltMapY -= MAP_TILT_RATE;
+      tiltMapZ -= MAP_TILT_RATE;
       tiltMapX -= MAP_TILT_RATE;
     }
     else if (mapTiltLeft) tiltMapX += MAP_TILT_RATE;
     else if (mapTiltRight) tiltMapX -= MAP_TILT_RATE;
-    else if (mapTiltForward) tiltMapY += MAP_TILT_RATE;
-    else if (mapTiltBack) tiltMapY -= MAP_TILT_RATE;
-    tiltMap();
+    else if (mapTiltForward) tiltMapZ += MAP_TILT_RATE;
+    else if (mapTiltBack) tiltMapZ -= MAP_TILT_RATE;
+    if (tiltMapX != 0 || tiltMapZ != 0) tiltMap();
 
     // Control Movement and Player Rotation
-    camDir.set(cam.getDirection()).multLocal(0.6f); //20f for BetterCharacterControl
-    camDir.setY(0); // Keep from flying into space when camera angle looking skyward
-    camLeft.set(cam.getLeft()).multLocal(0.4f); //20f for BetterCharacterControl
+    camDir.set(cam.getDirection()).multLocal(20f); //20f for BetterCharacterControl
+    if (camDir.getY() > 0) camDir.setY(0); // Keep from flying into space when camera angle looking skyward
+    camLeft.set(cam.getLeft()).multLocal(20f); //20f for BetterCharacterControl
     walkDirection.set(0, 0, 0);
 
-    if (left || right || up || down) rotation += 3;
+    if (left || right || up || down) rotation += 4;
     if (left) moveBall(0, -1.0f, camLeft);
     if (right) moveBall(0, 1.0f, camLeft.negate());
     if (up) moveBall(1.0f, 0, camDir);
@@ -317,15 +368,51 @@ public class UClient extends SimpleApplication
         scalePlayer();
       }
     }
+
+    /*
+    CollisionResults camColl = new CollisionResults();
+    CollisionResults landColl = new CollisionResults();
+    Vector3f camDir = new Vector3f(-(Math.abs(cam.getLocation().getX()) - Math.abs(playerNode.getLocalTranslation().getX())),
+                                   cam.getLocation().getY() - playerNode.getLocalTranslation().getY(),
+                                  -(Math.abs(cam.getLocation().getZ()) - Math.abs(playerNode.getLocalTranslation().getZ())));
+    Ray ray = new Ray(playerNode.getLocalTranslation(), camDir);
+    playerNode.collideWith(ray, camColl);
+    terrain.collideWith(ray, landColl);
+
+    System.out.println("cam: " + cam.getLocation());
+    System.out.println("direction: " + camDir);
+    System.out.println("player: " + playerNode.getLocalTranslation());
+
+    if (landColl.size() > 0)
+    {
+      //float camDist = camColl.getClosestCollision().getDistance();
+      float terDist = landColl.getClosestCollision().getDistance();
+      System.out.println("landDist: " + terDist);
+    }*/
   }
 
   private void tiltMap ()
   {
-    mapTilt = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * tiltMapX, new Vector3f(0, 0, 1.0f));
-    Quaternion q = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * tiltMapY, new Vector3f(1.0f, 0, 0));
+    mapTilt = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * (float) tiltMapX/100, new Vector3f(0, 0, 1.0f));
+    Quaternion q = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * (float) tiltMapZ/100, new Vector3f(1.0f, 0, 0));
     Quaternion m = mapTilt.mult(q);
-    terrain.setLocalRotation(m);
-    landscape.setPhysicsRotation(m);
+    //landscape.setPhysicsRotation(m);
+    //System.out.println("land: " + landscape.getPhysicsRotation());
+    //terrain.setLocalRotation(m);
+    //System.out.println("terrain: " + terrain.getLocalRotation());
+    //camNode.rotate(tiltMapX/100,0,tiltMapZ/100);
+    float tiltX = tiltMapX/100;
+    float tiltZ = tiltMapZ/100;
+    float tiltY = -9.81f+Math.max(Math.abs(tiltMapX/100),Math.abs(tiltMapZ/100));
+    System.out.println((float)tiltMapX/100 + ", " + tiltY + ", " + (float)tiltMapZ/100);
+    if (tiltY > 0) tiltY = 0;
+    //if (tiltX)
+    playerControl.setGravity(new Vector3f(tiltMapX/10,
+      tiltY,
+      tiltMapZ/10));
+    bulletAppState.getPhysicsSpace().setGravity(new Vector3f(tiltMapX/100,
+                                                             tiltY,
+                                                             tiltMapZ/100));
   }
 
   private void moveBall(float x, float z, Vector3f c)
@@ -354,7 +441,11 @@ public class UClient extends SimpleApplication
 
     // For third person cam
     // pivot node allows for mouse tracking of player character
+    //camControl = new GhostControl(new SphereCollisionShape(0.2f));
+    //camControl.setPhysicsLocation(new Vector3f(-340, 84, -418));
+    //RigidBodyControl sC = new RigidBodyControl(new SphereCollisionShape(1.0f), 0.0f);
     mouseInput.setCursorVisible(false);
+
     camNode = new CameraNode("Camera Node", cam);
     camNode.setControlDir(CameraControl.ControlDirection.SpatialToCamera);
     camNode.setLocalTranslation(new Vector3f(0, 4, -18));
@@ -365,6 +456,10 @@ public class UClient extends SimpleApplication
     camNode.setEnabled(true);
     flyCam.setEnabled(false);
     pivot.getLocalRotation().fromAngleAxis(verticalAngle, Vector3f.UNIT_X);
+    //sC.setPhysicsLocation(new Vector3f(-340, 80, -400));
+    //camNode.addControl(camControl);
+    //bulletAppState.getPhysicsSpace().add(sC);
+    //bulletAppState.getPhysicsSpace().add(camControl);
 
     // For first person camera
     //camNode.lookAt(playerNode.getLocalTranslation(), Vector3f.UNIT_Y);
@@ -400,23 +495,28 @@ public class UClient extends SimpleApplication
     playerNode.attachChild(playerG);
     */
 
+    //LayeredMaterial im = LayeredMaterial(assetManager, 60);
+
     sphereShape = new SphereCollisionShape(PLAYER_SPHERE_START_RADIUS);
 
-    // BetterCharacteControl moves, but bounces and falls through ground
-    //playerControl = new BetterCharacterControl(PLAYER_SPHERE_START_RADIUS, PLAYER_SPHERE_START_RADIUS, 1.0f);
-    //playerControl.setJumpForce(new Vector3f(0,0,0));
-    //playerControl.setGravity(new Vector3f(0,-10,0));
+    //BetterCharacteControl moves, but bounces and falls through ground
+    playerControl = new BetterCharacterControl(PLAYER_SPHERE_START_RADIUS, PLAYER_SPHERE_START_RADIUS, 1.0f);
+    playerControl.setJumpForce(new Vector3f(100f,100f,0));
+    //playerControl.setGravity(new Vector3f(0,10,0));
     //playerControl.setApplyPhysicsLocal(true);
     //playerControl.setSpatial(playerG);
-    playerControl = new CharacterControl(sphereShape, 0.05f);
-    playerControl.setJumpSpeed(20);
-    playerControl.setFallSpeed(30);
-    playerControl.setGravity(30);
-    playerControl.setPhysicsLocation(new Vector3f(-340, 80, -400));
+    //playerControl = new CharacterControl(sphereShape, 1.0f); // increase step height to avoid falling through world
+    //playerControl.setJumpSpeed(20);
+    //playerControl.setFallSpeed(30);
+    //playerControl.setGravity(30);
+    //playerControl.setApplyPhysicsLocal(true);
+    //playerControl.setEnabled(true);
+    //playerControl.setSpatial(playerG);
+    //playerControl.setPhysicsLocation(new Vector3f(-340, 80, -400));
     playerNode.setLocalTranslation(new Vector3f(-340, 80, -400));
     playerNode.addControl(playerControl);
-    rootNode.attachChild(playerNode);
     bulletAppState.getPhysicsSpace().add(playerControl);
+    rootNode.attachChild(playerNode);
   }
 
   private void setUpLandscape()
@@ -500,7 +600,7 @@ public class UClient extends SimpleApplication
   private void setUpWater()
   {
     fpp = new FilterPostProcessor(assetManager);
-    water = new WaterFilter(rootNode, lightDir);
+    water = new WaterFilter(rootNode, mainLight.getDirection());
     water.setWaterHeight(waterHeight);
     water.setDeepWaterColor(new ColorRGBA(0.0f, 0.5f, 0.5f, 1.0f));
     fpp.addFilter(water);
@@ -517,7 +617,7 @@ public class UClient extends SimpleApplication
     DirectionalLight dl = new DirectionalLight();
     dl.setColor(ColorRGBA.White);
     //dl.setDirection(new Vector3f(2.8f, -2.8f, -2.8f).normalizeLocal());
-    dl.setDirection(lightDir.normalizeLocal());
+    //dl.setDirection(lightDir.normalizeLocal());
     rootNode.addLight(dl);
   }
 

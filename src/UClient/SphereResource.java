@@ -1,6 +1,7 @@
 package UClient;
 
 import com.jme3.asset.AssetManager;
+import com.jme3.bullet.collision.shapes.SphereCollisionShape;
 import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
@@ -35,7 +36,7 @@ public class SphereResource
 
     sphere = new Sphere(32, 32, radius);
     geom = new Geometry("Sphere_" + id, sphere);
-    geom.setLocalTranslation(new Vector3f(x, 80, z));
+    geom.setLocalTranslation(new Vector3f(x, 250, z));
     geom.setUserData("id", id);
     geom.setUserData("isHit", false);
     Material mat = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
@@ -44,7 +45,11 @@ public class SphereResource
     mat.setColor("Specular", ColorRGBA.White);
     mat.setFloat("Shininess", 64f);
     geom.setMaterial(mat);
-    sphereResource_phy = new RigidBodyControl(2f);
+    sphereResource_phy = new RigidBodyControl(1f);
+    //sphereResource_phy.getCollisionShape().setScale(new Vector3f(radius,radius,radius)); //!!!
+    sphereResource_phy.setSpatial(geom);
+    sphereResource_phy.setApplyPhysicsLocal(true);
+    sphereResource_phy.setEnabled(true);
     geom.addControl(sphereResource_phy);
   }
 
