@@ -15,6 +15,10 @@ import javax.xml.soap.MessageFactory;
 
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
+import eeg.util.Edk;
+import eeg.util.EdkErrorCode;
+import eeg.util.EmoProfileManagement;
+import eeg.util.EmoState;
 
 //import statements
 //Check if window closes automatically. Otherwise add suitable code
@@ -218,6 +222,7 @@ public class MainGui extends JFrame   {
 		Container content = getContentPane();
 	    content.setBackground(Color.white);
 	    content.setLayout(new FlowLayout());
+		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	    
 	    String [] options = {"Neutral","Push","Lift"};
 	    comboBox = new JComboBox(options);
@@ -291,6 +296,7 @@ public class MainGui extends JFrame   {
 			}
 		});
 		add(loadBtt);
+		pack();
 	}
 	
 }
