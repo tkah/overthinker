@@ -16,10 +16,7 @@ import overthinker.client.eeg.EmoProfileManagement;
 import overthinker.client.eeg.EmoState;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
-import eeg.util.Edk;
-import eeg.util.EdkErrorCode;
-import eeg.util.EmoProfileManagement;
-import eeg.util.EmoState;
+
 
 //import statements
 //Check if window closes automatically. Otherwise add suitable code

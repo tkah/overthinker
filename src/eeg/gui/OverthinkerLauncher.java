@@ -2,10 +2,11 @@ package eeg.gui;
 
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
-import eeg.util.Edk;
-import eeg.util.EdkErrorCode;
-import eeg.util.EmoProfileManagement;
-import eeg.util.EmoState;
+import overthinker.client.eeg.Edk;
+import overthinker.client.eeg.EdkErrorCode;
+import overthinker.client.eeg.EmoProfileManagement;
+import overthinker.client.eeg.EmoState;
+
 
 import javax.swing.*;
 import java.awt.*;
