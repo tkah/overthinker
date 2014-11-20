@@ -20,18 +20,16 @@ import com.jme3.network.Network;
 import com.jme3.network.serializing.Serializer;
 import com.jme3.post.FilterPostProcessor;
 import com.jme3.scene.Node;
-import com.jme3.system.JmeContext;
 import com.jme3.terrain.geomipmap.TerrainLodControl;
 import com.jme3.terrain.geomipmap.TerrainQuad;
 import com.jme3.terrain.heightmap.AbstractHeightMap;
-import com.jme3.terrain.heightmap.HillHeightMap;
 import com.jme3.terrain.heightmap.ImageBasedHeightMap;
 import com.jme3.texture.Texture;
 import com.jme3.water.WaterFilter;
-import overthinker.net.message.NewClientRequestMessage;
-import overthinker.net.message.NewClientResponseMessage;
-
-
+import overthinker.Model;
+import overthinker.net.message.ModelChangeRequest;
+import overthinker.net.message.ModelUpdate;
+import overthinker.net.message.NewClientRequest;
 
 import java.io.IOException;
 
@@ -39,9 +37,13 @@ import java.io.IOException;
  * Created by Peter on 11/12/2014.
  */
 public class ClientMain extends SimpleApplication implements ActionListener {
+
+    private Model localModel;
+
     private Client netClient = null;
     private ClientGameData clientGameData;
     private WaterFilter water;
+    private Vector3f lightDir = new Vector3f(-4.9f, -1.3f, 5.9f);
     private FilterPostProcessor fpp;
     private TerrainQuad terrain;
     private Material mat_terrain;
@@ -66,17 +68,17 @@ public class ClientMain extends SimpleApplication implements ActionListener {
 
     private void setUpClient() {
 
-        netClient.send(new NewClientRequestMessage());
-        while(clientGameData == null)
+        netClient.send(new NewClientRequest());
+        while(localModel == null)
         {
-            System.out.println("Waiting For Game Data...");
+            System.out.println("Waiting For Model Data...");
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
-        System.out.println("Received game data");
+
         bulletAppState = new BulletAppState();
         stateManager.attach(bulletAppState);
         //bulletAppState.getPhysicsSpace().enableDebug(assetManager);
@@ -88,8 +90,8 @@ public class ClientMain extends SimpleApplication implements ActionListener {
         setUpLight();
 
         fpp = new FilterPostProcessor(assetManager);
-        water = new WaterFilter(rootNode, clientGameData.getLightDir());
-        water.setWaterHeight(clientGameData.getWaterHeight());
+        water = new WaterFilter(rootNode, lightDir);
+        water.setWaterHeight(localModel.getWaterHeight());
         fpp.addFilter(water);
         viewPort.addProcessor(fpp);
 
@@ -101,7 +103,7 @@ public class ClientMain extends SimpleApplication implements ActionListener {
 
         /** 1.1) Add ALPHA map (for red-blue-green coded splat textures) */
         mat_terrain.setTexture("Alpha", assetManager.loadTexture(
-                "overthinker/assets/terrains/maze1color.png"));
+                "overthinker/levels/maze1/maze1color.png"));
 
         /** 1.2) Add GRASS texture into the red layer (Tex1). */
         Texture grass = assetManager.loadTexture(
@@ -127,7 +129,7 @@ public class ClientMain extends SimpleApplication implements ActionListener {
         /** 2. Create the height map */
         AbstractHeightMap heightmap = null;
         Texture heightMapImage = assetManager.loadTexture(
-                "overthinker/assets/terrains/maze1.jpg");
+                "overthinker/levels/maze1/maze1.jpg");
         heightmap = new ImageBasedHeightMap(heightMapImage.getImage());
 
         /*HillHeightMap heightmap = null;
@@ -195,10 +197,11 @@ public class ClientMain extends SimpleApplication implements ActionListener {
 
         ClientNetListener listener = new ClientNetListener(this);
 
-        Serializer.registerClass(NewClientRequestMessage.class);
-        Serializer.registerClass(NewClientResponseMessage.class);
+        Serializer.registerClass(ModelChangeRequest.class);
+        Serializer.registerClass(ModelUpdate.class);
+        Serializer.registerClass(NewClientRequest.class);
 
-        netClient.addMessageListener(listener, NewClientResponseMessage.class);
+        netClient.addMessageListener(listener, ModelUpdate.class);
 
         netClient.start();
     }
@@ -274,11 +277,14 @@ public class ClientMain extends SimpleApplication implements ActionListener {
         cam.setLocation(player.getPhysicsLocation());
     }
 
-    public void setClientGameData(ClientGameData clientGameData) {
-        this.clientGameData = clientGameData;
-    }
-
     public CharacterControl getPlayer() {
         return player;
+    }
+
+    public Model getLocalModel() {
+        return localModel;
+    }
+    public void setLocalModel(Model model){
+        this.localModel = model;
     }
 }

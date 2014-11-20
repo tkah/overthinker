@@ -1,8 +1,8 @@
 package overthinker.client;
 
-import com.jme3.math.Vector3f;
-import overthinker.net.message.NewClientResponseMessage;
-import overthinker.net.message.PingMessage;
+import overthinker.Globals;
+import overthinker.Model;
+import overthinker.net.message.ModelUpdate;
 import com.jme3.network.Client;
 import com.jme3.network.Message;
 import com.jme3.network.MessageListener;
@@ -19,18 +19,10 @@ public class ClientNetListener implements MessageListener<Client> {
     }
 
     public void messageReceived(Client source, Message message) {
-        if (message instanceof PingMessage) {
-            // do something with the message
-            PingMessage pingMessage = (PingMessage) message;
-            System.out.println("Client #" + source.getId() + " received: '" + pingMessage.getMessage() + "'");
-        } else if( message instanceof NewClientResponseMessage){
-            System.out.println("Received opening response");
-            NewClientResponseMessage responseMessage = (NewClientResponseMessage) message;
-            ClientGameData clientGameData = new ClientGameData();
-            clientGameData.setLightDir(new Vector3f(responseMessage.lightDirX, responseMessage.lightDirY,
-                    responseMessage.lightDirZ));
-            clientGameData.setWaterHeight(responseMessage.waterHeight);
-            clientMain.setClientGameData(clientGameData);
+        if (message instanceof ModelUpdate){
+            if(Globals.DEBUG)System.out.println("Received new model");
+            if(clientMain.getLocalModel() == null)clientMain.setLocalModel(new Model());
+            clientMain.getLocalModel().update((ModelUpdate)message);
         }
     }
 }

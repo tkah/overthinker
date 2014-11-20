@@ -27,7 +27,7 @@ import com.jme3.texture.Texture;
 import com.jme3.texture.Texture.WrapMode;
 import com.jme3.water.WaterFilter;
 
-/** Sample 10 - How to create fast-rendering terrains from heightmaps,
+/** Sample 10 - How to create fast-rendering maze1 from heightmaps,
  and how to use texture splatting to make the terrain look good.  */
 public class MountainMaze extends SimpleApplication
         implements ActionListener {
@@ -81,7 +81,7 @@ public class MountainMaze extends SimpleApplication
 
         /** 1.1) Add ALPHA map (for red-blue-green coded splat textures) */
         mat_terrain.setTexture("Alpha", assetManager.loadTexture(
-                "overthinker/assets/terrains/maze1color.png"));
+                "overthinker/assets/maze1/maze1color.png"));
 
         /** 1.2) Add GRASS texture into the red layer (Tex1). */
         Texture grass = assetManager.loadTexture(
@@ -107,7 +107,7 @@ public class MountainMaze extends SimpleApplication
         /** 2. Create the height map */
         AbstractHeightMap heightmap = null;
         Texture heightMapImage = assetManager.loadTexture(
-                "overthinker/assets/terrains/maze1.jpg");
+                "overthinker/assets/maze1/maze1.jpg");
         heightmap = new ImageBasedHeightMap(heightMapImage.getImage());
 
         /*HillHeightMap heightmap = null;
