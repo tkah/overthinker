@@ -169,7 +169,7 @@ Wraps a single Kernel and forwards new messages
 <B>Constructor Summary</B></FONT></TH>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
-<TD><CODE><B><A HREF="../../../../com/jme3/network/base/KernelAdapter.html#KernelAdapter(com.jme3.network.base.DefaultServer, com.jme3.network.kernel.Kernel, com.jme3.network.MessageListener, boolean)">KernelAdapter</A></B>(<A HREF="../../../../com/jme3/network/base/DefaultServer.html" title="class in com.jme3.network.base">DefaultServer</A>&nbsp;server,
+<TD><CODE><B><A HREF="../../../../com/jme3/network/base/KernelAdapter.html#KernelAdapter(com.jme3.network.base.DefaultServer, com.jme3.network.kernel.Kernel, com.jme3.network.MessageListener, boolean)">KernelAdapter</A></B>(<A HREF="../../../../com/jme3/network/base/DefaultServer.html" title="class in com.jme3.network.base">DefaultServer</A>&nbsp;overthinker.server,
               <A HREF="../../../../com/jme3/network/kernel/Kernel.html" title="interface in com.jme3.network.kernel">Kernel</A>&nbsp;kernel,
               <A HREF="../../../../com/jme3/network/MessageListener.html" title="interface in com.jme3.network">MessageListener</A>&lt;<A HREF="../../../../com/jme3/network/HostedConnection.html" title="interface in com.jme3.network">HostedConnection</A>&gt;&nbsp;messageDispatcher,
               boolean&nbsp;reliable)</CODE>
@@ -237,7 +237,7 @@ Wraps a single Kernel and forwards new messages
          <A HREF="../../../../com/jme3/network/Message.html" title="interface in com.jme3.network">Message</A>&nbsp;m)</CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Note on threading for those writing their own server 
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Note on threading for those writing their own overthinker.server
   or adapter implementations.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
@@ -333,7 +333,7 @@ Wraps a single Kernel and forwards new messages
 <A NAME="KernelAdapter(com.jme3.network.base.DefaultServer, com.jme3.network.kernel.Kernel, com.jme3.network.MessageListener, boolean)"><!-- --></A><H3>
 KernelAdapter</H3>
 <PRE>
-public <B>KernelAdapter</B>(<A HREF="../../../../com/jme3/network/base/DefaultServer.html" title="class in com.jme3.network.base">DefaultServer</A>&nbsp;server,
+public <B>KernelAdapter</B>(<A HREF="../../../../com/jme3/network/base/DefaultServer.html" title="class in com.jme3.network.base">DefaultServer</A>&nbsp;overthinker.server,
                      <A HREF="../../../../com/jme3/network/kernel/Kernel.html" title="interface in com.jme3.network.kernel">Kernel</A>&nbsp;kernel,
                      <A HREF="../../../../com/jme3/network/MessageListener.html" title="interface in com.jme3.network">MessageListener</A>&lt;<A HREF="../../../../com/jme3/network/HostedConnection.html" title="interface in com.jme3.network">HostedConnection</A>&gt;&nbsp;messageDispatcher,
                      boolean&nbsp;reliable)</PRE>
@@ -441,7 +441,7 @@ dispatch</H3>
 protected void <B>dispatch</B>(<A HREF="../../../../com/jme3/network/kernel/Endpoint.html" title="interface in com.jme3.network.kernel">Endpoint</A>&nbsp;p,
                         <A HREF="../../../../com/jme3/network/Message.html" title="interface in com.jme3.network">Message</A>&nbsp;m)</PRE>
 <DL>
-<DD>Note on threading for those writing their own server 
+<DD>Note on threading for those writing their own overthinker.server
   or adapter implementations.  The rule that a single connection be 
   processed by only one thread at a time is more about ensuring that
   the messages are delivered in the order that they are received

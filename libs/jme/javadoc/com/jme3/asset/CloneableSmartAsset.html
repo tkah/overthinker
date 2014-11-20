@@ -109,13 +109,13 @@ Implementing the <code>CloneableSmartAsset</code> interface allows use
  <p>
  Smart asset management requires cooperation from the <A HREF="../../../com/jme3/asset/AssetKey.html" title="class in com.jme3.asset"><CODE>AssetKey</CODE></A>. 
  In particular, the AssetKey should return <A HREF="../../../com/jme3/asset/cache/WeakRefCloneAssetCache.html" title="class in com.jme3.asset.cache"><CODE>WeakRefCloneAssetCache</CODE></A> in its 
- <A HREF="../../../com/jme3/asset/AssetKey.html#getCacheType()"><CODE>AssetKey.getCacheType()</CODE></A> method. Also smart assets MUST
+ <A HREF="../../../com/jme3/asset/AssetKey.html#getCacheType()"><CODE>AssetKey.getCacheType()</CODE></A> method. Also smart overthinker.assets MUST
  create a clone of the asset and cannot return the same reference,
  e.g. <A HREF="../../../com/jme3/asset/AssetProcessor.html#createClone(java.lang.Object)"><CODE>createClone(someAsset)</CODE></A> <code>!= someAsset</code>.
  <p>
  If the <A HREF="../../../com/jme3/asset/AssetManager.html#loadAsset(com.jme3.asset.AssetKey)"><CODE>AssetManager.loadAsset(com.jme3.asset.AssetKey)</CODE></A> method
  is called twice with the same asset key (equals() wise, not necessarily reference wise)
- then both assets will have the same asset key set (reference wise) via
+ then both overthinker.assets will have the same asset key set (reference wise) via
  <A HREF="../../../com/jme3/asset/AssetKey.html#AssetKey()"><CODE>AssetKey.AssetKey()</CODE></A>, then this asset key
  is used to track all instances of that asset. Once all clones of the asset 
  are garbage collected, the shared asset key becomes unreachable and at that 

@@ -107,7 +107,7 @@ Interface Client</H2>
 </PRE>
 
 <P>
-Represents a remote connection to a server that can be used
+Represents a remote connection to a overthinker.server that can be used
   for sending and receiving messages.
 <P>
 
@@ -149,7 +149,7 @@ Represents a remote connection to a server that can be used
 
 <BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Adds a listener that will be notified when any message or object
-  is received from the server.</TD>
+  is received from the overthinker.server.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -167,7 +167,7 @@ Represents a remote connection to a server that can be used
 <TD><CODE><B><A HREF="../../../com/jme3/network/Client.html#close()">close</A></B>()</CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Closes this connection to the server.</TD>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Closes this connection to the overthinker.server.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -175,7 +175,7 @@ Represents a remote connection to a server that can be used
 <TD><CODE><B><A HREF="../../../com/jme3/network/Client.html#getGameName()">getGameName</A></B>()</CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns the 'game name' for servers to which this client should be able
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns the 'game name' for servers to which this overthinker.client should be able
   to connect.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
@@ -184,9 +184,9 @@ Represents a remote connection to a server that can be used
 <TD><CODE><B><A HREF="../../../com/jme3/network/Client.html#getId()">getId</A></B>()</CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns a unique ID for this client within the remote
-  server or -1 if this client isn't fully connected to the
-  server.</TD>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns a unique ID for this overthinker.client within the remote
+  overthinker.server or -1 if this overthinker.client isn't fully connected to the
+  overthinker.server.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -194,7 +194,7 @@ Represents a remote connection to a server that can be used
 <TD><CODE><B><A HREF="../../../com/jme3/network/Client.html#getVersion()">getVersion</A></B>()</CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns the game-specific version of the server this client should
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns the game-specific version of the overthinker.server this overthinker.client should
   be able to connect to.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
@@ -203,7 +203,7 @@ Represents a remote connection to a server that can be used
 <TD><CODE><B><A HREF="../../../com/jme3/network/Client.html#isConnected()">isConnected</A></B>()</CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns true if this client is fully connected to the
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Returns true if this overthinker.client is fully connected to the
   host.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
@@ -256,7 +256,7 @@ Represents a remote connection to a server that can be used
 <TD><CODE><B><A HREF="../../../com/jme3/network/Client.html#send(com.jme3.network.Message)">send</A></B>(<A HREF="../../../com/jme3/network/Message.html" title="interface in com.jme3.network">Message</A>&nbsp;message)</CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Sends a message to the server.</TD>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Sends a message to the overthinker.server.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
 <TD ALIGN="right" VALIGN="top" WIDTH="1%"><FONT SIZE="-1">
@@ -264,7 +264,7 @@ Represents a remote connection to a server that can be used
 <TD><CODE><B><A HREF="../../../com/jme3/network/Client.html#start()">start</A></B>()</CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Starts the client allowing it to begin processing incoming
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Starts the overthinker.client allowing it to begin processing incoming
   messages and delivering them to listeners.</TD>
 </TR>
 </TABLE>
@@ -286,7 +286,7 @@ start</H3>
 <PRE>
 void <B>start</B>()</PRE>
 <DL>
-<DD>Starts the client allowing it to begin processing incoming
+<DD>Starts the overthinker.client allowing it to begin processing incoming
   messages and delivering them to listeners.
 <P>
 <DD><DL>
@@ -303,7 +303,7 @@ isConnected</H3>
 <PRE>
 boolean <B>isConnected</B>()</PRE>
 <DL>
-<DD>Returns true if this client is fully connected to the
+<DD>Returns true if this overthinker.client is fully connected to the
   host.
 <P>
 <DD><DL>
@@ -320,9 +320,9 @@ getId</H3>
 <PRE>
 int <B>getId</B>()</PRE>
 <DL>
-<DD>Returns a unique ID for this client within the remote
-  server or -1 if this client isn't fully connected to the
-  server.
+<DD>Returns a unique ID for this overthinker.client within the remote
+  overthinker.server or -1 if this overthinker.client isn't fully connected to the
+  overthinker.server.
 <P>
 <DD><DL>
 </DL>
@@ -338,9 +338,9 @@ getGameName</H3>
 <PRE>
 java.lang.String <B>getGameName</B>()</PRE>
 <DL>
-<DD>Returns the 'game name' for servers to which this client should be able
-  to connect.  This should match the 'game name' set on the server or this
-  client will be turned away.
+<DD>Returns the 'game name' for servers to which this overthinker.client should be able
+  to connect.  This should match the 'game name' set on the overthinker.server or this
+  overthinker.client will be turned away.
 <P>
 <DD><DL>
 </DL>
@@ -356,7 +356,7 @@ getVersion</H3>
 <PRE>
 int <B>getVersion</B>()</PRE>
 <DL>
-<DD>Returns the game-specific version of the server this client should
+<DD>Returns the game-specific version of the overthinker.server this overthinker.client should
   be able to connect to.
 <P>
 <DD><DL>
@@ -373,7 +373,7 @@ send</H3>
 <PRE>
 void <B>send</B>(<A HREF="../../../com/jme3/network/Message.html" title="interface in com.jme3.network">Message</A>&nbsp;message)</PRE>
 <DL>
-<DD>Sends a message to the server.
+<DD>Sends a message to the overthinker.server.
 <P>
 <DD><DL>
 <DT><B>Specified by:</B><DD><CODE><A HREF="../../../com/jme3/network/MessageConnection.html#send(com.jme3.network.Message)">send</A></CODE> in interface <CODE><A HREF="../../../com/jme3/network/MessageConnection.html" title="interface in com.jme3.network">MessageConnection</A></CODE></DL>
@@ -407,7 +407,7 @@ close</H3>
 <PRE>
 void <B>close</B>()</PRE>
 <DL>
-<DD>Closes this connection to the server.
+<DD>Closes this connection to the overthinker.server.
 <P>
 <DD><DL>
 </DL>
@@ -457,7 +457,7 @@ addMessageListener</H3>
 void <B>addMessageListener</B>(<A HREF="../../../com/jme3/network/MessageListener.html" title="interface in com.jme3.network">MessageListener</A>&lt;? super <A HREF="../../../com/jme3/network/Client.html" title="interface in com.jme3.network">Client</A>&gt;&nbsp;listener)</PRE>
 <DL>
 <DD>Adds a listener that will be notified when any message or object
-  is received from the server.
+  is received from the overthinker.server.
 <P>
 <DD><DL>
 </DL>
@@ -527,7 +527,7 @@ addErrorListener</H3>
 void <B>addErrorListener</B>(<A HREF="../../../com/jme3/network/ErrorListener.html" title="interface in com.jme3.network">ErrorListener</A>&lt;? super <A HREF="../../../com/jme3/network/Client.html" title="interface in com.jme3.network">Client</A>&gt;&nbsp;listener)</PRE>
 <DL>
 <DD>Adds a listener that will be notified when any connection errors
-  occur.  If a client has no error listeners then the default behavior
+  occur.  If a overthinker.client has no error listeners then the default behavior
   is to close the connection and provide an appropriate DisconnectInfo
   to any ClientStateListeners.  If the application adds its own error
   listeners then it must take care of closing the connection itself.

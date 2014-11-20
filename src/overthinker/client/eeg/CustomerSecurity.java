@@ -1,4 +1,4 @@
-package eeg.util;
+package overthinker.client.eeg;
 
 import com.sun.jna.Library;
 import com.sun.jna.Native;

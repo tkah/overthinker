@@ -1,7 +1,6 @@
-package eeg.examples;
+package overthinker.client.eeg.examples;
 import java.awt.Color;
 import java.awt.Container;
-import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -9,10 +8,12 @@ import java.awt.event.ActionListener;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JOptionPane;
-import javax.xml.soap.MessageFactory;
 
+import overthinker.client.eeg.Edk;
+import overthinker.client.eeg.EdkErrorCode;
+import overthinker.client.eeg.EmoProfileManagement;
+import overthinker.client.eeg.EmoState;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 import eeg.util.Edk;

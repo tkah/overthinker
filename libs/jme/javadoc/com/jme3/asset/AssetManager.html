@@ -101,7 +101,7 @@ Interface AssetManager</H2>
 </PRE>
 
 <P>
-<code>AssetManager</code> provides an interface for managing the data assets
+<code>AssetManager</code> provides an interface for managing the data overthinker.assets
  of a jME3 application.
  <p>
  The asset manager provides a means to register <A HREF="../../../com/jme3/asset/AssetLocator.html" title="interface in com.jme3.asset"><CODE>AssetLocator</CODE></A>s,
@@ -111,8 +111,8 @@ Interface AssetManager</H2>
  to add new <A HREF="../../../com/jme3/asset/AssetLocator.html" title="interface in com.jme3.asset"><CODE>AssetLocator</CODE></A>s. 
  Some examples of locators:
  <ul>
- <li><A HREF="../../../com/jme3/asset/plugins/FileLocator.html" title="class in com.jme3.asset.plugins"><CODE>FileLocator</CODE></A> - Used to find assets on the local file system.</li>
- <li><A HREF="../../../com/jme3/asset/plugins/ClasspathLocator.html" title="class in com.jme3.asset.plugins"><CODE>ClasspathLocator</CODE></A> - Used to find assets in the Java classpath</li>
+ <li><A HREF="../../../com/jme3/asset/plugins/FileLocator.html" title="class in com.jme3.asset.plugins"><CODE>FileLocator</CODE></A> - Used to find overthinker.assets on the local file system.</li>
+ <li><A HREF="../../../com/jme3/asset/plugins/ClasspathLocator.html" title="class in com.jme3.asset.plugins"><CODE>ClasspathLocator</CODE></A> - Used to find overthinker.assets in the Java classpath</li>
  </ul>
  <p>
  The asset data is represented by the <A HREF="../../../com/jme3/asset/AssetInfo.html" title="class in com.jme3.asset"><CODE>AssetInfo</CODE></A> class, this
@@ -339,7 +339,7 @@ Interface AssetManager</H2>
                 java.lang.Class&lt;? extends <A HREF="../../../com/jme3/asset/AssetLocator.html" title="interface in com.jme3.asset">AssetLocator</A>&gt;&nbsp;locatorClass)</CODE>
 
 <BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Registers the given locator class for locating assets with this
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Registers the given locator class for locating overthinker.assets with this
  <code>AssetManager</code>.</TD>
 </TR>
 <TR BGCOLOR="white" CLASS="TableRowColor">
@@ -425,7 +425,7 @@ void <B>addClassLoader</B>(java.lang.ClassLoader&nbsp;loader)</PRE>
 <DL>
 <DD>Adds a <CODE>ClassLoader</CODE> that is used to load <CODE>classes</CODE>
  that are needed for finding and loading Assets. 
- This does <strong>not</strong> allow loading assets from that classpath, 
+ This does <strong>not</strong> allow loading overthinker.assets from that classpath,
  use registerLocator for that.
 <P>
 <DD><DL>
@@ -496,7 +496,7 @@ registerLocator</H3>
  method for more information.
 <P>
 <DD><DL>
-<DT><B>Parameters:</B><DD><CODE>rootPath</CODE> - The root path from which to locate assets, this 
+<DT><B>Parameters:</B><DD><CODE>rootPath</CODE> - The root path from which to locate overthinker.assets, this
  depends on the implementation of the asset locator. 
  A URL based locator will expect a url folder such as "http://www.example.com/"
  while a File based locator will expect a file path (OS dependent).<DD><CODE>locatorClassName</CODE> - The full class name of the <A HREF="../../../com/jme3/asset/AssetLocator.html" title="interface in com.jme3.asset"><CODE>AssetLocator</CODE></A>
@@ -540,7 +540,7 @@ registerLocator</H3>
 void <B>registerLocator</B>(java.lang.String&nbsp;rootPath,
                      java.lang.Class&lt;? extends <A HREF="../../../com/jme3/asset/AssetLocator.html" title="interface in com.jme3.asset">AssetLocator</A>&gt;&nbsp;locatorClass)</PRE>
 <DL>
-<DD>Registers the given locator class for locating assets with this
+<DD>Registers the given locator class for locating overthinker.assets with this
  <code>AssetManager</code>. <A HREF="../../../com/jme3/asset/AssetLocator.html" title="interface in com.jme3.asset"><CODE>AssetLocator</CODE></A>s are invoked in the order
  they were registered, to locate the asset by the <A HREF="../../../com/jme3/asset/AssetKey.html" title="class in com.jme3.asset"><CODE>AssetKey</CODE></A>.
  Once an <A HREF="../../../com/jme3/asset/AssetLocator.html" title="interface in com.jme3.asset"><CODE>AssetLocator</CODE></A> returns a non-null AssetInfo, it is sent
@@ -549,7 +549,7 @@ void <B>registerLocator</B>(java.lang.String&nbsp;rootPath,
  <A HREF="../../../com/jme3/asset/AssetManager.html#unregisterLocator(java.lang.String, java.lang.Class)"><CODE>unregisterLocator(java.lang.String, java.lang.Class)</CODE></A>.
 <P>
 <DD><DL>
-<DT><B>Parameters:</B><DD><CODE>rootPath</CODE> - Specifies the root path from which to locate assets
+<DT><B>Parameters:</B><DD><CODE>rootPath</CODE> - Specifies the root path from which to locate overthinker.assets
  for the given <A HREF="../../../com/jme3/asset/AssetLocator.html" title="interface in com.jme3.asset"><CODE>AssetLocator</CODE></A>. The purpose of this parameter
  depends on the type of the <A HREF="../../../com/jme3/asset/AssetLocator.html" title="interface in com.jme3.asset"><CODE>AssetLocator</CODE></A>.<DD><CODE>locatorClass</CODE> - The class type of the <A HREF="../../../com/jme3/asset/AssetLocator.html" title="interface in com.jme3.asset"><CODE>AssetLocator</CODE></A> to register.<DT><B>See Also:</B><DD><A HREF="../../../com/jme3/asset/AssetLocator.html#setRootPath(java.lang.String)"><CODE>AssetLocator.setRootPath(java.lang.String)</CODE></A>, 
 <A HREF="../../../com/jme3/asset/AssetLocator.html#locate(com.jme3.asset.AssetManager, com.jme3.asset.AssetKey)"><CODE>AssetLocator.locate(com.jme3.asset.AssetManager, com.jme3.asset.AssetKey)</CODE></A>, 
@@ -643,7 +643,7 @@ locateAsset</H3>
  The call will attempt to locate the asset by invoking the
  <A HREF="../../../com/jme3/asset/AssetLocator.html" title="interface in com.jme3.asset"><CODE>AssetLocator</CODE></A> that are registered with this <code>AssetManager</code>,
  in the same way that the <A HREF="../../../com/jme3/asset/AssetManager.html#loadAsset(com.jme3.asset.AssetKey)"><CODE>loadAsset(com.jme3.asset.AssetKey)</CODE></A>
- method locates assets.
+ method locates overthinker.assets.
 <P>
 <DD><DL>
 <DT><B>Parameters:</B><DD><CODE>key</CODE> - The <A HREF="../../../com/jme3/asset/AssetKey.html" title="class in com.jme3.asset"><CODE>AssetKey</CODE></A> to locate.

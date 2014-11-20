@@ -1,4 +1,4 @@
-package eeg.util;
+package overthinker.client.eeg;
 
 import com.sun.jna.Library;
 import com.sun.jna.Native;
@@ -162,8 +162,8 @@ public interface Edk extends Library
     	/*!
     		Blocking call
 
-    		\param szHost - A null-terminated string identifying the hostname or IP address of the remote EmoEngine server
-    		\param port - The port number of the remote EmoEngine server
+    		\param szHost - A null-terminated string identifying the hostname or IP address of the remote EmoEngine overthinker.server
+    		\param port - The port number of the remote EmoEngine overthinker.server
     					- If connecting to the Emotiv Control Panel, use port 3008
     					- If connecting to the EmoComposer, use port 1726
     	
