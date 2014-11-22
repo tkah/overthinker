@@ -45,6 +45,8 @@ import com.jme3.util.TangentBinormalGenerator;
 import com.jme3.water.WaterFilter;
 import jme3utilities.sky.SkyControl;
 import jme3utilities.sky.Updater;
+import org.lwjgl.Sys;
+
 import java.util.Calendar;
 import java.util.ArrayList;
 
@@ -74,15 +76,15 @@ public class UClient extends SimpleApplication
   private Vector3f camLeft = new Vector3f();
 
   private Node resources;
-  private Node playerNode;
+  private PlayerNode playerNode;
   private Node pivot;
   private CameraNode camNode;
 
   private GhostControl camControl;
   private BulletAppState bulletAppState;
-  private RigidBodyControl landscape;
+  private LandscapeControl landscape;
   //private CharacterControl playerControl;
-  private BetterCharacterControl playerControl;
+  private PlayerControl playerControl;
 
 
   private SphereCollisionShape sphereShape;
@@ -106,6 +108,7 @@ public class UClient extends SimpleApplication
   float rotation; // Save rotation levels for each direction
   float tiltRotationBack, tiltRotationForward, tiltRotationLeft, tiltRotationRight;
   int tiltMapX, tiltMapZ = 0;
+  float tiltY = -9.81f;
 
   /** Server Communcation - Not yet implemented **/
   private Vector3f myLoc = new Vector3f(); // Might replace with 'walkDirection' from above
@@ -140,7 +143,7 @@ public class UClient extends SimpleApplication
     //bulletAppState.getPhysicsSpace().enableDebug(assetManager);
     resources = new Node("Resources");
     rootNode.attachChild(resources);
-    playerNode = new Node("player");
+    playerNode = new PlayerNode("player");
     pivot = new Node("Pivot");
 
     //viewPort.setBackgroundColor(new ColorRGBA(0.7f, 0.8f, 1f, 1f));
@@ -321,26 +324,117 @@ public class UClient extends SimpleApplication
     else if (mapTiltRight) tiltMapX -= MAP_TILT_RATE;
     else if (mapTiltForward) tiltMapZ += MAP_TILT_RATE;
     else if (mapTiltBack) tiltMapZ -= MAP_TILT_RATE;
-    if (tiltMapX != 0 || tiltMapZ != 0) tiltMap();
+    //if (tiltMapX != 0 || tiltMapZ != 0) tiltMap();
+
+    boolean onGround = playerNode.isOnGround();
+    Vector3f worldCenter = terrain.getWorldTranslation();
+    worldCenter.setY(playerNode.getWorldTranslation().getY());
+    Vector3f centerVect = worldCenter.subtract(playerNode.getWorldTranslation());
+    centerVect.normalize();
+    System.out.println(centerVect);
+
+    if (mapTiltLeft)
+    {
+      CollisionResults leftColl = new CollisionResults();
+      Vector3f leftDir = new Vector3f(1,0,0);
+      Ray rayL = new Ray(playerNode.getLocalTranslation(), leftDir);
+      terrain.collideWith(rayL, leftColl);
+      if (leftColl.size() > 0 && leftColl.getClosestCollision().getDistance() > sphereShape.getRadius() + .1f)
+      {
+        System.out.println("UClient: simpleUpdate - not on left, dist: " + leftColl.getClosestCollision().getDistance());
+        onGround = false;
+      }
+      playerControl.setGravity(new Vector3f(-50, 0, 0));
+    }
+    else if (mapTiltRight)
+    {
+      CollisionResults rightColl = new CollisionResults();
+      Vector3f rightDir = new Vector3f(-1,0,0);
+      Ray rayR = new Ray(playerNode.getLocalTranslation(), rightDir);
+      terrain.collideWith(rayR, rightColl);
+      if (rightColl.size() > 0 && rightColl.getClosestCollision().getDistance() > sphereShape.getRadius() + .1f)
+      {
+        System.out.println("UClient: simpleUpdate - not on right, dist: " + rightColl.getClosestCollision().getDistance());
+        onGround = false;
+      }
+      playerControl.setGravity(new Vector3f(50, 0, 0));
+    }
+    else if (mapTiltForward)
+    {
+      CollisionResults foreColl = new CollisionResults();
+      Vector3f foreDir = new Vector3f(0,0,-1);
+      Ray rayF = new Ray(playerNode.getLocalTranslation(), centerVect);
+      terrain.collideWith(rayF, foreColl);
+      if ((foreColl.size() > 0 && foreColl.getClosestCollision().getDistance() > sphereShape.getRadius() + .1f) || foreColl.size() == 0)
+      {
+        if (foreColl.size() > 0) System.out.println("UClient: simpleUpdate - not on fore, dist: " + foreColl.getClosestCollision().getDistance());
+        onGround = false;
+      }
+      playerControl.setGravity(new Vector3f(0, 0, -50));
+    }
+    else if (mapTiltBack)
+    {
+      System.out.println("back");
+      CollisionResults backColl = new CollisionResults();
+      Vector3f backDir = new Vector3f(0,0,1);
+      Ray rayB = new Ray(playerNode.getLocalTranslation(), backDir);
+      terrain.collideWith(rayB, backColl);
+      if ((backColl.size() > 0 && backColl.getClosestCollision().getDistance() > sphereShape.getRadius() + .1f) || backColl.size() == 0)
+      {
+        if (backColl.size() > 0) System.out.println("UClient: simpleUpdate - not on back, dist: " + backColl.getClosestCollision().getDistance());
+        else System.out.println("not touching ground");
+        onGround = false;
+      }
+      playerControl.setGravity(new Vector3f(0, 0, 50));
+    }
+    else
+    {
+      CollisionResults downColl = new CollisionResults();
+      Vector3f downDir = new Vector3f(0,-1,0);
+      Ray rayD = new Ray(playerNode.getLocalTranslation(), downDir);
+      terrain.collideWith(rayD, downColl);
+      if (downColl.size() > 0 && downColl.getClosestCollision().getDistance() > sphereShape.getRadius() + 3f)
+      {
+        System.out.println("UClient: simpleUpdate - not on down, dist: " + downColl.getClosestCollision().getDistance());
+        onGround = false;
+      }
+      playerControl.setGravity(new Vector3f(0, -50, 0));
+    }
+
+
+    playerNode.setIsOnGround(onGround);
 
     // Control Movement and Player Rotation
     camDir.set(cam.getDirection()).multLocal(20f); //20f for BetterCharacterControl
-    if (camDir.getY() > 0) camDir.setY(0); // Keep from flying into space when camera angle looking skyward
+    //if (camDir.getY() > 0 || camDir.getY() < 0) camDir.setZ(0); // Keep from flying into space when camera angle looking skyward
+    //if (tiltY > -1.0f && (camLeft.getZ() > 0 || camLeft.getZ() < 0)) camLeft.setZ(0);
     camLeft.set(cam.getLeft()).multLocal(20f); //20f for BetterCharacterControl
     walkDirection.set(0, 0, 0);
 
     if (left || right || up || down) rotation += 4;
+
     if (left) moveBall(0, -1.0f, camLeft);
     if (right) moveBall(0, 1.0f, camLeft.negate());
     if (up) moveBall(1.0f, 0, camDir);
-    if (down) moveBall(-1.0f,0, camDir.negate());
-    if (up&&right) moveBall(1.0f, 1.0f, null);
-    if (up&&left) moveBall(1.0f, -1.0f, null);
-    if (down&&right) moveBall(-1.0f, 1.0f, null);
-    if (down&&left) moveBall(-1.0f, -1.0f, null);
+    if (down) moveBall(-1.0f, 0, camDir.negate());
+    if (up && right) moveBall(1.0f, 1.0f, null);
+    if (up && left) moveBall(1.0f, -1.0f, null);
+    if (down && right) moveBall(-1.0f, 1.0f, null);
+    if (down && left) moveBall(-1.0f, -1.0f, null);
 
     addMovementSound((up || down || left || right ));
 
+    if (playerNode.isOnGround())
+    {
+      System.out.println("Moving");
+    }
+    else
+    {
+      //walkDirection.set(0, 0, 0);
+      if (mapTiltBack || mapTiltForward) walkDirection.setZ(0);
+      else if (mapTiltLeft || mapTiltRight) walkDirection.setX(0);
+      else walkDirection.setY(0);
+    }
     playerControl.setWalkDirection(walkDirection);
 
     // Collision Scaling
@@ -375,30 +469,9 @@ public class UClient extends SimpleApplication
         scaleStartTime = Globals.getTotSecs();
         playerNeedsScaling = true;
         scalePlayer();
-
       }
     }
 
-    /*
-    CollisionResults camColl = new CollisionResults();
-    CollisionResults landColl = new CollisionResults();
-    Vector3f camDir = new Vector3f(-(Math.abs(cam.getLocation().getX()) - Math.abs(playerNode.getLocalTranslation().getX())),
-                                   cam.getLocation().getY() - playerNode.getLocalTranslation().getY(),
-                                  -(Math.abs(cam.getLocation().getZ()) - Math.abs(playerNode.getLocalTranslation().getZ())));
-    Ray ray = new Ray(playerNode.getLocalTranslation(), camDir);
-    playerNode.collideWith(ray, camColl);
-    terrain.collideWith(ray, landColl);
-
-    System.out.println("cam: " + cam.getLocation());
-    System.out.println("direction: " + camDir);
-    System.out.println("player: " + playerNode.getLocalTranslation());
-
-    if (landColl.size() > 0)
-    {
-      //float camDist = camColl.getClosestCollision().getDistance();
-      float terDist = landColl.getClosestCollision().getDistance();
-      System.out.println("landDist: " + terDist);
-    }*/
     //move the audio with the camera
     listener.setLocation(cam.getLocation());
     listener.setRotation(cam.getRotation());
@@ -416,21 +489,22 @@ public class UClient extends SimpleApplication
     //camNode.rotate(tiltMapX/100,0,tiltMapZ/100);
     float tiltX = tiltMapX/100;
     float tiltZ = tiltMapZ/100;
-    float tiltY = -9.81f+Math.max(Math.abs(tiltMapX/100),Math.abs(tiltMapZ/100));
+    tiltY = -9.81f+Math.max(Math.abs(tiltMapX/100),Math.abs(tiltMapZ/100));
     System.out.println((float)tiltMapX/100 + ", " + tiltY + ", " + (float)tiltMapZ/100);
     if (tiltY > 0) tiltY = 0;
+    playerControl.setGravity(new Vector3f(-10, 0, 0));
     //if (tiltX)
-    playerControl.setGravity(new Vector3f(tiltMapX / 10,
+    /*playerControl.setGravity(new Vector3f(tiltMapX / 10,
       tiltY,
       tiltMapZ / 10));
-    bulletAppState.getPhysicsSpace().setGravity(new Vector3f(tiltMapX / 100,
+    /*bulletAppState.getPhysicsSpace().setGravity(new Vector3f(tiltMapX / 100,
       tiltY,
-      tiltMapZ / 100));
+      tiltMapZ / 100));*/
   }
 
   private void moveBall(float x, float z, Vector3f c)
   {
-    Quaternion ballRotate = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * rotation, new Vector3f(x, 0,z));
+    Quaternion ballRotate = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * rotation, new Vector3f(x, 0, z));
     playerG.setLocalRotation(ballRotate);
     if (c != null) walkDirection.addLocal(c);
   }
@@ -513,7 +587,7 @@ public class UClient extends SimpleApplication
     sphereShape = new SphereCollisionShape(PLAYER_SPHERE_START_RADIUS);
 
     //BetterCharacteControl moves, but bounces and falls through ground
-    playerControl = new BetterCharacterControl(PLAYER_SPHERE_START_RADIUS, PLAYER_SPHERE_START_RADIUS, 1.0f);
+    playerControl = new PlayerControl(PLAYER_SPHERE_START_RADIUS, PLAYER_SPHERE_START_RADIUS, 5.0f);
     playerControl.setJumpForce(new Vector3f(100f,100f,0));
     //playerControl.setGravity(new Vector3f(0,10,0));
     //playerControl.setApplyPhysicsLocal(true);
@@ -605,7 +679,7 @@ public class UClient extends SimpleApplication
     // compound collision shape and a static RigidBodyControl with mass zero.
     CollisionShape sceneShape =
       CollisionShapeFactory.createMeshShape(terrain);
-    landscape = new RigidBodyControl(sceneShape, 0);
+    landscape = new LandscapeControl(sceneShape, 0, bulletAppState.getPhysicsSpace());
     terrain.addControl(landscape);
     bulletAppState.getPhysicsSpace().add(landscape);
   }
@@ -661,10 +735,10 @@ public class UClient extends SimpleApplication
 
 
     // Tilting map, to be replaced by headset commands
-    inputManager.addMapping("MapTiltBack", new KeyTrigger(KeyInput.KEY_I));
+    inputManager.addMapping("MapTiltForward", new KeyTrigger(KeyInput.KEY_I));
     inputManager.addMapping("MapTiltLeft", new KeyTrigger(KeyInput.KEY_J));
     inputManager.addMapping("MapTiltRight", new KeyTrigger(KeyInput.KEY_L));
-    inputManager.addMapping("MapTiltForward", new KeyTrigger(KeyInput.KEY_K));
+    inputManager.addMapping("MapTiltBack", new KeyTrigger(KeyInput.KEY_K));
     inputManager.addListener(this, "MapTiltBack");
     inputManager.addListener(this, "MapTiltLeft");
     inputManager.addListener(this, "MapTiltRight");
