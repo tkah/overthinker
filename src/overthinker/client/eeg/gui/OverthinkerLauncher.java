@@ -1,4 +1,4 @@
-package eeg.gui;
+package overthinker.client.eeg.gui;
 
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
