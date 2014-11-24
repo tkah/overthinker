@@ -9,16 +9,27 @@ import org.lwjgl.Sys;
  */
 public class PlayerControl extends BetterCharacterControl
 {
+  /**
+   * Class constructor
+   * @param radius - radius of player
+   * @param height - height of player
+   * @param mass   - mass of player
+   */
   public PlayerControl(float radius, float height, float mass)
   {
     super(radius, height, mass);
   }
 
+  /**
+   * Override BetterCharacterControl jump method
+   * Necessary to bypass the parent class's onGround
+   * check. This check is done in the simpleUpdate()
+   * method of UClient using the playerNode's onGround
+   * value.
+   */
   @Override
   public void jump()
   {
-    super.jump();
-    System.out.println(getGravity());
-    //setGravity(getGravity().negate());
+    jump = true;
   }
 }

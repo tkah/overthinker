@@ -24,14 +24,11 @@ import com.jme3.light.Light;
 import com.jme3.math.*;
 import com.jme3.post.FilterPostProcessor;
 import com.jme3.post.filters.BloomFilter;
-import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.CameraNode;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.control.CameraControl;
-import com.jme3.scene.shape.Quad;
 import com.jme3.scene.shape.Sphere;
-import com.jme3.shadow.DirectionalLightShadowFilter;
 import com.jme3.shadow.DirectionalLightShadowRenderer;
 import com.jme3.shadow.EdgeFilteringMode;
 import com.jme3.terrain.geomipmap.TerrainLodControl;
@@ -41,11 +38,9 @@ import com.jme3.terrain.heightmap.ImageBasedHeightMap;
 import com.jme3.texture.Texture;
 import com.jme3.texture.Texture.WrapMode;
 import com.jme3.util.TangentBinormalGenerator;
-import com.jme3.water.SimpleWaterProcessor;
 import com.jme3.water.WaterFilter;
 import jme3utilities.sky.SkyControl;
 import jme3utilities.sky.Updater;
-import org.lwjgl.Sys;
 
 import java.util.Calendar;
 import java.util.ArrayList;
@@ -56,12 +51,14 @@ public class UClient extends SimpleApplication
   private static final int SPHERE_RESOURCE_COUNT = 100;
   private static final float SPHERE_RESOURCE_RADIUS = 1.0f;
   private static final float PLAYER_SPHERE_START_RADIUS = 2.0f;
-  private static final int MAP_TILT_RATE = 5;
+  private static final float GRAVITY = 50;
+  private static final float GROUND_RAY_ALLOWANCE = 0.5f;
   private static final float WATER_HEIGHT_DEFAULT_RATE = 0.005f;
   private static final float WATER_HEIGHT_PLAYER_RATE = 0.001f; // Should be somewhat lower than the DEFAULT_RATE,
                                                                 // but water height should continue increase no matter what
 
   private float waterHeight = 20.0f;
+  private float waterHeightRate = 0.005f;
   private float verticalAngle = 30 * FastMath.DEG_TO_RAD;
   private float maxVerticalAngle = 85 * FastMath.DEG_TO_RAD;
   private float minVerticalAngle = -85 * FastMath.DEG_TO_RAD;
@@ -69,12 +66,8 @@ public class UClient extends SimpleApplication
   private Vector3f lightDir = new Vector3f(-4.9f, -2.3f, 5.9f);
   private AmbientLight ambientLight = null;
   private DirectionalLight mainLight = null;
-  SkyControl sc = null;
 
-  private Vector3f viewDirection = new Vector3f(0,0,1);
   private Vector3f walkDirection = new Vector3f();
-  private Vector3f camDir = new Vector3f();
-  private Vector3f camLeft = new Vector3f();
 
   private Node resources;
   private PlayerNode playerNode;
@@ -84,7 +77,6 @@ public class UClient extends SimpleApplication
   private GhostControl camControl;
   private BulletAppState bulletAppState;
   private LandscapeControl landscape;
-  //private CharacterControl playerControl;
   private PlayerControl playerControl;
 
 
@@ -101,20 +93,15 @@ public class UClient extends SimpleApplication
   private int scaleStartTime;
 
   private boolean left = false, right = false, up = false, down = false, slowWater = false, jump = false;
-  private boolean mapTiltLeft = false, mapTiltRight = false, mapTiltForward = false, mapTiltBack = false;
+  private boolean gravityLeft = false, gravityRight = false, gravityForward = false, gravityBack = false;
   private ArrayList<SphereResource> sphereResourceArrayList = new ArrayList<SphereResource>();
   private ArrayList<SphereResource> sphereResourcesToShrink = new ArrayList<SphereResource>();
 
-  private Quaternion mapTilt = new Quaternion();
-  float rotation; // Save rotation levels for each direction
-  float tiltRotationBack, tiltRotationForward, tiltRotationLeft, tiltRotationRight;
-  int tiltMapX, tiltMapZ = 0;
-  float tiltY = -9.81f;
+  float rotation;
 
   /** Server Communcation - Not yet implemented **/
   private Vector3f myLoc = new Vector3f(); // Might replace with 'walkDirection' from above
   private ArrayList<Vector3f> playerLocs = new ArrayList<Vector3f>();
-  Integer distortionVal;  //Might consider waterHeight as a possible "distortion"
 
   /** Create AudioNodes **/
   private AudioNode audio_ocean;
@@ -146,8 +133,6 @@ public class UClient extends SimpleApplication
     rootNode.attachChild(resources);
     playerNode = new PlayerNode("player");
     pivot = new Node("Pivot");
-
-    //viewPort.setBackgroundColor(new ColorRGBA(0.7f, 0.8f, 1f, 1f));
 
     setUpKeys();
     //setUpLight();
@@ -250,17 +235,16 @@ public class UClient extends SimpleApplication
     else if (binding.equals("Up")) up = isPressed;
     else if (binding.equals("Down")) down = isPressed;
     else if (binding.equals("SlowWater")) slowWater = isPressed;
-    else if (binding.equals("MapTiltBack")) mapTiltBack = isPressed;
-    else if (binding.equals("MapTiltForward")) mapTiltForward = isPressed;
-    else if (binding.equals("MapTiltLeft")) mapTiltLeft = isPressed;
-    else if (binding.equals("MapTiltRight")) mapTiltRight = isPressed;
+    else if (binding.equals("MapTiltBack")) gravityBack = isPressed;
+    else if (binding.equals("MapTiltForward")) gravityForward = isPressed;
+    else if (binding.equals("MapTiltLeft")) gravityLeft = isPressed;
+    else if (binding.equals("MapTiltRight")) gravityRight = isPressed;
     else if (binding.equals("Jump"))
     {
       System.out.println("jump");
       if (isPressed)
       {
-        //jump = isPressed;
-        playerControl.jump();
+        if (playerNode.isOnGround()) playerControl.jump();
       }
     }
   }
@@ -277,115 +261,122 @@ public class UClient extends SimpleApplication
     if (!slowWater) water.setWaterHeight(water.getWaterHeight() + WATER_HEIGHT_DEFAULT_RATE);
     else water.setWaterHeight(water.getWaterHeight() + WATER_HEIGHT_PLAYER_RATE);
 
+    // water.setWaterHeight(water.getWaterHeight() + waterHeightRate);
+
     boolean onGround = playerNode.isOnGround();
-    Vector3f worldCenter = terrain.getWorldTranslation();
-    worldCenter.setY(playerNode.getWorldTranslation().getY());
-    Vector3f centerVect = worldCenter.subtract(playerNode.getWorldTranslation());
-    centerVect.normalize();
+    Vector3f dir;
+    CollisionResults coll;
 
 
-    if (mapTiltForward && mapTiltLeft)
+    if (gravityForward && gravityLeft)
     {
-      playerControl.setGravity(new Vector3f(50, 0, -50));
-    }
-    else if (mapTiltForward && mapTiltRight)
-    {
-      playerControl.setGravity(new Vector3f(-50, 0, -50));
-    }
-    else if (mapTiltBack && mapTiltRight)
-    {
-      playerControl.setGravity(new Vector3f(-50, 0, 50));
-    }
-    else if (mapTiltBack && mapTiltLeft)
-    {
-      playerControl.setGravity(new Vector3f(50, 0, 50));
-    }
-    else if (mapTiltLeft)
-    {
-      CollisionResults leftColl = new CollisionResults();
-      Vector3f leftDir = new Vector3f(1,0,0);
-      Ray rayL = new Ray(playerNode.getLocalTranslation(), centerVect);
-      terrain.collideWith(rayL, leftColl);
-      if (leftColl.size() > 0 && leftColl.getClosestCollision().getDistance() > sphereShape.getRadius() + .1f)
+      coll = new CollisionResults();
+      dir = new Vector3f(1,0,-1);
+      Ray ray = new Ray(playerNode.getLocalTranslation(), dir);
+      terrain.collideWith(ray, coll);
+      if ((coll.size() > 0 && coll.getClosestCollision().getDistance() > sphereShape.getRadius() + GROUND_RAY_ALLOWANCE) || coll.size() == 0)
       {
-        //System.out.println("UClient: simpleUpdate - not on left, dist: " + leftColl.getClosestCollision().getDistance());
         onGround = false;
       }
-      playerControl.setGravity(new Vector3f(50, 0, 0));
+      playerControl.setGravity(new Vector3f(GRAVITY, 0, -GRAVITY));
     }
-    else if (mapTiltRight)
+    else if (gravityForward && gravityRight)
     {
-      CollisionResults rightColl = new CollisionResults();
-      Vector3f rightDir = new Vector3f(-1,0,0);
-      Ray rayR = new Ray(playerNode.getLocalTranslation(), centerVect);
-      terrain.collideWith(rayR, rightColl);
-      if (rightColl.size() > 0 && rightColl.getClosestCollision().getDistance() > sphereShape.getRadius() + .1f)
+      coll = new CollisionResults();
+      dir = new Vector3f(-1,0,-1);
+      Ray ray = new Ray(playerNode.getLocalTranslation(), dir);
+      terrain.collideWith(ray, coll);
+      if ((coll.size() > 0 && coll.getClosestCollision().getDistance() > sphereShape.getRadius() + GROUND_RAY_ALLOWANCE) || coll.size() == 0)
       {
-        //System.out.println("UClient: simpleUpdate - not on right, dist: " + rightColl.getClosestCollision().getDistance());
         onGround = false;
       }
-      playerControl.setGravity(new Vector3f(-50, 0, 0));
+      playerControl.setGravity(new Vector3f(-GRAVITY, 0, -GRAVITY));
     }
-    else if (mapTiltForward)
+    else if (gravityBack && gravityRight)
     {
-      CollisionResults foreColl = new CollisionResults();
-      Vector3f foreDir = new Vector3f(0,0,-1);
-      Ray rayF = new Ray(playerNode.getLocalTranslation(), centerVect);
-      terrain.collideWith(rayF, foreColl);
-      if ((foreColl.size() > 0 && foreColl.getClosestCollision().getDistance() > sphereShape.getRadius() + .1f) || foreColl.size() == 0)
+      coll = new CollisionResults();
+      dir = new Vector3f(-1,0,1);
+      Ray ray = new Ray(playerNode.getLocalTranslation(), dir);
+      terrain.collideWith(ray, coll);
+      if ((coll.size() > 0 && coll.getClosestCollision().getDistance() > sphereShape.getRadius() + GROUND_RAY_ALLOWANCE) || coll.size() == 0)
       {
-        //if (foreColl.size() > 0) System.out.println("UClient: simpleUpdate - not on fore, dist: " + foreColl.getClosestCollision().getDistance());
         onGround = false;
       }
-      playerControl.setGravity(new Vector3f(0, 0, -50));
+      playerControl.setGravity(new Vector3f(-GRAVITY, 0, GRAVITY));
     }
-    else if (mapTiltBack)
+    else if (gravityBack && gravityLeft)
     {
-      System.out.println("back");
-      CollisionResults backColl = new CollisionResults();
-      Vector3f backDir = new Vector3f(0,0,1);
-      Ray rayB = new Ray(playerNode.getLocalTranslation(), centerVect);
-      terrain.collideWith(rayB, backColl);
-      if ((backColl.size() > 0 && backColl.getClosestCollision().getDistance() > sphereShape.getRadius() + .1f) || backColl.size() == 0)
+      coll = new CollisionResults();
+      dir = new Vector3f(1,0,1);
+      Ray ray = new Ray(playerNode.getLocalTranslation(), dir);
+      terrain.collideWith(ray, coll);
+      if ((coll.size() > 0 && coll.getClosestCollision().getDistance() > sphereShape.getRadius() + GROUND_RAY_ALLOWANCE) || coll.size() == 0)
       {
-        //if (backColl.size() > 0) System.out.println("UClient: simpleUpdate - not on back, dist: " + backColl.getClosestCollision().getDistance());
-        //else System.out.println("not touching ground");
         onGround = false;
       }
-      playerControl.setGravity(new Vector3f(0, 0, 50));
+      playerControl.setGravity(new Vector3f(GRAVITY, 0, GRAVITY));
+    }
+    else if (gravityLeft)
+    {
+      coll = new CollisionResults();
+      dir = new Vector3f(1,0,0);
+      Ray rayL = new Ray(playerNode.getLocalTranslation(), dir);
+      terrain.collideWith(rayL, coll);
+      if (coll.size() > 0 && coll.getClosestCollision().getDistance() > sphereShape.getRadius() + GROUND_RAY_ALLOWANCE || coll.size() == 0)
+      {
+        onGround = false;
+      }
+      playerControl.setGravity(new Vector3f(GRAVITY, 0, 0));
+    }
+    else if (gravityRight)
+    {
+      coll = new CollisionResults();
+      dir = new Vector3f(-1,0,0);
+      Ray rayR = new Ray(playerNode.getLocalTranslation(), dir);
+      terrain.collideWith(rayR, coll);
+      if (coll.size() > 0 && coll.getClosestCollision().getDistance() > sphereShape.getRadius() + GROUND_RAY_ALLOWANCE || coll.size() == 0)
+      {
+        onGround = false;
+      }
+      playerControl.setGravity(new Vector3f(-GRAVITY, 0, 0));
+    }
+    else if (gravityForward)
+    {
+      coll = new CollisionResults();
+      dir = new Vector3f(0,0,-1);
+      Ray rayF = new Ray(playerNode.getLocalTranslation(), dir);
+      terrain.collideWith(rayF, coll);
+      if ((coll.size() > 0 && coll.getClosestCollision().getDistance() > sphereShape.getRadius() + GROUND_RAY_ALLOWANCE) || coll.size() == 0)
+      {
+       onGround = false;
+      }
+      playerControl.setGravity(new Vector3f(0, 0, -GRAVITY));
+    }
+    else if (gravityBack)
+    {
+      coll = new CollisionResults();
+      dir = new Vector3f(0,0,1);
+      Ray rayB = new Ray(playerNode.getLocalTranslation(), dir);
+      terrain.collideWith(rayB, coll);
+      if ((coll.size() > 0 && coll.getClosestCollision().getDistance() > sphereShape.getRadius() + GROUND_RAY_ALLOWANCE) || coll.size() == 0)
+      {
+        onGround = false;
+      }
+      playerControl.setGravity(new Vector3f(0, 0, GRAVITY));
     }
     else
     {
-      CollisionResults downColl = new CollisionResults();
-      Vector3f downDir = new Vector3f(0,-1,0);
-      Ray rayD = new Ray(playerNode.getLocalTranslation(), downDir);
-      terrain.collideWith(rayD, downColl);
-      if (downColl.size() > 0 && downColl.getClosestCollision().getDistance() > sphereShape.getRadius() + .1f)
+      coll = new CollisionResults();
+      dir = new Vector3f(0,-1,0);
+      Ray rayD = new Ray(playerNode.getLocalTranslation(), dir);
+      terrain.collideWith(rayD, coll);
+      if (coll.size() > 0 && coll.getClosestCollision().getDistance() > sphereShape.getRadius() + GROUND_RAY_ALLOWANCE || coll.size() == 0)
       {
-        //System.out.println("UClient: simpleUpdate - not on down, dist: " + downColl.getClosestCollision().getDistance());
         onGround = false;
       }
-      if (!jump) playerControl.setGravity(new Vector3f(0, -50, 0));
+      if (!jump) playerControl.setGravity(new Vector3f(0, -GRAVITY, 0));
     }
-
-
     playerNode.setIsOnGround(onGround);
-
-    /*
-    // Control Movement and Player Rotation based on camera location
-    camDir.set(cam.getDirection()).multLocal(20f);
-    camLeft.set(cam.getLeft()).multLocal(20f);
-    walkDirection.set(0, 0, 0);
-
-    if (left) moveBall(0, -1.0f, camLeft);
-    if (right) moveBall(0, 1.0f, camLeft.negate());
-    if (up) moveBall(1.0f, 0, camDir);
-    if (down) moveBall(-1.0f, 0, camDir.negate());
-    if (up && right) moveBall(1.0f, 1.0f, null);
-    if (up && left) moveBall(1.0f, -1.0f, null);
-    if (down && right) moveBall(-1.0f, 1.0f, null);
-    if (down && left) moveBall(-1.0f, -1.0f, null);
-    */
 
     if (left || right || up || down) rotation += 4;
 
@@ -405,7 +396,6 @@ public class UClient extends SimpleApplication
     else if (down) walkDirection.addLocal(modelForwardDir.mult(20f).negate());
     if (left) walkDirection.addLocal(modelLeftDir.mult(20f));
     else if (right) walkDirection.addLocal(modelLeftDir.mult(20f).negate());
-
 
     addMovementSound((up || down || left || right));
 
@@ -451,14 +441,6 @@ public class UClient extends SimpleApplication
     listener.setRotation(cam.getRotation());
   }
 
-  private void tiltMap ()
-  {
-    mapTilt = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * (float) tiltMapX/100, new Vector3f(0, 0, 1.0f));
-    Quaternion q = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * (float) tiltMapZ/100, new Vector3f(1.0f, 0, 0));
-    Quaternion m = mapTilt.mult(q);
-    landscape.setPhysicsRotation(m);
-  }
-
   private void moveBall(float x, float z)//, Vector3f c)
   {
     Quaternion ballRotate = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * rotation, new Vector3f(x, 0, z));
@@ -475,6 +457,56 @@ public class UClient extends SimpleApplication
     sphereShape.setScale(playerNode.getWorldScale());
     duration = curTime - scaleStartTime;
     if (duration >= Globals.SCALE_ANIM_TIME) playerNeedsScaling = false;
+  }
+
+  /** ---Setters/Getters--- **/
+
+  /**
+   * Setter for water height. Water level always increasing.
+   * Value comes from EEG to determine just how fast.
+   * Range: .001 - .005
+   *
+   * @param val - water height value from EEG
+   */
+  public void setWaterHeight (float val)
+  {
+    waterHeightRate = val;
+  }
+
+  /**
+   * Setters for left gravity. Determined by EEG gyroscope.
+   * @param val - left gravity val
+   */
+  public void setGravityLeft (boolean val)
+  {
+    gravityLeft = val;
+  }
+
+  /**
+   * Setters for right gravity. Determined by EEG gyroscope.
+   * @param val - right gravity val
+   */
+  public void setGravityRight (boolean val)
+  {
+    gravityRight = val;
+  }
+
+  /**
+   * Setters for forward gravity. Determined by EEG gyroscope.
+   * @param val - forward gravity val
+   */
+  public void setGravityForward (boolean val)
+  {
+    gravityForward = val;
+  }
+
+  /**
+   * Setters for back gravity. Determined by EEG gyroscope.
+   * @param val - back gravity val
+   */
+  public void setGravityBack (boolean val)
+  {
+    gravityBack = val;
   }
 
   /** ---Initialization methods--- **/
