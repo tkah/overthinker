@@ -1,5 +1,10 @@
 package overthinker.levels.maze1;
 
+import com.jme3.bullet.BulletAppState;
+import com.jme3.math.FastMath;
+import com.jme3.math.Vector3f;
+import com.jme3.scene.CameraNode;
+import com.jme3.scene.Node;
 import overthinker.levels.Level;
 
 import java.util.ArrayList;
@@ -9,63 +14,32 @@ import java.util.ArrayList;
  */
 public class Maze1 extends Level {
 
-    public static final int SPHERE_RESOURCE_COUNT = 100;
-    public static final float SPHERE_RESOURCE_RADIUS = 1.0f;
-    public static final float PLAYER_SPHERE_START_RADIUS = 2.0f;
-    public static final float MAP_TILT_RATE = 0.008f;
-    public static final float WATER_HEIGHT_DEFAULT_RATE = 0.005f;
-    public static final float WATER_HEIGHT_PLAYER_RATE = 0.001f;
-
-    private String heightMapLocation;
-    private String textureMapLocation;
-    private int initialDistortionValue;
-    private float initialWaterHeight;
-
-    private ArrayList<float[]> initialSpawnPoints = new ArrayList<float[]>();
-    private ArrayList<float[]> initialResourceLocations = new ArrayList<float[]>();
-    private ArrayList<float[]> initialObstacleLocations = new ArrayList<float[]>();
-
     public Maze1(){
-        heightMapLocation="overthinker/levels/maze1/maze1.jpg";
-        textureMapLocation="overthinker/levels/maze1/maze1color.png";
-        initialDistortionValue = 0;
-        initialWaterHeight = 20.0f;
-        initialSpawnPoints.add(new float[]{-340, 50, -400});
+        setSphere_resource_count(100);
+        setSphere_resource_radius(1.0f);
+        setPlayer_sphere_start_radius(2.0f);
+        setMap_tilt_rate(0.008f);
+        setWater_height_default_rate(0.005f);
+        setWater_height_player_rate(0.001f);
 
-    }
+        setWaterHeight(20.0f);
+        setVerticalAngle(30 * FastMath.DEG_TO_RAD);
+        setMaxVerticalAngle(85 * FastMath.DEG_TO_RAD);
+        setMinVerticalAngle(-85 * FastMath.DEG_TO_RAD);
+        
+        setLightDir(new Vector3f(-4.9f, -1.3f, 5.9f));
+        setWalkDirection(new Vector3f());
+        setCamDir(new Vector3f());
+        setCamLeft(new Vector3f());
 
-    @Override
-    public String getHeightMapLocation() {
-        return heightMapLocation;
-    }
+        setResources(new Node("Resources"));
+        setPlayerNode(new Node("player"));
+        setPivot(new Node("Pivot"));
 
-    @Override
-    public String getTextureMapLocation() {
-        return textureMapLocation;
-    }
+        setBulletAppState(new BulletAppState());
 
-    @Override
-    public int getInitialDistortionValue() {
-        return initialDistortionValue;
-    }
-
-    @Override
-    public float getInitialWaterHeight() {
-        return initialWaterHeight;
-    }
-
-    @Override
-    public ArrayList<float[]> getInitialSpawnPoints() {
-        return initialSpawnPoints;
-    }
-
-    @Override
-    public ArrayList<float[]> getInitialResourceLocations() {
-        return initialResourceLocations;
-    }
-
-    @Override
-    public ArrayList<float[]> getInitialObstacleLocations() {
-        return initialObstacleLocations;
+        setHeightMapLocation("overthinker/assets/terrains/tieredmaze1.png");
+        setMatTerrainLocation("Common/MatDefs/Terrain/Terrain.j3md");
+        setMatTerrainAlphaTextureLocation("overthinker/assets/terrains/tieredmaze1color.png");
     }
 }
