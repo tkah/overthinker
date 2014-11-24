@@ -1,4 +1,4 @@
-package UClient;
+package overthinker.client;
 
 import com.jme3.asset.AssetManager;
 import com.jme3.bullet.control.RigidBodyControl;

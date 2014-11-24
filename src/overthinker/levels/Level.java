@@ -1,4 +1,4 @@
-package overthinker;
+package overthinker.levels;
 
 import java.util.ArrayList;
 

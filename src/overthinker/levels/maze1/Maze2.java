@@ -8,9 +8,6 @@ import com.jme3.math.FastMath;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.CameraNode;
 import com.jme3.scene.Node;
-import overthinker.Level;
-
-import java.util.ArrayList;
 
 /**
  * Created by Peter on 11/20/2014.

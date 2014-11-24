@@ -2,7 +2,7 @@ package overthinker.server.gui;
 
 
 import com.jme3.network.HostedConnection;
-import overthinker.Model;
+import overthinker.Util;
 import overthinker.levels.maze1.Maze1;
 import overthinker.net.message.ModelChangeRequest;
 import overthinker.net.message.ModelUpdate;
@@ -14,6 +14,7 @@ import com.jme3.system.JmeContext;
 import overthinker.net.message.NewClientRequest;
 import overthinker.server.ServerNetListener;
 
+import java.awt.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -23,9 +24,10 @@ import java.util.HashMap;
  */
 public class ServerMain extends SimpleApplication {
     private Server netServer;
-    private Model activeModel;
+    private Util.Model activeModel;
     private long modelVersion;
     private ArrayList<HostedConnection> clients = new ArrayList<HostedConnection>();
+    private HashMap<HostedConnection, Point> clientLocations = new HashMap<HostedConnection, Point>();
     private HashMap<HostedConnection, Float> versions = new HashMap<HostedConnection, Float>();
 
     public static void main(String[] args) {
@@ -46,7 +48,7 @@ public class ServerMain extends SimpleApplication {
 
     private void initModel() {
         modelVersion = 0L;
-        activeModel = new Model(new Maze1());
+        activeModel = new Util.Model(new Maze1());
     }
 
     public ArrayList<HostedConnection> getClients()
@@ -73,7 +75,7 @@ public class ServerMain extends SimpleApplication {
         return netServer;
     }
 
-    public Model getActiveModel() {
+    public Util.Model getActiveModel() {
         return activeModel;
     }
 

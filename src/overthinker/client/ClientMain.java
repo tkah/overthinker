@@ -1,7 +1,5 @@
 package overthinker.client;
 
-import UClient.Globals;
-import UClient.SphereResource;
 import com.jme3.app.SimpleApplication;
 import com.jme3.audio.AudioNode;
 import com.jme3.bullet.BulletAppState;
@@ -42,7 +40,7 @@ import com.jme3.terrain.heightmap.ImageBasedHeightMap;
 import com.jme3.texture.Texture;
 import com.jme3.util.TangentBinormalGenerator;
 import com.jme3.water.WaterFilter;
-import overthinker.Model;
+import overthinker.Util;
 import overthinker.net.message.ModelChangeRequest;
 import overthinker.net.message.ModelUpdate;
 import overthinker.net.message.NewClientRequest;
@@ -55,8 +53,9 @@ import java.util.ArrayList;
  */
 public class ClientMain extends SimpleApplication implements ActionListener, AnalogListener {
 
-    private Model localModel;
+    private Util.Model localModel;
     private Client netClient = null;
+    private Level level;
 
     private static final int SPHERE_RESOURCE_COUNT = 100;
     private static final float SPHERE_RESOURCE_RADIUS = 1.0f;
@@ -118,10 +117,7 @@ public class ClientMain extends SimpleApplication implements ActionListener, Ana
     private AudioNode audio_jump;
     private AudioNode audio_collect;
 
-//    private ClientGameData clientGameData;
-//    private ClientInputListener inputListener = new ClientInputListener(this);
-//    public boolean left = false, right = false, up = false, down = false;
-
+    private int spawnX, spawnY;
 
     public static void main(String[] args) {
         ClientMain app = new ClientMain();
@@ -788,10 +784,16 @@ public class ClientMain extends SimpleApplication implements ActionListener, Ana
         return playerControl;
     }
 
-    public Model getLocalModel() {
+    public Util.Model getLocalModel() {
         return localModel;
     }
-    public void setLocalModel(Model model){
+
+    public void setLocalModel(Util.Model model){
         this.localModel = model;
+    }
+
+    public void setSpawnPoint(int x, int y){
+        spawnX = x;
+        spawnY = y;
     }
 }
