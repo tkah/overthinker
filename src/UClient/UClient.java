@@ -3,6 +3,7 @@ package UClient; /**
  */
 
 import com.jme3.app.SimpleApplication;
+import com.jme3.asset.TextureKey;
 import com.jme3.audio.AudioNode;
 import com.jme3.bullet.BulletAppState;
 import com.jme3.bullet.collision.shapes.CollisionShape;
@@ -27,10 +28,12 @@ import com.jme3.light.Light;
 import com.jme3.math.*;
 import com.jme3.post.FilterPostProcessor;
 import com.jme3.post.filters.BloomFilter;
+import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.CameraNode;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.control.CameraControl;
+import com.jme3.scene.shape.Quad;
 import com.jme3.scene.shape.Sphere;
 import com.jme3.shadow.DirectionalLightShadowFilter;
 import com.jme3.shadow.DirectionalLightShadowRenderer;
@@ -42,6 +45,7 @@ import com.jme3.terrain.heightmap.ImageBasedHeightMap;
 import com.jme3.texture.Texture;
 import com.jme3.texture.Texture.WrapMode;
 import com.jme3.util.TangentBinormalGenerator;
+import com.jme3.water.SimpleWaterProcessor;
 import com.jme3.water.WaterFilter;
 import jme3utilities.sky.SkyControl;
 import jme3utilities.sky.Updater;
@@ -273,7 +277,7 @@ public class UClient extends SimpleApplication
     else water.setWaterHeight(water.getWaterHeight() + WATER_HEIGHT_PLAYER_RATE);
 
     // Tilt Map, to be controlled by EEG gyroscope
-    if (!mapTiltLeft && !mapTiltRight && !mapTiltBack && !mapTiltForward) // EEG not rotating, move back to normal
+    /*if (!mapTiltLeft && !mapTiltRight && !mapTiltBack && !mapTiltForward) // EEG not rotating, move back to normal
     {
       if (tiltMapX < 0 && tiltMapZ > 0)
       {
@@ -324,40 +328,88 @@ public class UClient extends SimpleApplication
     else if (mapTiltRight) tiltMapX -= MAP_TILT_RATE;
     else if (mapTiltForward) tiltMapZ += MAP_TILT_RATE;
     else if (mapTiltBack) tiltMapZ -= MAP_TILT_RATE;
-    //if (tiltMapX != 0 || tiltMapZ != 0) tiltMap();
+    if (tiltMapX != 0 || tiltMapZ != 0) tiltMap();*/
 
     boolean onGround = playerNode.isOnGround();
     Vector3f worldCenter = terrain.getWorldTranslation();
     worldCenter.setY(playerNode.getWorldTranslation().getY());
     Vector3f centerVect = worldCenter.subtract(playerNode.getWorldTranslation());
     centerVect.normalize();
-    System.out.println(centerVect);
 
-    if (mapTiltLeft)
+    // Diagonal Gravity - Doesn't seem to be necessary
+    /*if (mapTiltLeft && mapTiltBack)
+    {
+      CollisionResults coll = new CollisionResults();
+      Ray colRay = new Ray(playerNode.getLocalTranslation(), centerVect);
+      terrain.collideWith(colRay, coll);
+      if (coll.size() > 0 && coll.getClosestCollision().getDistance() > sphereShape.getRadius() + .1f)
+      {
+        System.out.println("UClient: simpleUpdate - not on left, dist: " + coll.getClosestCollision().getDistance());
+        onGround = false;
+      }
+      playerControl.setGravity(new Vector3f(50, 0, 50));
+    }
+    else if (mapTiltRight && mapTiltBack)
+    {
+      CollisionResults coll = new CollisionResults();
+      Ray colRay = new Ray(playerNode.getLocalTranslation(), centerVect);
+      terrain.collideWith(colRay, coll);
+      if (coll.size() > 0 && coll.getClosestCollision().getDistance() > sphereShape.getRadius() + .1f)
+      {
+        System.out.println("UClient: simpleUpdate - not on left, dist: " + coll.getClosestCollision().getDistance());
+        onGround = false;
+      }
+      playerControl.setGravity(new Vector3f(-50, 0, 50));
+    }
+    else if (mapTiltLeft && mapTiltForward)
+    {
+      CollisionResults coll = new CollisionResults();
+      Ray colRay = new Ray(playerNode.getLocalTranslation(), centerVect);
+      terrain.collideWith(colRay, coll);
+      if (coll.size() > 0 && coll.getClosestCollision().getDistance() > sphereShape.getRadius() + .1f)
+      {
+        System.out.println("UClient: simpleUpdate - not on left, dist: " + coll.getClosestCollision().getDistance());
+        onGround = false;
+      }
+      playerControl.setGravity(new Vector3f(50, 0, -50));
+    }
+    else if (mapTiltRight && mapTiltForward)
+    {
+      CollisionResults coll = new CollisionResults();
+      Ray colRay = new Ray(playerNode.getLocalTranslation(), centerVect);
+      terrain.collideWith(colRay, coll);
+      if (coll.size() > 0 && coll.getClosestCollision().getDistance() > sphereShape.getRadius() + .1f)
+      {
+        System.out.println("UClient: simpleUpdate - not on left, dist: " + coll.getClosestCollision().getDistance());
+        onGround = false;
+      }
+      playerControl.setGravity(new Vector3f(-50, 0, -50));
+    }
+    else*/ if (mapTiltLeft)
     {
       CollisionResults leftColl = new CollisionResults();
       Vector3f leftDir = new Vector3f(1,0,0);
-      Ray rayL = new Ray(playerNode.getLocalTranslation(), leftDir);
+      Ray rayL = new Ray(playerNode.getLocalTranslation(), centerVect);
       terrain.collideWith(rayL, leftColl);
       if (leftColl.size() > 0 && leftColl.getClosestCollision().getDistance() > sphereShape.getRadius() + .1f)
       {
-        System.out.println("UClient: simpleUpdate - not on left, dist: " + leftColl.getClosestCollision().getDistance());
+        //System.out.println("UClient: simpleUpdate - not on left, dist: " + leftColl.getClosestCollision().getDistance());
         onGround = false;
       }
-      playerControl.setGravity(new Vector3f(-50, 0, 0));
+      playerControl.setGravity(new Vector3f(50, 0, 0));
     }
     else if (mapTiltRight)
     {
       CollisionResults rightColl = new CollisionResults();
       Vector3f rightDir = new Vector3f(-1,0,0);
-      Ray rayR = new Ray(playerNode.getLocalTranslation(), rightDir);
+      Ray rayR = new Ray(playerNode.getLocalTranslation(), centerVect);
       terrain.collideWith(rayR, rightColl);
       if (rightColl.size() > 0 && rightColl.getClosestCollision().getDistance() > sphereShape.getRadius() + .1f)
       {
-        System.out.println("UClient: simpleUpdate - not on right, dist: " + rightColl.getClosestCollision().getDistance());
+        //System.out.println("UClient: simpleUpdate - not on right, dist: " + rightColl.getClosestCollision().getDistance());
         onGround = false;
       }
-      playerControl.setGravity(new Vector3f(50, 0, 0));
+      playerControl.setGravity(new Vector3f(-50, 0, 0));
     }
     else if (mapTiltForward)
     {
@@ -367,7 +419,7 @@ public class UClient extends SimpleApplication
       terrain.collideWith(rayF, foreColl);
       if ((foreColl.size() > 0 && foreColl.getClosestCollision().getDistance() > sphereShape.getRadius() + .1f) || foreColl.size() == 0)
       {
-        if (foreColl.size() > 0) System.out.println("UClient: simpleUpdate - not on fore, dist: " + foreColl.getClosestCollision().getDistance());
+        //if (foreColl.size() > 0) System.out.println("UClient: simpleUpdate - not on fore, dist: " + foreColl.getClosestCollision().getDistance());
         onGround = false;
       }
       playerControl.setGravity(new Vector3f(0, 0, -50));
@@ -377,12 +429,12 @@ public class UClient extends SimpleApplication
       System.out.println("back");
       CollisionResults backColl = new CollisionResults();
       Vector3f backDir = new Vector3f(0,0,1);
-      Ray rayB = new Ray(playerNode.getLocalTranslation(), backDir);
+      Ray rayB = new Ray(playerNode.getLocalTranslation(), centerVect);
       terrain.collideWith(rayB, backColl);
       if ((backColl.size() > 0 && backColl.getClosestCollision().getDistance() > sphereShape.getRadius() + .1f) || backColl.size() == 0)
       {
-        if (backColl.size() > 0) System.out.println("UClient: simpleUpdate - not on back, dist: " + backColl.getClosestCollision().getDistance());
-        else System.out.println("not touching ground");
+        //if (backColl.size() > 0) System.out.println("UClient: simpleUpdate - not on back, dist: " + backColl.getClosestCollision().getDistance());
+        //else System.out.println("not touching ground");
         onGround = false;
       }
       playerControl.setGravity(new Vector3f(0, 0, 50));
@@ -393,9 +445,9 @@ public class UClient extends SimpleApplication
       Vector3f downDir = new Vector3f(0,-1,0);
       Ray rayD = new Ray(playerNode.getLocalTranslation(), downDir);
       terrain.collideWith(rayD, downColl);
-      if (downColl.size() > 0 && downColl.getClosestCollision().getDistance() > sphereShape.getRadius() + 3f)
+      if (downColl.size() > 0 && downColl.getClosestCollision().getDistance() > sphereShape.getRadius() + .1f)
       {
-        System.out.println("UClient: simpleUpdate - not on down, dist: " + downColl.getClosestCollision().getDistance());
+        //System.out.println("UClient: simpleUpdate - not on down, dist: " + downColl.getClosestCollision().getDistance());
         onGround = false;
       }
       playerControl.setGravity(new Vector3f(0, -50, 0));
@@ -405,10 +457,8 @@ public class UClient extends SimpleApplication
     playerNode.setIsOnGround(onGround);
 
     // Control Movement and Player Rotation
-    camDir.set(cam.getDirection()).multLocal(20f); //20f for BetterCharacterControl
-    //if (camDir.getY() > 0 || camDir.getY() < 0) camDir.setZ(0); // Keep from flying into space when camera angle looking skyward
-    //if (tiltY > -1.0f && (camLeft.getZ() > 0 || camLeft.getZ() < 0)) camLeft.setZ(0);
-    camLeft.set(cam.getLeft()).multLocal(20f); //20f for BetterCharacterControl
+    camDir.set(cam.getDirection()).multLocal(20f);
+    camLeft.set(cam.getLeft()).multLocal(20f);
     walkDirection.set(0, 0, 0);
 
     if (left || right || up || down) rotation += 4;
@@ -472,6 +522,8 @@ public class UClient extends SimpleApplication
       }
     }
 
+    System.out.println(playerNode.getWorldTranslation());
+
     //move the audio with the camera
     listener.setLocation(cam.getLocation());
     listener.setRotation(cam.getRotation());
@@ -482,24 +534,7 @@ public class UClient extends SimpleApplication
     mapTilt = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * (float) tiltMapX/100, new Vector3f(0, 0, 1.0f));
     Quaternion q = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * (float) tiltMapZ/100, new Vector3f(1.0f, 0, 0));
     Quaternion m = mapTilt.mult(q);
-    //landscape.setPhysicsRotation(m);
-    //System.out.println("land: " + landscape.getPhysicsRotation());
-    //terrain.setLocalRotation(m);
-    //System.out.println("terrain: " + terrain.getLocalRotation());
-    //camNode.rotate(tiltMapX/100,0,tiltMapZ/100);
-    float tiltX = tiltMapX/100;
-    float tiltZ = tiltMapZ/100;
-    tiltY = -9.81f+Math.max(Math.abs(tiltMapX/100),Math.abs(tiltMapZ/100));
-    System.out.println((float)tiltMapX/100 + ", " + tiltY + ", " + (float)tiltMapZ/100);
-    if (tiltY > 0) tiltY = 0;
-    playerControl.setGravity(new Vector3f(-10, 0, 0));
-    //if (tiltX)
-    /*playerControl.setGravity(new Vector3f(tiltMapX / 10,
-      tiltY,
-      tiltMapZ / 10));
-    /*bulletAppState.getPhysicsSpace().setGravity(new Vector3f(tiltMapX / 100,
-      tiltY,
-      tiltMapZ / 100));*/
+    landscape.setPhysicsRotation(m);
   }
 
   private void moveBall(float x, float z, Vector3f c)
@@ -571,7 +606,7 @@ public class UClient extends SimpleApplication
     playerNode.attachChild(playerG);
 
 
-    /* Red Balls
+    /* Red Player Ball
     playerG = new Geometry("Sphere", playerSphere);
     Material mat = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
     mat.setBoolean("UseMaterialColors", true);
@@ -582,24 +617,11 @@ public class UClient extends SimpleApplication
     playerNode.attachChild(playerG);
     */
 
-    //LayeredMaterial im = LayeredMaterial(assetManager, 60);
-
     sphereShape = new SphereCollisionShape(PLAYER_SPHERE_START_RADIUS);
 
     //BetterCharacteControl moves, but bounces and falls through ground
     playerControl = new PlayerControl(PLAYER_SPHERE_START_RADIUS, PLAYER_SPHERE_START_RADIUS, 5.0f);
     playerControl.setJumpForce(new Vector3f(100f,100f,0));
-    //playerControl.setGravity(new Vector3f(0,10,0));
-    //playerControl.setApplyPhysicsLocal(true);
-    //playerControl.setSpatial(playerG);
-    //playerControl = new CharacterControl(sphereShape, 1.0f); // increase step height to avoid falling through world
-    //playerControl.setJumpSpeed(20);
-    //playerControl.setFallSpeed(30);
-    //playerControl.setGravity(30);
-    //playerControl.setApplyPhysicsLocal(true);
-    //playerControl.setEnabled(true);
-    //playerControl.setSpatial(playerG);
-    //playerControl.setPhysicsLocation(new Vector3f(-340, 80, -400));
     playerNode.setLocalTranslation(new Vector3f(-340, 80, -400));
     playerNode.addControl(playerControl);
     bulletAppState.getPhysicsSpace().add(playerControl);
@@ -610,38 +632,64 @@ public class UClient extends SimpleApplication
   {
     /** Create terrain material and load four textures into it. */
     mat_terrain = new Material(assetManager,
-      "Common/MatDefs/Terrain/Terrain.j3md");
+      "Common/MatDefs/Terrain/TerrainLighting.j3md");
+    mat_terrain.setBoolean("useTriPlanarMapping", false);
+    mat_terrain.setFloat("Shininess", 0.0f);
 
     /** Add ALPHA map (for red-blue-green coded splat textures) */
-    mat_terrain.setTexture("Alpha", assetManager.loadTexture(
+    mat_terrain.setTexture("AlphaMap", assetManager.loadTexture(
       "assets/terrains/tieredmaze1color.png"));
+    mat_terrain.setTexture("AlphaMap_1", assetManager.loadTexture(
+      "assets/terrains/tieredmaze1color2.jpg"));
 
-    /** Add GRASS texture into the red layer (Tex1). */
+    /** Add GRASS texture into the red layer*/
     Texture grass = assetManager.loadTexture(
       "Textures/Terrain/splat/grass.jpg");
     grass.setWrap(WrapMode.Repeat);
-    mat_terrain.setTexture("Tex1", grass);
-    mat_terrain.setFloat("Tex1Scale", 64f);
+    mat_terrain.setTexture("DiffuseMap", grass);
+    mat_terrain.setFloat("DiffuseMap_0_scale", 64f);
 
-    /** Add DIRT texture into the green layer (Tex2) */
+    /** Add DIRT texture into the green layer*/
     Texture dirt = assetManager.loadTexture(
       "Textures/Terrain/splat/dirt.jpg");
     dirt.setWrap(WrapMode.Repeat);
-    mat_terrain.setTexture("Tex2", dirt);
-    mat_terrain.setFloat("Tex2Scale", 32f);
+    mat_terrain.setTexture("DiffuseMap_1", dirt);
+    mat_terrain.setFloat("DiffuseMap_1_scale", 32f);
 
-    /** Add ROAD texture into the blue layer (Tex3) */
+    /** Add ROAD texture into the blue layer */
     Texture rock = assetManager.loadTexture(
       "Textures/Terrain/splat/road.jpg");
     rock.setWrap(WrapMode.Repeat);
-    mat_terrain.setTexture("Tex3", rock);
-    mat_terrain.setFloat("Tex3Scale", 128f);
+    mat_terrain.setTexture("DiffuseMap_2", rock);
+    mat_terrain.setFloat("DiffuseMap_2_scale", 128f);
+
+    /** Add Lava Rocks into alpha layer**/
+    Texture lava = assetManager.loadTexture(
+      "assets/textures/lava_texture-sm.jpg");
+    lava.setWrap(WrapMode.Repeat);
+    mat_terrain.setTexture("DiffuseMap_3", lava);
+    mat_terrain.setFloat("DiffuseMap_3_scale", 128f);
 
     /** Create the height map */
-    AbstractHeightMap heightmap = null;
-    Texture heightMapImage = assetManager.loadTexture(
-      "assets/terrains/tieredmaze1.png");
-    heightmap = new ImageBasedHeightMap(heightMapImage.getImage());
+    //AbstractHeightMap heightmap = null;
+    //Texture heightMapImage = assetManager.loadTexture(
+    //  "assets/terrains/tieredmaze1.png");
+    //heightmap = new ImageBasedHeightMap(heightMapImage.getImage());
+    //TextureKey hmKey = new TextureKey("assets/terrains/tieredmaze1.png", false);
+    Texture heightMapImage = assetManager.loadTexture("assets/terrains/tieredmaze1.png");
+
+    AbstractHeightMap heightMap = null;
+
+    try
+    {
+      heightMap = new ImageBasedHeightMap(heightMapImage.getImage());
+      heightMap.load();
+      //heightMap.smooth(0.9f, 1);
+    }
+    catch (Exception e)
+    {
+      e.printStackTrace();
+    }
 
     // Height Map Randomization
         /*HillHeightMap heightmap = null;
@@ -652,7 +700,7 @@ public class UClient extends SimpleApplication
             ex.printStackTrace();
         }*/
 
-    heightmap.load();
+    //heightmap.load();
 
     /** We have prepared material and heightmap.
      * Now we create the actual terrain:
@@ -663,7 +711,7 @@ public class UClient extends SimpleApplication
      * -We supply the prepared heightmap itself.
      */
     int patchSize = 65;
-    terrain = new TerrainQuad("my terrain", patchSize, 513, heightmap.getHeightMap());
+    terrain = new TerrainQuad("my terrain", patchSize, 513, heightMap.getHeightMap());
 
     /** We give the terrain its material, position & scale it, and attach it. */
     terrain.setMaterial(mat_terrain);
