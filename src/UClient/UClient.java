@@ -3,15 +3,11 @@ package UClient; /**
  */
 
 import com.jme3.app.SimpleApplication;
-import com.jme3.asset.TextureKey;
 import com.jme3.audio.AudioNode;
 import com.jme3.bullet.BulletAppState;
 import com.jme3.bullet.collision.shapes.CollisionShape;
 import com.jme3.bullet.collision.shapes.SphereCollisionShape;
-import com.jme3.bullet.control.BetterCharacterControl;
-import com.jme3.bullet.control.CharacterControl;
 import com.jme3.bullet.control.GhostControl;
-import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.bullet.util.CollisionShapeFactory;
 import com.jme3.collision.CollisionResult;
 import com.jme3.collision.CollisionResults;
@@ -287,7 +283,24 @@ public class UClient extends SimpleApplication
     Vector3f centerVect = worldCenter.subtract(playerNode.getWorldTranslation());
     centerVect.normalize();
 
-    if (mapTiltLeft)
+
+    if (mapTiltForward && mapTiltLeft)
+    {
+      playerControl.setGravity(new Vector3f(50, 0, -50));
+    }
+    else if (mapTiltForward && mapTiltRight)
+    {
+      playerControl.setGravity(new Vector3f(-50, 0, -50));
+    }
+    else if (mapTiltBack && mapTiltRight)
+    {
+      playerControl.setGravity(new Vector3f(-50, 0, 50));
+    }
+    else if (mapTiltBack && mapTiltLeft)
+    {
+      playerControl.setGravity(new Vector3f(50, 0, 50));
+    }
+    else if (mapTiltLeft)
     {
       CollisionResults leftColl = new CollisionResults();
       Vector3f leftDir = new Vector3f(1,0,0);
@@ -529,7 +542,7 @@ public class UClient extends SimpleApplication
     sphereShape = new SphereCollisionShape(PLAYER_SPHERE_START_RADIUS);
 
     //BetterCharacteControl moves, but bounces and falls through ground
-    playerControl = new PlayerControl(PLAYER_SPHERE_START_RADIUS, PLAYER_SPHERE_START_RADIUS, 30f);
+    playerControl = new PlayerControl(PLAYER_SPHERE_START_RADIUS, PLAYER_SPHERE_START_RADIUS, 10f);
     playerControl.setJumpForce(new Vector3f(0,300,0));
     playerControl.setGravity(new Vector3f(0,-10,0));
     playerNode.setLocalTranslation(new Vector3f(-340, 80, -400));
