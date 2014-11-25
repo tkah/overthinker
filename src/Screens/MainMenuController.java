@@ -7,6 +7,7 @@ import com.jme3.app.state.AppStateManager;
 import com.jme3.asset.AssetManager;
 import com.jme3.audio.AudioRenderer;
 import com.jme3.bullet.BulletAppState;
+import com.jme3.cursors.plugins.JmeCursor;
 import com.jme3.input.InputManager;
 import com.jme3.niftygui.NiftyJmeDisplay;
 import com.jme3.renderer.Camera;
@@ -46,6 +47,11 @@ public class MainMenuController extends AbstractAppState implements ScreenContro
       this.inputManager = this.app.getInputManager();
       this.guiViewPort = this.app.getGuiViewPort();
       this.audioRenderer = this.app.getAudioRenderer();
+
+      JmeCursor jc = (JmeCursor) assetManager.loadAsset("assets/interface/cursorPointing.cur");
+      inputManager.setCursorVisible(true);
+      inputManager.setMouseCursor(jc);
+
       initNifty();
   }
 
