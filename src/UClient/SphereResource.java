@@ -75,6 +75,7 @@ public class SphereResource
 
   public void setShrink(boolean s)
   {
+    if (s == true) startShrinkTime = Globals.getTotSecs();
     shrink = s;
   }
 
@@ -86,8 +87,25 @@ public class SphereResource
     if(geom.getLocalScale().getY() <= .01) shrink = false;
   }
 
-  public void setSphereToReappear()
+  public void setSphereBack()
   {
+    geom.scale(100f);
+    sphere.updateBound();
+    sphereResource_phy.getCollisionShape().setScale(new Vector3f(100,100,100));
+  }
 
+  public int getStartShrinkTime()
+  {
+    return startShrinkTime;
+  }
+
+  public int getX()
+  {
+    return x;
+  }
+
+  public int getZ()
+  {
+    return z;
   }
 }

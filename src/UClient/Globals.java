@@ -14,7 +14,7 @@ public class Globals
   public static final int MAP_HEIGHT = 512;
   public static final int TIMER_DELAY = 1000;
   public static final int SCALE_ANIM_TIME = 1;
-  public static final float SCALE_BY = 1.001f;
+  public static final float SCALE_BY = 1.005f;
   private static Random rand = new Random();
 
   private static Timer timer;

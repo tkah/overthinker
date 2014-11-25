@@ -24,6 +24,7 @@ import com.jme3.light.Light;
 import com.jme3.math.*;
 import com.jme3.post.FilterPostProcessor;
 import com.jme3.post.filters.BloomFilter;
+import com.jme3.post.filters.FadeFilter;
 import com.jme3.scene.CameraNode;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
@@ -41,6 +42,7 @@ import com.jme3.util.TangentBinormalGenerator;
 import com.jme3.water.WaterFilter;
 import jme3utilities.sky.SkyControl;
 import jme3utilities.sky.Updater;
+import org.lwjgl.Sys;
 
 import java.util.Calendar;
 import java.util.ArrayList;
@@ -48,7 +50,7 @@ import java.util.ArrayList;
 public class UClient extends SimpleApplication
   implements ActionListener, AnalogListener
 {
-  private static final int SPHERE_RESOURCE_COUNT = 100;
+  private static final int SPHERE_RESOURCE_COUNT = 250;
   private static final float SPHERE_RESOURCE_RADIUS = 1.0f;
   private static final float PLAYER_SPHERE_START_RADIUS = 2.0f;
   private static final float GRAVITY = 50;
@@ -56,6 +58,7 @@ public class UClient extends SimpleApplication
   private static final float WATER_HEIGHT_DEFAULT_RATE = 0.005f;
   private static final float WATER_HEIGHT_PLAYER_RATE = 0.001f; // Should be somewhat lower than the DEFAULT_RATE,
                                                                 // but water height should continue increase no matter what
+  private static final float MAX_PLAYER_SIZE = 6f;
 
   private float waterHeight = 20.0f;
   private float waterHeightRate = 0.005f;
@@ -71,6 +74,7 @@ public class UClient extends SimpleApplication
 
   private Node resources;
   private PlayerNode playerNode;
+  private Node lvl5Node;
   private Node pivot;
   private CameraNode camNode;
 
@@ -79,25 +83,27 @@ public class UClient extends SimpleApplication
   private LandscapeControl landscape;
   private PlayerControl playerControl;
 
-
-  private SphereCollisionShape sphereShape;
   private Sphere playerSphere;
   private Geometry playerG;
 
+  private FadeFilter fade;
   private FilterPostProcessor fpp;
   private WaterFilter water;
   private TerrainQuad terrain;
   private Material mat_terrain;
 
-  private boolean playerNeedsScaling;
-  private int scaleStartTime;
+  private boolean playerNeedsScalingUp = false;
+  private int scaleUpStartTime;
 
   private boolean left = false, right = false, up = false, down = false, slowWater = false, jump = false;
   private boolean gravityLeft = false, gravityRight = false, gravityForward = false, gravityBack = false;
+  private boolean speedBoost = false, dead = false;
   private ArrayList<SphereResource> sphereResourceArrayList = new ArrayList<SphereResource>();
   private ArrayList<SphereResource> sphereResourcesToShrink = new ArrayList<SphereResource>();
 
   float rotation;
+  float rotSpeed = 300f;
+  float moveSpeed = 20f;
 
   /** Server Communcation - Not yet implemented **/
   private Vector3f myLoc = new Vector3f(); // Might replace with 'walkDirection' from above
@@ -133,6 +139,7 @@ public class UClient extends SimpleApplication
     rootNode.attachChild(resources);
     playerNode = new PlayerNode("player");
     pivot = new Node("Pivot");
+    lvl5Node = new Node ("SceneNode");
 
     setUpKeys();
     //setUpLight();
@@ -163,7 +170,11 @@ public class UClient extends SimpleApplication
     rootNode.addLight(ambientLight);
     rootNode.addControl(sc);
     setUpWater();
-    setUpLandscape();
+    setUpLandscape(0);
+
+    fade = new FadeFilter(2); // e.g. 2 seconds
+    fpp.addFilter(fade);
+    viewPort.addProcessor(fpp);
 
     /* Bloom is nice, but burns through walls
     BloomFilter bloom = new BloomFilter(BloomFilter.GlowMode.Objects);
@@ -210,6 +221,10 @@ public class UClient extends SimpleApplication
     }
     else if (binding.equals("MouseDown")) checkVertAngle(value);
     else if (binding.equals("MouseUp")) checkVertAngle(-value);
+    else if (binding.equals("ZoomIn")) camNode.setLocalTranslation(new Vector3f(0, camNode.getLocalTranslation().getY() - .22f,
+                                                                                camNode.getLocalTranslation().getZ() + 1));
+    else if (binding.equals("ZoomOut")) camNode.setLocalTranslation(new Vector3f(0, camNode.getLocalTranslation().getY() + .22f,
+                                                                                 camNode.getLocalTranslation().getZ() - 1));
 
     pivot.getLocalRotation().fromAngleAxis(verticalAngle, Vector3f.UNIT_X);
   }
@@ -239,9 +254,9 @@ public class UClient extends SimpleApplication
     else if (binding.equals("MapTiltForward")) gravityForward = isPressed;
     else if (binding.equals("MapTiltLeft")) gravityLeft = isPressed;
     else if (binding.equals("MapTiltRight")) gravityRight = isPressed;
+    else if (binding.equals("SpeedBoost")) speedBoost = isPressed;
     else if (binding.equals("Jump"))
     {
-      System.out.println("jump");
       if (isPressed)
       {
         if (playerNode.isOnGround()) playerControl.jump();
@@ -260,125 +275,27 @@ public class UClient extends SimpleApplication
     // Raise Water Level, to be controlled by EEG
     if (!slowWater) water.setWaterHeight(water.getWaterHeight() + WATER_HEIGHT_DEFAULT_RATE);
     else water.setWaterHeight(water.getWaterHeight() + WATER_HEIGHT_PLAYER_RATE);
-
-    // water.setWaterHeight(water.getWaterHeight() + waterHeightRate);
-
-    boolean onGround = playerNode.isOnGround();
-    Vector3f dir;
-    CollisionResults coll;
+    //water.setWaterHeight(water.getWaterHeight() + waterHeightRate);
 
 
-    if (gravityForward && gravityLeft)
+    if ((playerG.getWorldTranslation().getY() <= water.getWaterHeight()) || speedBoost)
     {
-      coll = new CollisionResults();
-      dir = new Vector3f(1,0,-1);
-      Ray ray = new Ray(playerNode.getLocalTranslation(), dir);
-      terrain.collideWith(ray, coll);
-      if ((coll.size() > 0 && coll.getClosestCollision().getDistance() > sphereShape.getRadius() + GROUND_RAY_ALLOWANCE) || coll.size() == 0)
-      {
-        onGround = false;
-      }
-      playerControl.setGravity(new Vector3f(GRAVITY, 0, -GRAVITY));
+      scalePlayerDown();
     }
-    else if (gravityForward && gravityRight)
-    {
-      coll = new CollisionResults();
-      dir = new Vector3f(-1,0,-1);
-      Ray ray = new Ray(playerNode.getLocalTranslation(), dir);
-      terrain.collideWith(ray, coll);
-      if ((coll.size() > 0 && coll.getClosestCollision().getDistance() > sphereShape.getRadius() + GROUND_RAY_ALLOWANCE) || coll.size() == 0)
-      {
-        onGround = false;
-      }
-      playerControl.setGravity(new Vector3f(-GRAVITY, 0, -GRAVITY));
-    }
-    else if (gravityBack && gravityRight)
-    {
-      coll = new CollisionResults();
-      dir = new Vector3f(-1,0,1);
-      Ray ray = new Ray(playerNode.getLocalTranslation(), dir);
-      terrain.collideWith(ray, coll);
-      if ((coll.size() > 0 && coll.getClosestCollision().getDistance() > sphereShape.getRadius() + GROUND_RAY_ALLOWANCE) || coll.size() == 0)
-      {
-        onGround = false;
-      }
-      playerControl.setGravity(new Vector3f(-GRAVITY, 0, GRAVITY));
-    }
-    else if (gravityBack && gravityLeft)
-    {
-      coll = new CollisionResults();
-      dir = new Vector3f(1,0,1);
-      Ray ray = new Ray(playerNode.getLocalTranslation(), dir);
-      terrain.collideWith(ray, coll);
-      if ((coll.size() > 0 && coll.getClosestCollision().getDistance() > sphereShape.getRadius() + GROUND_RAY_ALLOWANCE) || coll.size() == 0)
-      {
-        onGround = false;
-      }
-      playerControl.setGravity(new Vector3f(GRAVITY, 0, GRAVITY));
-    }
-    else if (gravityLeft)
-    {
-      coll = new CollisionResults();
-      dir = new Vector3f(1,0,0);
-      Ray rayL = new Ray(playerNode.getLocalTranslation(), dir);
-      terrain.collideWith(rayL, coll);
-      if (coll.size() > 0 && coll.getClosestCollision().getDistance() > sphereShape.getRadius() + GROUND_RAY_ALLOWANCE || coll.size() == 0)
-      {
-        onGround = false;
-      }
-      playerControl.setGravity(new Vector3f(GRAVITY, 0, 0));
-    }
-    else if (gravityRight)
-    {
-      coll = new CollisionResults();
-      dir = new Vector3f(-1,0,0);
-      Ray rayR = new Ray(playerNode.getLocalTranslation(), dir);
-      terrain.collideWith(rayR, coll);
-      if (coll.size() > 0 && coll.getClosestCollision().getDistance() > sphereShape.getRadius() + GROUND_RAY_ALLOWANCE || coll.size() == 0)
-      {
-        onGround = false;
-      }
-      playerControl.setGravity(new Vector3f(-GRAVITY, 0, 0));
-    }
-    else if (gravityForward)
-    {
-      coll = new CollisionResults();
-      dir = new Vector3f(0,0,-1);
-      Ray rayF = new Ray(playerNode.getLocalTranslation(), dir);
-      terrain.collideWith(rayF, coll);
-      if ((coll.size() > 0 && coll.getClosestCollision().getDistance() > sphereShape.getRadius() + GROUND_RAY_ALLOWANCE) || coll.size() == 0)
-      {
-       onGround = false;
-      }
-      playerControl.setGravity(new Vector3f(0, 0, -GRAVITY));
-    }
-    else if (gravityBack)
-    {
-      coll = new CollisionResults();
-      dir = new Vector3f(0,0,1);
-      Ray rayB = new Ray(playerNode.getLocalTranslation(), dir);
-      terrain.collideWith(rayB, coll);
-      if ((coll.size() > 0 && coll.getClosestCollision().getDistance() > sphereShape.getRadius() + GROUND_RAY_ALLOWANCE) || coll.size() == 0)
-      {
-        onGround = false;
-      }
-      playerControl.setGravity(new Vector3f(0, 0, GRAVITY));
-    }
-    else
-    {
-      coll = new CollisionResults();
-      dir = new Vector3f(0,-1,0);
-      Ray rayD = new Ray(playerNode.getLocalTranslation(), dir);
-      terrain.collideWith(rayD, coll);
-      if (coll.size() > 0 && coll.getClosestCollision().getDistance() > sphereShape.getRadius() + GROUND_RAY_ALLOWANCE || coll.size() == 0)
-      {
-        onGround = false;
-      }
-      if (!jump) playerControl.setGravity(new Vector3f(0, -GRAVITY, 0));
-    }
-    playerNode.setIsOnGround(onGround);
 
-    if (left || right || up || down) rotation += 4;
+    // Player died
+    if (playerControl.getHeight() < .2f && !dead)
+    {
+      fade.fadeOut();
+      dead = true;
+      bulletAppState.getPhysicsSpace().remove(landscape);
+      lvl5Node.removeFromParent();
+      //setUpLandscape(1);
+    }
+
+    checkGravity();
+
+    if (left || right || up || down) rotation += tpf*rotSpeed;
 
     if (left) moveBall(0, -1.0f);
     if (right) moveBall(0, 1.0f);
@@ -392,25 +309,36 @@ public class UClient extends SimpleApplication
     Vector3f modelForwardDir = playerNode.getWorldRotation().mult(Vector3f.UNIT_Z);
     Vector3f modelLeftDir = playerNode.getWorldRotation().mult(Vector3f.UNIT_X);
     walkDirection.set(0,0,0);
-    if (up) walkDirection.addLocal(modelForwardDir.mult(20f));
-    else if (down) walkDirection.addLocal(modelForwardDir.mult(20f).negate());
-    if (left) walkDirection.addLocal(modelLeftDir.mult(20f));
-    else if (right) walkDirection.addLocal(modelLeftDir.mult(20f).negate());
+    if (up) walkDirection.addLocal(modelForwardDir.mult(moveSpeed));
+    else if (down) walkDirection.addLocal(modelForwardDir.mult(moveSpeed).negate());
+    if (left) walkDirection.addLocal(modelLeftDir.mult(moveSpeed));
+    else if (right) walkDirection.addLocal(modelLeftDir.mult(moveSpeed).negate());
 
     addMovementSound((up || down || left || right));
 
     playerControl.setWalkDirection(walkDirection);
 
     // Collision Scaling
-    if (playerNeedsScaling) scalePlayer();
-    boolean clear = true;
+    if (playerNeedsScalingUp && playerControl.getHeight() < MAX_PLAYER_SIZE) scalePlayerUp();
+    ArrayList<SphereResource> toRemove = new ArrayList<SphereResource>();
     for (SphereResource s : sphereResourcesToShrink)
     {
-      clear = false;
       if (s.getShrink()) s.setSphereToDisappear();
-      else s.getGeometry().removeFromParent();
+      else if (!s.getShrink() && Globals.getTotSecs() - s.getStartShrinkTime() > 30)
+      {
+        s.getGeometry().setLocalTranslation(new Vector3f(s.getX(), 200, s.getZ()));
+        s.setSphereBack();
+        resources.attachChild(s.getGeometry());
+        toRemove.add(s);
+      }
+      else
+      {
+        s.setShrink(false);
+        s.getGeometry().setUserData("isHit", false);
+        s.getGeometry().removeFromParent();
+      }
     }
-    if (clear) sphereResourcesToShrink.clear();
+    for (SphereResource s : toRemove) sphereResourcesToShrink.remove(s);
 
     CollisionResults results = new CollisionResults();
     resources.collideWith(playerG.getWorldBound(), results);
@@ -430,9 +358,9 @@ public class UClient extends SimpleApplication
         SphereResource s = sphereResourceArrayList.get(sResId);
         s.setShrink(true);
         sphereResourcesToShrink.add(s);
-        scaleStartTime = Globals.getTotSecs();
-        playerNeedsScaling = true;
-        scalePlayer();
+        scaleUpStartTime = Globals.getTotSecs();
+        playerNeedsScalingUp = true;
+        if (playerControl.getHeight() < MAX_PLAYER_SIZE) scalePlayerUp();
       }
     }
 
@@ -448,15 +376,147 @@ public class UClient extends SimpleApplication
     //if (c != null) walkDirection.addLocal(c);
   }
 
-  private void scalePlayer()
+  private void scalePlayerDown()
+  {
+    //int curTime = Globals.getTotSecs();
+    //int duration;
+
+    rotSpeed += 2f;
+    moveSpeed += .01f;
+    playerNode.scale(.99f);
+    playerControl.setScale(.99f);
+    //duration = curTime - scaleDownStartTime;
+    //if (duration >= Globals.SCALE_ANIM_TIME) playerNeedsScalingDown = false;
+  }
+
+  private void scalePlayerUp()
   {
     int curTime = Globals.getTotSecs();
     int duration;
 
+    rotSpeed -= 1f;
+    moveSpeed -= .01f;
     playerNode.scale(Globals.SCALE_BY);
-    sphereShape.setScale(playerNode.getWorldScale());
-    duration = curTime - scaleStartTime;
-    if (duration >= Globals.SCALE_ANIM_TIME) playerNeedsScaling = false;
+    playerControl.setScale(Globals.SCALE_BY);
+    duration = curTime - scaleUpStartTime;
+    if (duration >= Globals.SCALE_ANIM_TIME) playerNeedsScalingUp = false;
+  }
+
+  private void checkGravity()
+  {
+    boolean onGround = playerNode.isOnGround();
+    Vector3f dir;
+    CollisionResults coll;
+
+    if (gravityForward && gravityLeft)
+    {
+      coll = new CollisionResults();
+      dir = new Vector3f(1,0,-1);
+      Ray ray = new Ray(playerNode.getLocalTranslation(), dir);
+      terrain.collideWith(ray, coll);
+      if ((coll.size() > 0 && coll.getClosestCollision().getDistance() > playerControl.getHeight() + GROUND_RAY_ALLOWANCE) || coll.size() == 0)
+      {
+        onGround = false;
+      }
+      playerControl.setGravity(new Vector3f(GRAVITY, 0, -GRAVITY));
+    }
+    else if (gravityForward && gravityRight)
+    {
+      coll = new CollisionResults();
+      dir = new Vector3f(-1,0,-1);
+      Ray ray = new Ray(playerNode.getLocalTranslation(), dir);
+      terrain.collideWith(ray, coll);
+      if ((coll.size() > 0 && coll.getClosestCollision().getDistance() > playerControl.getHeight() + GROUND_RAY_ALLOWANCE) || coll.size() == 0)
+      {
+        onGround = false;
+      }
+      playerControl.setGravity(new Vector3f(-GRAVITY, 0, -GRAVITY));
+    }
+    else if (gravityBack && gravityRight)
+    {
+      coll = new CollisionResults();
+      dir = new Vector3f(-1,0,1);
+      Ray ray = new Ray(playerNode.getLocalTranslation(), dir);
+      terrain.collideWith(ray, coll);
+      if ((coll.size() > 0 && coll.getClosestCollision().getDistance() > playerControl.getHeight() + GROUND_RAY_ALLOWANCE) || coll.size() == 0)
+      {
+        onGround = false;
+      }
+      playerControl.setGravity(new Vector3f(-GRAVITY, 0, GRAVITY));
+    }
+    else if (gravityBack && gravityLeft)
+    {
+      coll = new CollisionResults();
+      dir = new Vector3f(1,0,1);
+      Ray ray = new Ray(playerNode.getLocalTranslation(), dir);
+      terrain.collideWith(ray, coll);
+      if ((coll.size() > 0 && coll.getClosestCollision().getDistance() > playerControl.getHeight() + GROUND_RAY_ALLOWANCE) || coll.size() == 0)
+      {
+        onGround = false;
+      }
+      playerControl.setGravity(new Vector3f(GRAVITY, 0, GRAVITY));
+    }
+    else if (gravityLeft)
+    {
+      coll = new CollisionResults();
+      dir = new Vector3f(1,0,0);
+      Ray rayL = new Ray(playerNode.getLocalTranslation(), dir);
+      terrain.collideWith(rayL, coll);
+      if (coll.size() > 0 && coll.getClosestCollision().getDistance() > playerControl.getHeight() + GROUND_RAY_ALLOWANCE || coll.size() == 0)
+      {
+        onGround = false;
+      }
+      playerControl.setGravity(new Vector3f(GRAVITY, 0, 0));
+    }
+    else if (gravityRight)
+    {
+      coll = new CollisionResults();
+      dir = new Vector3f(-1,0,0);
+      Ray rayR = new Ray(playerNode.getLocalTranslation(), dir);
+      terrain.collideWith(rayR, coll);
+      if (coll.size() > 0 && coll.getClosestCollision().getDistance() > playerControl.getHeight() + GROUND_RAY_ALLOWANCE || coll.size() == 0)
+      {
+        onGround = false;
+      }
+      playerControl.setGravity(new Vector3f(-GRAVITY, 0, 0));
+    }
+    else if (gravityForward)
+    {
+      coll = new CollisionResults();
+      dir = new Vector3f(0,0,-1);
+      Ray rayF = new Ray(playerNode.getLocalTranslation(), dir);
+      terrain.collideWith(rayF, coll);
+      if ((coll.size() > 0 && coll.getClosestCollision().getDistance() > playerControl.getHeight() + GROUND_RAY_ALLOWANCE) || coll.size() == 0)
+      {
+        onGround = false;
+      }
+      playerControl.setGravity(new Vector3f(0, 0, -GRAVITY));
+    }
+    else if (gravityBack)
+    {
+      coll = new CollisionResults();
+      dir = new Vector3f(0,0,1);
+      Ray rayB = new Ray(playerNode.getLocalTranslation(), dir);
+      terrain.collideWith(rayB, coll);
+      if ((coll.size() > 0 && coll.getClosestCollision().getDistance() > playerControl.getHeight() + GROUND_RAY_ALLOWANCE) || coll.size() == 0)
+      {
+        onGround = false;
+      }
+      playerControl.setGravity(new Vector3f(0, 0, GRAVITY));
+    }
+    else
+    {
+      coll = new CollisionResults();
+      dir = new Vector3f(0,-1,0);
+      Ray rayD = new Ray(playerNode.getLocalTranslation(), dir);
+      terrain.collideWith(rayD, coll);
+      if (coll.size() > 0 && coll.getClosestCollision().getDistance() > playerControl.getHeight() + GROUND_RAY_ALLOWANCE || coll.size() == 0)
+      {
+        onGround = false;
+      }
+      if (!jump) playerControl.setGravity(new Vector3f(0, -GRAVITY, 0));
+    }
+    playerNode.setIsOnGround(onGround);
   }
 
   /** ---Setters/Getters--- **/
@@ -571,8 +631,6 @@ public class UClient extends SimpleApplication
     playerNode.attachChild(playerG);
     */
 
-    sphereShape = new SphereCollisionShape(PLAYER_SPHERE_START_RADIUS);
-
     //BetterCharacteControl moves, but bounces and falls through ground
     playerControl = new PlayerControl(PLAYER_SPHERE_START_RADIUS, PLAYER_SPHERE_START_RADIUS, 10f);
     playerControl.setJumpForce(new Vector3f(0,300,0));
@@ -580,10 +638,11 @@ public class UClient extends SimpleApplication
     playerNode.setLocalTranslation(new Vector3f(-340, 80, -400));
     playerNode.addControl(playerControl);
     bulletAppState.getPhysicsSpace().add(playerControl);
+    bulletAppState.getPhysicsSpace().addAll(playerNode);
     rootNode.attachChild(playerNode);
   }
 
-  private void setUpLandscape()
+  private void setUpLandscape(int mapNum)
   {
     /** Create terrain material and load four textures into it. */
     mat_terrain = new Material(assetManager,
@@ -626,7 +685,10 @@ public class UClient extends SimpleApplication
     mat_terrain.setFloat("DiffuseMap_3_scale", 128f);
 
     /** Create the height map */
-    Texture heightMapImage = assetManager.loadTexture("assets/terrains/tieredmaze1.png");
+    Texture heightMapImage;
+
+    if (mapNum == 0) heightMapImage = assetManager.loadTexture("assets/terrains/tieredmaze1.png");
+    else heightMapImage = assetManager.loadTexture("assets/terrains/tieredmaze1_nowalls.png");
 
     AbstractHeightMap heightMap = null;
 
@@ -665,7 +727,8 @@ public class UClient extends SimpleApplication
     terrain.setMaterial(mat_terrain);
     terrain.setLocalTranslation(0, 0, 0);
     terrain.setLocalScale(2f, 1f, 2f);
-    rootNode.attachChild(terrain);
+    lvl5Node.attachChild(terrain);
+    rootNode.attachChild(lvl5Node);
 
     /** The LOD (level of detail) depends on were the camera is: */
     TerrainLodControl control = new TerrainLodControl(terrain, getCamera());
@@ -711,10 +774,14 @@ public class UClient extends SimpleApplication
     inputManager.addMapping("TurnRight", new MouseAxisTrigger(MouseInput.AXIS_X, false));
     inputManager.addMapping("MouseDown", new MouseAxisTrigger(MouseInput.AXIS_Y, true));
     inputManager.addMapping("MouseUp", new MouseAxisTrigger(MouseInput.AXIS_Y, false));
+    inputManager.addMapping("ZoomIn", new MouseAxisTrigger(MouseInput.AXIS_WHEEL, false));
+    inputManager.addMapping("ZoomOut", new MouseAxisTrigger(MouseInput.AXIS_WHEEL, true));
     inputManager.addListener(this, "TurnLeft");
     inputManager.addListener(this, "TurnRight");
     inputManager.addListener(this, "MouseDown");
     inputManager.addListener(this, "MouseUp");
+    inputManager.addListener(this, "ZoomIn");
+    inputManager.addListener(this, "ZoomOut");
 
     // Basic character movement
     inputManager.addMapping("Left", new KeyTrigger(KeyInput.KEY_A));
@@ -722,13 +789,14 @@ public class UClient extends SimpleApplication
     inputManager.addMapping("Up", new KeyTrigger(KeyInput.KEY_W));
     inputManager.addMapping("Down", new KeyTrigger(KeyInput.KEY_S));
     inputManager.addMapping("Jump", new KeyTrigger(KeyInput.KEY_SPACE));
+    inputManager.addMapping("SpeedBoost", new KeyTrigger(KeyInput.KEY_E));
     inputManager.addListener(this, "Left");
     inputManager.addListener(this, "Right");
     inputManager.addListener(this, "Up");
     inputManager.addListener(this, "Down");
     inputManager.addListener(this, "Jump");
+    inputManager.addListener(this, "SpeedBoost");
     inputManager.addListener(jumpActionListener,"Jump");
-
 
     // Tilting map, to be replaced by headset commands
     inputManager.addMapping("MapTiltForward", new KeyTrigger(KeyInput.KEY_I));

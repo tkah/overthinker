@@ -20,6 +20,18 @@ public class PlayerControl extends BetterCharacterControl
     super(radius, height, mass);
   }
 
+  public void setScale (float size)
+  {
+    height *= size;
+    radius *= size;
+    rigidBody.setCollisionShape(getShape());
+  }
+
+  public float getHeight()
+  {
+    return height;
+  }
+
   /**
    * Override BetterCharacterControl jump method
    * Necessary to bypass the parent class's onGround
