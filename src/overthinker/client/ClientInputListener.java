@@ -15,13 +15,13 @@ public class ClientInputListener implements ActionListener {
     @Override
     public void onAction(String binding, boolean isPressed, float tpf) {
         if (binding.equals("Left")) {
-            client.left = isPressed;
+            client.getLevel().setLeft(isPressed);
         } else if (binding.equals("Right")) {
-            client.right = isPressed;
+            client.getLevel().setRight(isPressed);
         } else if (binding.equals("Up")) {
-            client.up = isPressed;
+            client.getLevel().setUp(isPressed);
         } else if (binding.equals("Down")) {
-            client.down = isPressed;
+            client.getLevel().setDown(isPressed);
         } else if (binding.equals("Jump")) {
             if (isPressed) { client.getPlayer().jump(); }
         }

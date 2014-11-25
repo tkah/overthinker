@@ -1,20 +1,18 @@
-package overthinker.server.gui;
+package overthinker.server;
 
 
+import com.jme3.math.Vector3f;
 import com.jme3.network.HostedConnection;
-import overthinker.Util;
-import overthinker.levels.maze1.Maze1;
-import overthinker.net.message.ModelChangeRequest;
-import overthinker.net.message.ModelUpdate;
+import overthinker.net.ModelChangeRequest;
+import overthinker.net.ModelUpdate;
 import com.jme3.app.SimpleApplication;
 import com.jme3.network.Network;
 import com.jme3.network.Server;
 import com.jme3.network.serializing.Serializer;
 import com.jme3.system.JmeContext;
-import overthinker.net.message.NewClientRequest;
-import overthinker.server.ServerNetListener;
+import overthinker.net.NewClientRequest;
+import overthinker.net.NewClientResponse;
 
-import java.awt.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -24,15 +22,14 @@ import java.util.HashMap;
  */
 public class ServerMain extends SimpleApplication {
     private Server netServer;
-    private Util.Model activeModel;
-    private long modelVersion;
+    private ServerModel model;
+    
     private ArrayList<HostedConnection> clients = new ArrayList<HostedConnection>();
-    private HashMap<HostedConnection, Point> clientLocations = new HashMap<HostedConnection, Point>();
-    private HashMap<HostedConnection, Float> versions = new HashMap<HostedConnection, Float>();
+    private HashMap<HostedConnection, Float> clientModelVersions = new HashMap<HostedConnection, Float>();
 
     public static void main(String[] args) {
         ServerMain app = new ServerMain();
-        app.start(JmeContext.Type.Headless); // headless type for servers!
+        app.start(JmeContext.Type.Headless);
     }
     @Override
     public void simpleInitApp() {
@@ -46,14 +43,15 @@ public class ServerMain extends SimpleApplication {
         netServer.start();
     }
 
-    private void initModel() {
-        modelVersion = 0L;
-        activeModel = new Util.Model(new Maze1());
+    public void broadcastModelUpdate()
+    {
+        ModelUpdate modelUpdate = new ModelUpdate();
+//        modelUpdate.setPlayerLocations((Vector3f[])model.getPlayerLocations().toArray());
+        modelUpdate.version = model.version;
     }
 
-    public ArrayList<HostedConnection> getClients()
-    {
-        return clients;
+    private void initModel() {
+        model = new ServerModel();
     }
 
     private void initNetServer() {
@@ -62,24 +60,27 @@ public class ServerMain extends SimpleApplication {
         Serializer.registerClass(ModelChangeRequest.class);
         Serializer.registerClass(ModelUpdate.class);
         Serializer.registerClass(NewClientRequest.class);
+        Serializer.registerClass(NewClientResponse.class);
 
         netServer.addMessageListener(listener, NewClientRequest.class);
         netServer.addMessageListener(listener, ModelChangeRequest.class);
     }
 
-    public HashMap<HostedConnection, Float> getVersions() {
-        return versions;
+    public ArrayList<HostedConnection> getClients()
+    {
+        return clients;
+    }
+
+
+    public HashMap<HostedConnection, Float> getClientModelVersions() {
+        return clientModelVersions;
     }
 
     public Server getNetServer(){
         return netServer;
     }
 
-    public Util.Model getActiveModel() {
-        return activeModel;
-    }
-
-    public long getModelVersion() {
-        return modelVersion;
+    public ServerModel getModel() {
+        return model;
     }
 }

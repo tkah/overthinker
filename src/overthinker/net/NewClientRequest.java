@@ -1,4 +1,4 @@
-package overthinker.net.message;
+package overthinker.net;
 
 import com.jme3.network.AbstractMessage;
 import com.jme3.network.serializing.Serializable;

@@ -90,6 +90,8 @@ public abstract class Level {
     private String audioJumpLocation;
     private String audioCollectLocation;
 
+    private int spawnX, spawnY, spawnZ;
+
     public int getSphere_resource_count() {
         return sphere_resource_count;
     }
@@ -528,5 +530,29 @@ public abstract class Level {
 
     public void setAudioCollectLocation(String audioCollectLocation) {
         this.audioCollectLocation = audioCollectLocation;
+    }
+
+    public int getSpawnX() {
+        return spawnX;
+    }
+
+    public void setSpawnX(int spawnX) {
+        this.spawnX = spawnX;
+    }
+
+    public int getSpawnY() {
+        return spawnY;
+    }
+
+    public void setSpawnY(int spawnY) {
+        this.spawnY = spawnY;
+    }
+
+    public int getSpawnZ() {
+        return spawnZ;
+    }
+
+    public void setSpawnZ(int spawnZ) {
+        this.spawnZ = spawnZ;
     }
 }

@@ -37,21 +37,21 @@ import com.jme3.terrain.heightmap.ImageBasedHeightMap;
 import com.jme3.texture.Texture;
 import com.jme3.util.TangentBinormalGenerator;
 import com.jme3.water.WaterFilter;
-import overthinker.Util;
+import overthinker.server.ServerModel;
 import overthinker.levels.Level;
-import overthinker.net.message.ModelChangeRequest;
-import overthinker.net.message.ModelUpdate;
-import overthinker.net.message.NewClientRequest;
+import overthinker.net.ModelChangeRequest;
+import overthinker.net.ModelUpdate;
+import overthinker.net.NewClientRequest;
+import overthinker.net.NewClientResponse;
 
 import java.io.IOException;
-import java.util.ArrayList;
 
 /**
  * Created by Peter on 11/12/2014.
  */
 public class ClientMain extends SimpleApplication implements ActionListener, AnalogListener {
 
-    private Util.Model localModel;
+    private ServerModel model;
     private Client netClient = null;
     private Level level;
 
@@ -66,7 +66,6 @@ public class ClientMain extends SimpleApplication implements ActionListener, Ana
         /** Set up Physics */
         stateManager.attach(level.getBulletAppState());
         rootNode.attachChild(level.getResources());
-
         viewPort.setBackgroundColor(new ColorRGBA(0.7f, 0.8f, 1f, 1f));
 
         setUpKeys();
@@ -220,25 +219,15 @@ public class ClientMain extends SimpleApplication implements ActionListener, Ana
         level.getPlayerG().setMaterial(mat);
         level.getPlayerNode().attachChild(level.getPlayerG());
 
-
-    /* Red Balls
-    playerG = new Geometry("Sphere", playerSphere);
-    Material mat = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
-    mat.setBoolean("UseMaterialColors", true);
-    mat.setColor("Diffuse", ColorRGBA.Red);
-    mat.setColor("Specular", ColorRGBA.White);
-    mat.setFloat("Shininess", 64f);
-    playerG.setMaterial(mat);
-    playerNode.attachChild(playerG);
-    */
-
         level.setSphereShape(new SphereCollisionShape(level.getPlayer_sphere_start_radius()));
         level.setPlayerControl(new CharacterControl(level.getSphereShape(), 0.05f));
         level.getPlayerControl().setJumpSpeed(20);
         level.getPlayerControl().setFallSpeed(30);
         level.getPlayerControl().setGravity(30);
-        level.getPlayerControl().setPhysicsLocation(new Vector3f(-340, 80, -400));
-        level.getPlayerNode().setLocalTranslation(new Vector3f(-340, 80, -400));
+        level.getPlayerControl().setPhysicsLocation(new Vector3f(level.getSpawnX(),
+                level.getSpawnY(), level.getSpawnZ()));
+        level.getPlayerNode().setLocalTranslation(new Vector3f(level.getSpawnX(),
+                level.getSpawnY(), level.getSpawnZ()));
         level.getPlayerNode().addControl(level.getPlayerControl());
         rootNode.attachChild(level.getPlayerNode());
         level.getBulletAppState().getPhysicsSpace().add(level.getPlayerControl());
@@ -341,13 +330,15 @@ public class ClientMain extends SimpleApplication implements ActionListener, Ana
         Serializer.registerClass(ModelChangeRequest.class);
         Serializer.registerClass(ModelUpdate.class);
         Serializer.registerClass(NewClientRequest.class);
+        Serializer.registerClass(NewClientResponse.class);
 
         netClient.addMessageListener(listener, ModelUpdate.class);
+        netClient.addMessageListener(listener, NewClientResponse.class);
 
         netClient.start();
         netClient.send(new NewClientRequest());
 
-        while(localModel == null)
+        while(level == null)
         {
             System.out.println("Waiting For Model Data...");
             try {
@@ -593,12 +584,12 @@ public class ClientMain extends SimpleApplication implements ActionListener, Ana
         return level.getPlayerControl();
     }
 
-    public Util.Model getLocalModel() {
-        return localModel;
+
+    public void setLevel(Level level){
+        this.level = level;
     }
 
-    public void setLocalModel(Util.Model model){
-        this.localModel = model;
+    public Level getLevel(){
+        return level;
     }
-
 }
