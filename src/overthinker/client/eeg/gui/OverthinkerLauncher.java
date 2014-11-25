@@ -7,6 +7,9 @@ import overthinker.client.eeg.EdkErrorCode;
 import overthinker.client.eeg.EmoState;
 
 public class OverthinkerLauncher {
+
+    static final int MIN_GYRO_DELTA = 200;
+
     public static void main(String[] args)
     {
         Pointer eEvent				= Edk.INSTANCE.EE_EmoEngineEventCreate();
@@ -20,6 +23,8 @@ public class OverthinkerLauncher {
         boolean readytocollect 		= false;
         IntByReference gyroX = new IntByReference(0);
         IntByReference gyroY = new IntByReference(0);
+
+
 
         userID 			= new IntByReference(0);
         nSamplesTaken	= new IntByReference(0);
@@ -103,6 +108,7 @@ public class OverthinkerLauncher {
 //                            }
                             Edk.INSTANCE.EE_HeadsetGetGyroDelta(userID.getValue(), gyroX, gyroY);
                             System.out.print(" GyroDelta[X]: "+gyroX.getValue()+" GyroDelta[Y]: "+gyroY.getValue());
+                            System.out.print(", tilt direction: "+ interpretGyro(gyroX, gyroY));
                             //Edk.INSTANCE. dot HOW DO I ACCESS FRUSTRATION dot BAD API
                             Edk.INSTANCE.EE_EmoEngineEventGetEmoState(hData, eState);
                             System.out.print(", Frust: "+EmoState.INSTANCE.ES_AffectivGetFrustrationScore(eState));
@@ -117,5 +123,26 @@ public class OverthinkerLauncher {
         Edk.INSTANCE.EE_EmoStateFree(eState);
         Edk.INSTANCE.EE_EmoEngineEventFree(eEvent);
         System.out.println("Disconnected!");
+    }
+
+    public static int interpretGyro(IntByReference gyroX, IntByReference gyroY) {
+        int xDelta = gyroX.getValue();
+        int yDelta = gyroY.getValue();
+        if (xDelta == 0 && yDelta == 0) return 0;  //nothing happening.
+        if (Math.abs(xDelta)  > MIN_GYRO_DELTA )
+        {
+            if (xDelta > 0) return 1; //UP or Down, not sure yet.
+            else return -1;     //Down or up, not sure yet.
+        }
+        if (Math.abs(yDelta) > MIN_GYRO_DELTA)
+        {
+            if (yDelta > 0) return 2; //Left or right, not sure yet.
+            else return -2; //right or left, not sure yet.
+        }
+        return 0;
+    }
+
+    public static int interpretFrustration() {
+        return 0;
     }
 }
