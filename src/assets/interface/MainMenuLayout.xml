@@ -22,6 +22,17 @@
             <image id="btnStartGame_hover" name="hide" filename="assets/interface/btnStartGame_hover.png" align="left" >
             </image>
         </image>
+            <image id="btnQuitGame" filename="assets/interface/btnQuitGame.png" align="left" childLayout="overlay">
+                <effect>
+                    <onStartScreen name="hide" targetElement="btnQuitGame_hover"></onStartScreen>
+                    <onStartHover name="show" targetElement="btnQuitGame_hover" onStartEffect="methodToBeCalledWhenEffectStarted()"></onStartHover>
+                    <onEndHover name="hide" targetElement="btnQuitGame_hover" onStartEffect="methodToBeCalledWhenEffectStarted()"></onEndHover>
+                </effect>
+                <interact onClick="menuQuitGame()"/>
+                <image id="btnQuitGame_hover" name="hide" filename="assets/interface/btnQuitGame_hover.png" align="left" >
+                </image>
+            </image>
+
         </panel>
         </layer>
     </screen>

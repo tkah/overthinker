@@ -42,7 +42,7 @@ public class Main extends SimpleApplication {
 
        Main app = new Main();
        app.setSettings(settings);
-       app.setShowSettings(false);
+       app.setShowSettings(true);
        app.start();
 
    }

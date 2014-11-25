@@ -1,5 +1,6 @@
 package Screens;
 
+import UClient.UClient;
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.app.state.AbstractAppState;
@@ -36,6 +37,7 @@ public class MainMenuController extends AbstractAppState implements ScreenContro
     private BulletAppState bulletAppState;
 
 
+
   @Override
     public void initialize(AppStateManager stateManager, Application app){
       super.initialize(stateManager, app);
@@ -62,8 +64,13 @@ public class MainMenuController extends AbstractAppState implements ScreenContro
         guiViewPort.addProcessor(nDisplay);
     }
     public void menuStartGame() {
-       // UClient uc = new UClient();
-        //stateManager.attach(uc);
+       //UClient uc = new UClient();
+        //uc.start();
+
+    }
+
+    public void menuQuitGame(){
+        app.stop();
     }
 
     public void methodToBeCalledWhenEffectStarted() {

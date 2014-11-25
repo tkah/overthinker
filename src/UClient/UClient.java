@@ -661,16 +661,16 @@ public class UClient extends SimpleApplication
     emitLeft.setImagesY(2);
     emitLeft.setSelectRandomImage(true);
     emitLeft.setRandomAngle(true);
-    emitLeft.getParticleInfluencer().setVelocityVariation(1f);
+    emitLeft.getParticleInfluencer().setVelocityVariation(.60f);
 
     emitRight.setImagesX(2);
     emitRight.setImagesY(2);
     emitRight.setSelectRandomImage(true);
     emitRight.setRandomAngle(true);
-    emitRight.getParticleInfluencer().setVelocityVariation(1f);
+    emitRight.getParticleInfluencer().setVelocityVariation(.60f);
 
-    emitLeft.setLocalTranslation(1f,-1.7f,0f);
-    emitRight.setLocalTranslation(-1f,-1.7f,0f);
+    emitLeft.setLocalTranslation(.5f,-1.7f,0f);
+    emitRight.setLocalTranslation(-.5f,-1.7f,0f);
 
     playerNode.attachChild(emitLeft);
     playerNode.attachChild(emitRight);
@@ -679,10 +679,10 @@ public class UClient extends SimpleApplication
   private void addMovementSound(boolean emmit){
     if(emmit){
       emitLeft.setLowLife(.1f);
-      emitLeft.setHighLife(1f);
+      emitLeft.setHighLife(2f);
 
       emitRight.setLowLife(.1f);
-      emitRight.setHighLife(1f);
+      emitRight.setHighLife(2f);
       audio_footsteps.play();
     }else{
       emitLeft.setLowLife(0);
