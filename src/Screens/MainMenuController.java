@@ -64,13 +64,15 @@ public class MainMenuController extends AbstractAppState implements ScreenContro
         System.out.println("Hover start or stop?");
     }
 
-        public void setStartScreen(){
+    public void setStartScreen(){
         nifty.gotoScreen("start");
     }
 
     public void setLoadingScreen(){
         nifty.gotoScreen("loading");
     }
+
+    public void setLoadedScreen(){nifty.gotoScreen("loaded");}
 
     public void bind(Nifty nifty, Screen screen){
         System.out.println("bind(" + screen.getScreenId() + ") ");

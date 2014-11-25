@@ -12,7 +12,8 @@ import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.bullet.util.CollisionShapeFactory;
 import com.jme3.collision.CollisionResult;
 import com.jme3.collision.CollisionResults;
-import com.jme3.cursors.plugins.JmeCursor;
+import com.jme3.effect.ParticleEmitter;
+import com.jme3.effect.ParticleMesh;
 import com.jme3.input.KeyInput;
 import com.jme3.input.MouseInput;
 import com.jme3.input.controls.ActionListener;
@@ -43,7 +44,6 @@ import com.jme3.util.TangentBinormalGenerator;
 import com.jme3.water.WaterFilter;
 
 
-import java.awt.*;
 import java.util.ArrayList;
 
 public class UClient extends SimpleApplication
@@ -110,6 +110,7 @@ public class UClient extends SimpleApplication
   private AudioNode audio_footsteps;
   private AudioNode audio_jump;
   private AudioNode audio_collect;
+  private AudioNode audio_earthquake;
 
 
 
@@ -157,6 +158,7 @@ public class UClient extends SimpleApplication
     Globals.setUpTimer();
     Globals.startTimer();
     initAudio();
+    initDust();
   }
 
 
@@ -283,6 +285,7 @@ public class UClient extends SimpleApplication
     else if (mapTiltRight) tiltMapX -= MAP_TILT_RATE;
     else if (mapTiltForward) tiltMapY += MAP_TILT_RATE;
     else if (mapTiltBack) tiltMapY -= MAP_TILT_RATE;
+    //mapMovingSound((mapTiltBack || mapTiltForward || mapTiltLeft || mapTiltRight));
     tiltMap();
 
     // Control Movement and Player Rotation
@@ -300,6 +303,7 @@ public class UClient extends SimpleApplication
     if (up&&left) moveBall(1.0f, -1.0f, null);
     if (down&&right) moveBall(-1.0f, 1.0f, null);
     if (down&&left) moveBall(-1.0f, -1.0f, null);
+
 
     addMovementSound((up || down || left || right ));
 
@@ -352,6 +356,7 @@ public class UClient extends SimpleApplication
     Quaternion m = mapTilt.mult(q);
     terrain.setLocalRotation(m);
     landscape.setPhysicsRotation(m);
+
   }
 
   private void moveBall(float x, float z, Vector3f c)
@@ -604,6 +609,13 @@ public class UClient extends SimpleApplication
 
   private void initAudio(){
 
+    //earthquake sounds
+    audio_earthquake = new AudioNode(assetManager,"assets/sounds/earthquake.ogg",true);
+    audio_earthquake.setPositional(false);
+    audio_earthquake.setLooping(true);
+    audio_earthquake.setVolume(2);
+    rootNode.attachChild(audio_earthquake);
+
     //collect object
     audio_collect = new AudioNode(assetManager, "assets/sounds/collect.ogg",false);
     audio_collect.setPositional(false);
@@ -633,12 +645,61 @@ public class UClient extends SimpleApplication
     rootNode.attachChild(audio_ocean);
     audio_ocean.play();
   }
+
+  private ParticleEmitter emitLeft;
+  private ParticleEmitter emitRight;
+  private void initDust(){
+    emitLeft = new ParticleEmitter("dust left", ParticleMesh.Type.Triangle,100);
+    emitRight = new ParticleEmitter("dust right", ParticleMesh.Type.Triangle,100);
+
+    Material dust = new Material(assetManager, "Common/MatDefs/Misc/Particle.j3md");
+    emitLeft.setMaterial(dust);
+    emitRight.setMaterial(dust);
+
+    dust.setTexture("Texture", assetManager.loadTexture("assets/interface/smoke.png"));
+    emitLeft.setImagesX(2);
+    emitLeft.setImagesY(2);
+    emitLeft.setSelectRandomImage(true);
+    emitLeft.setRandomAngle(true);
+    emitLeft.getParticleInfluencer().setVelocityVariation(1f);
+
+    emitRight.setImagesX(2);
+    emitRight.setImagesY(2);
+    emitRight.setSelectRandomImage(true);
+    emitRight.setRandomAngle(true);
+    emitRight.getParticleInfluencer().setVelocityVariation(1f);
+
+    emitLeft.setLocalTranslation(1f,-1.7f,0f);
+    emitRight.setLocalTranslation(-1f,-1.7f,0f);
+
+    playerNode.attachChild(emitLeft);
+    playerNode.attachChild(emitRight);
+  }
   /** Method to add sounds when buttons are pressed **/
   private void addMovementSound(boolean emmit){
     if(emmit){
+      emitLeft.setLowLife(.1f);
+      emitLeft.setHighLife(1f);
+
+      emitRight.setLowLife(.1f);
+      emitRight.setHighLife(1f);
       audio_footsteps.play();
     }else{
+      emitLeft.setLowLife(0);
+      emitLeft.setHighLife(0);
+
+      emitRight.setLowLife(0);
+      emitRight.setHighLife(0);
+
       audio_footsteps.stop();
+    }
+  }
+
+  private void mapMovingSound(boolean emmit){
+    if(emmit){
+      audio_earthquake.play();
+    }else{
+      audio_earthquake.stop();
     }
   }
 

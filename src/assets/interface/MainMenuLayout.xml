@@ -26,7 +26,15 @@
         </layer>
     </screen>
 
+    <screen id="loading">
+        <layer childLayout="center" id="layer1" backgroundColor="#FFFFFF">
+            <image filename="assets/interface/loading.png" height="20%" id="backgroundSky" width="20%">
 
+            </image>
+        </layer>
+    </screen>
+
+    <screen id="loaded"></screen>
 
 
 
