@@ -12,6 +12,7 @@ import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.bullet.util.CollisionShapeFactory;
 import com.jme3.collision.CollisionResult;
 import com.jme3.collision.CollisionResults;
+import com.jme3.cursors.plugins.JmeCursor;
 import com.jme3.input.KeyInput;
 import com.jme3.input.MouseInput;
 import com.jme3.input.controls.ActionListener;
@@ -25,6 +26,7 @@ import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
 import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
+
 import com.jme3.post.FilterPostProcessor;
 import com.jme3.scene.CameraNode;
 import com.jme3.scene.Geometry;
@@ -40,6 +42,8 @@ import com.jme3.texture.Texture.WrapMode;
 import com.jme3.util.TangentBinormalGenerator;
 import com.jme3.water.WaterFilter;
 
+
+import java.awt.*;
 import java.util.ArrayList;
 
 public class UClient extends SimpleApplication
@@ -107,12 +111,16 @@ public class UClient extends SimpleApplication
   private AudioNode audio_jump;
   private AudioNode audio_collect;
 
+
+
   /**
    * Class entry point
    * @param args - command line arguments
    */
   public static void main(String[] args)
   {
+
+
     UClient app = new UClient();
     app.start();
   }
@@ -134,6 +142,9 @@ public class UClient extends SimpleApplication
 
     viewPort.setBackgroundColor(new ColorRGBA(0.7f, 0.8f, 1f, 1f));
 
+
+
+
     setUpKeys();
     setUpLight();
     setUpLandscape();
@@ -147,6 +158,8 @@ public class UClient extends SimpleApplication
     Globals.startTimer();
     initAudio();
   }
+
+
 
   /**
    * Custom actions for mouse actions
@@ -440,7 +453,7 @@ public class UClient extends SimpleApplication
 
     /** Add ALPHA map (for red-blue-green coded splat textures) */
     mat_terrain.setTexture("Alpha", assetManager.loadTexture(
-      "assets/terrains/tieredmaze1color.png"));
+            "assets/terrains/tieredmaze1color.png"));
 
     /** Add GRASS texture into the red layer (Tex1). */
     Texture grass = assetManager.loadTexture(

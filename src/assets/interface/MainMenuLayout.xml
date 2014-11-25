@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<nifty>
+
+    <!-- load styles -->
+    <useStyles filename="nifty-default-styles.xml" />
+    <useControls filename="nifty-default-controls.xml" />
+
+    <screen id="start" controller="Screens.MainMenuController">
+        <layer childLayout="horizontal" id="layer1">
+            <image filename="assets/interface/background.png" height="100%" width="100%" />
+        </layer>
+        <layer id="layer" backgroundColor="#0000" childLayout="center">
+        <panel id="panel" align="left" valign="bottom"  childLayout="vertical" visibleToMouse="true">
+
+        <image id="btnStartGame" filename="assets/interface/btnStartGame.png" align="left" childLayout="overlay">
+            <effect>
+                <onStartScreen name="hide" targetElement="btnStartGame_hover"></onStartScreen>
+                <onStartHover name="show" targetElement="btnStartGame_hover" onStartEffect="methodToBeCalledWhenEffectStarted()"></onStartHover>
+                <onEndHover name="hide" targetElement="btnStartGame_hover" onStartEffect="methodToBeCalledWhenEffectStarted()"></onEndHover>
+            </effect>
+            <interact onClick="menuStartGame()"/>
+            <image id="btnStartGame_hover" name="hide" filename="assets/interface/btnStartGame_hover.png" align="left" >
+            </image>
+        </image>
+        </panel>
+        </layer>
+    </screen>
+
+
+
+
+
+
+</nifty>
