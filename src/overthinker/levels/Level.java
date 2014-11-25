@@ -1,10 +1,12 @@
 package overthinker.levels;
 
+import com.jme3.audio.AudioNode;
 import com.jme3.bullet.BulletAppState;
 import com.jme3.bullet.collision.shapes.SphereCollisionShape;
 import com.jme3.bullet.control.CharacterControl;
 import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.material.Material;
+import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
 import com.jme3.post.FilterPostProcessor;
 import com.jme3.scene.CameraNode;
@@ -74,7 +76,19 @@ public abstract class Level {
     private ArrayList<SphereResource> sphereResource = new ArrayList<SphereResource>();
     private ArrayList<SphereResource> sphereResourcesToShrink = new ArrayList<SphereResource>();
 
+    private Quaternion mapTilt = new Quaternion();
+    private float rotation;
+    private float tiltMapX, tiltMapY = 0;
 
+    private AudioNode audioOcean;
+    private AudioNode audioFootsteps;
+    private AudioNode audioJump;
+    private AudioNode audioCollect;
+
+    private String audioOceanLocation;
+    private String audioFootstepsLocation;
+    private String audioJumpLocation;
+    private String audioCollectLocation;
 
     public int getSphere_resource_count() {
         return sphere_resource_count;
@@ -418,5 +432,101 @@ public abstract class Level {
 
     public ArrayList<SphereResource> getSphereResourcesToShrink() {
         return sphereResourcesToShrink;
+    }
+
+    public Quaternion getMapTilt() {
+        return mapTilt;
+    }
+
+    public void setMapTilt(Quaternion mapTilt) {
+        this.mapTilt = mapTilt;
+    }
+
+    public float getRotation() {
+        return rotation;
+    }
+
+    public void setRotation(float rotation) {
+        this.rotation = rotation;
+    }
+
+    public float getTiltMapX() {
+        return tiltMapX;
+    }
+
+    public void setTiltMapX(float tiltMapX) {
+        this.tiltMapX = tiltMapX;
+    }
+
+    public float getTiltMapY() {
+        return tiltMapY;
+    }
+
+    public void setTiltMapY(float tiltMapY) {
+        this.tiltMapY = tiltMapY;
+    }
+
+    public AudioNode getAudioOcean() {
+        return audioOcean;
+    }
+
+    public void setAudioOcean(AudioNode audioOcean) {
+        this.audioOcean = audioOcean;
+    }
+
+    public AudioNode getAudioFootsteps() {
+        return audioFootsteps;
+    }
+
+    public void setAudioFootsteps(AudioNode audioFootsteps) {
+        this.audioFootsteps = audioFootsteps;
+    }
+
+    public AudioNode getAudioJump() {
+        return audioJump;
+    }
+
+    public void setAudioJump(AudioNode audioJump) {
+        this.audioJump = audioJump;
+    }
+
+    public AudioNode getAudioCollect() {
+        return audioCollect;
+    }
+
+    public void setAudioCollect(AudioNode audioCollect) {
+        this.audioCollect = audioCollect;
+    }
+
+    public String getAudioOceanLocation() {
+        return audioOceanLocation;
+    }
+
+    public void setAudioOceanLocation(String audioOceanLocation) {
+        this.audioOceanLocation = audioOceanLocation;
+    }
+
+    public String getAudioFootstepsLocation() {
+        return audioFootstepsLocation;
+    }
+
+    public void setAudioFootstepsLocation(String audioFootstepsLocation) {
+        this.audioFootstepsLocation = audioFootstepsLocation;
+    }
+
+    public String getAudioJumpLocation() {
+        return audioJumpLocation;
+    }
+
+    public void setAudioJumpLocation(String audioJumpLocation) {
+        this.audioJumpLocation = audioJumpLocation;
+    }
+
+    public String getAudioCollectLocation() {
+        return audioCollectLocation;
+    }
+
+    public void setAudioCollectLocation(String audioCollectLocation) {
+        this.audioCollectLocation = audioCollectLocation;
     }
 }

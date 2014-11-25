@@ -55,16 +55,6 @@ public class ClientMain extends SimpleApplication implements ActionListener, Ana
     private Client netClient = null;
     private Level level;
 
-    private Quaternion mapTilt = new Quaternion();
-    float rotation; // Save rotation levels for each direction
-    float tiltMapX, tiltMapY = 0;
-
-    /** Create AudioNodes **/
-    private AudioNode audio_ocean;
-    private AudioNode audio_footsteps;
-    private AudioNode audio_jump;
-    private AudioNode audio_collect;
-
     public static void main(String[] args) {
         ClientMain app = new ClientMain();
         app.start(); // standard display type
@@ -87,7 +77,6 @@ public class ClientMain extends SimpleApplication implements ActionListener, Ana
         setUpCamera();
         createSphereResources();
 
-
         Globals.setUpTimer();
         Globals.startTimer();
         initAudio();
@@ -96,41 +85,41 @@ public class ClientMain extends SimpleApplication implements ActionListener, Ana
     private void initAudio(){
 
         //collect object
-        audio_collect = new AudioNode(assetManager, "overthinker/assets/sounds/collect.ogg",false);
-        audio_collect.setPositional(false);
-        audio_collect.setVolume(2);
-        rootNode.attachChild(audio_collect);
+        level.setAudioCollect(new AudioNode(assetManager, level.getAudioCollectLocation() ,false));
+        level.getAudioCollect().setPositional(false);
+        level.getAudioCollect().setVolume(2);
+        rootNode.attachChild(level.getAudioCollect());
 
         //walking sounds
-        audio_footsteps = new AudioNode(assetManager, "overthinker/assets/sounds/footsteps.ogg",true);
-        audio_footsteps.setPositional(false);
-        audio_footsteps.setLooping(true);
-        audio_footsteps.setVolume(2);
-        rootNode.attachChild(audio_footsteps);
+        level.setAudioFootsteps(new AudioNode(assetManager, level.getAudioFootstepsLocation() ,true));
+        level.getAudioFootsteps().setPositional(false);
+        level.getAudioFootsteps().setLooping(true);
+        level.getAudioFootsteps().setVolume(2);
+        rootNode.attachChild(level.getAudioFootsteps());
 
 
         //jumping sound
-        audio_jump = new AudioNode(assetManager, "overthinker/assets/sounds/pop.ogg",false);
-        audio_jump.setPositional(false);
-        audio_jump.setLooping(false);
-        audio_jump.setVolume(2);
-        rootNode.attachChild(audio_jump);
+        level.setAudioJump(new AudioNode(assetManager, level.getAudioJumpLocation() ,false));
+        level.getAudioJump().setPositional(false);
+        level.getAudioJump().setLooping(false);
+        level.getAudioJump().setVolume(2);
+        rootNode.attachChild(level.getAudioJump());
 
         //ambient map sounds
-        audio_ocean = new AudioNode(assetManager, "overthinker/assets/sounds/wavesLoop.ogg",true);
-        audio_ocean.setLooping(true);
-        audio_ocean.setPositional(true);
-        audio_ocean.setVolume(1);
-        rootNode.attachChild(audio_ocean);
-        audio_ocean.play();
+        level.setAudioOcean(new AudioNode(assetManager, level.getAudioOceanLocation(),true));
+        level.getAudioOcean().setLooping(true);
+        level.getAudioOcean().setPositional(true);
+        level.getAudioOcean().setVolume(1);
+        rootNode.attachChild(level.getAudioOcean());
+        level.getAudioOcean().play();
     }
 
     /** Method to add sounds when buttons are pressed **/
     private void addMovementSound(boolean emmit){
         if(emmit){
-            audio_footsteps.play();
+            level.getAudioFootsteps().play();
         }else{
-            audio_footsteps.stop();
+            level.getAudioFootsteps().stop();
         }
     }
 
@@ -138,7 +127,7 @@ public class ClientMain extends SimpleApplication implements ActionListener, Ana
         @Override
         public void onAction(String name, boolean keyPressed, float v) {
             if (name.equals("Jump") && keyPressed)
-                audio_jump.playInstance();
+                level.getAudioJump().playInstance();
 
         }
     };
@@ -458,56 +447,57 @@ public class ClientMain extends SimpleApplication implements ActionListener, Ana
         // Tilt Map, to be controlled by EEG gyroscope
         if (!level.isMapTiltLeft() && !level.isMapTiltRight() && !level.isMapTiltBack() && !level.isMapTiltForward()) // EEG not rotating, move back to normal
         {
-            if (tiltMapX < 0 && tiltMapY > 0)
+            if (level.getTiltMapX() < 0 && level.getTiltMapY() > 0)
             {
-                tiltMapX += level.getMap_tilt_rate();
-                tiltMapY -= level.getMap_tilt_rate();
+                level.setTiltMapX(level.getTiltMapX() + level.getMap_tilt_rate());
+                level.setTiltMapY(level.getTiltMapY() - level.getMap_tilt_rate());
             }
-            if (tiltMapX < 0 && tiltMapY < 0)
+            if (level.getTiltMapX() < 0 && level.getTiltMapY() < 0)
             {
-                tiltMapX += level.getMap_tilt_rate();
-                tiltMapY += level.getMap_tilt_rate();
+                level.setTiltMapX(level.getTiltMapX() + level.getMap_tilt_rate());
+                level.setTiltMapY(level.getTiltMapY() + level.getMap_tilt_rate());
             }
-            else if (tiltMapX > 0 && tiltMapY < 0)
+            else if (level.getTiltMapX() > 0 && level.getTiltMapY() < 0)
             {
-                tiltMapX -= level.getMap_tilt_rate();
-                tiltMapY += level.getMap_tilt_rate();
+                level.setTiltMapX(level.getTiltMapX() - level.getMap_tilt_rate());
+                level.setTiltMapY(level.getTiltMapY() - level.getMap_tilt_rate());
             }
-            else if (tiltMapX > 0 && tiltMapY > 0)
+            else if (level.getTiltMapX() > 0 && level.getTiltMapY() > 0)
             {
-                tiltMapX -= level.getMap_tilt_rate();
-                tiltMapY -= level.getMap_tilt_rate();
+                level.setTiltMapX(level.getTiltMapX() - level.getMap_tilt_rate());
+                level.setTiltMapY(level.getTiltMapY() - level.getMap_tilt_rate());
             }
-            else if (tiltMapX < 0) tiltMapX += level.getMap_tilt_rate();
-            else if (tiltMapX > 0) tiltMapX -= level.getMap_tilt_rate();
-            else if (tiltMapY > 0) tiltMapY -= level.getMap_tilt_rate();
-            else if (tiltMapY < 0) tiltMapY += level.getMap_tilt_rate();
+            else if (level.getTiltMapX() < 0) level.setTiltMapX(level.getTiltMapX() + level.getMap_tilt_rate());
+            else if (level.getTiltMapX() > 0) level.setTiltMapX(level.getTiltMapX() - level.getMap_tilt_rate());
+            else if (level.getTiltMapX() > 0) level.setTiltMapY(level.getTiltMapY() - level.getMap_tilt_rate());
+            else if (level.getTiltMapX() < 0) level.setTiltMapY(level.getTiltMapY() + level.getMap_tilt_rate());
         }
 
+        //TODO: CHECK FOR CONSISTANCY
         if (level.isMapTiltForward()&&level.isMapTiltLeft())
         {
-            tiltMapY += level.getMap_tilt_rate();
-            tiltMapX += level.getMap_tilt_rate();
+            level.setTiltMapY(level.getTiltMapY() + level.getMap_tilt_rate());
+            level.setTiltMapX(level.getTiltMapX() + level.getMap_tilt_rate());
         }
         else if (level.isMapTiltForward()&&level.isMapTiltRight())
         {
-            tiltMapY += level.getMap_tilt_rate();
-            tiltMapX -= level.getMap_tilt_rate();
+            level.setTiltMapY(level.getTiltMapY() - level.getMap_tilt_rate());
+            level.setTiltMapX(level.getTiltMapX() - level.getMap_tilt_rate());
         }
         else if (level.isMapTiltBack()&&level.isMapTiltLeft())
         {
-            tiltMapY -= level.getMap_tilt_rate();
-            tiltMapX += level.getMap_tilt_rate();
+            level.setTiltMapY(level.getTiltMapY() - level.getMap_tilt_rate());
+            level.setTiltMapX(level.getTiltMapX() + level.getMap_tilt_rate());
         }
         else if (level.isMapTiltBack()&&level.isMapTiltRight())
         {
-            tiltMapY -= level.getMap_tilt_rate();
-            tiltMapX -= level.getMap_tilt_rate();
+            level.setTiltMapY(level.getTiltMapY() - level.getMap_tilt_rate());
+            level.setTiltMapX(level.getTiltMapX() - level.getMap_tilt_rate());
         }
-        else if (level.isMapTiltLeft()) tiltMapX += level.getMap_tilt_rate();
-        else if (level.isMapTiltRight()) tiltMapX -= level.getMap_tilt_rate();
-        else if (level.isMapTiltForward()) tiltMapY += level.getMap_tilt_rate();
-        else if (level.isMapTiltBack()) tiltMapY -= level.getMap_tilt_rate();
+        else if (level.isMapTiltLeft()) level.setTiltMapX(level.getTiltMapX() + level.getMap_tilt_rate());
+        else if (level.isMapTiltRight()) level.setTiltMapX(level.getTiltMapX() - level.getMap_tilt_rate());
+        else if (level.isMapTiltForward()) level.setTiltMapY(level.getTiltMapY() + level.getMap_tilt_rate());
+        else if (level.isMapTiltBack()) level.setTiltMapY(level.getTiltMapY() - level.getMap_tilt_rate());
         tiltMap();
 
         // Control Movement and Player Rotation
@@ -516,7 +506,10 @@ public class ClientMain extends SimpleApplication implements ActionListener, Ana
         level.getCamLeft().set(cam.getLeft()).multLocal(0.4f); //20f for BetterCharacterControl
         level.getWalkDirection().set(0, 0, 0);
 
-        if (level.isLeft() || level.isRight() || level.isUp() || level.isDown()) rotation += 3;
+        if (level.isLeft() || level.isRight() || level.isUp() || level.isDown())
+        {
+            level.setRotation(level.getRotation()+3);
+        }
         if (level.isLeft()) moveBall(0, -1.0f, level.getCamLeft());
         if (level.isRight()) moveBall(0, 1.0f, level.getCamLeft().negate());
         if (level.isUp()) moveBall(1.0f, 0, level.getCamDir());
@@ -547,7 +540,7 @@ public class ClientMain extends SimpleApplication implements ActionListener, Ana
 
         if (results.size() > 0)
         {
-            audio_collect.play();
+            level.getAudioCollect().play();
             CollisionResult closest = results.getClosestCollision();
             System.out.println("What was hit? " + closest.getGeometry().getName());
 
@@ -572,15 +565,15 @@ public class ClientMain extends SimpleApplication implements ActionListener, Ana
 
     private void moveBall(float x, float z, Vector3f c)
     {
-        Quaternion ballRotate = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * rotation, new Vector3f(x, 0,z));
+        Quaternion ballRotate = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * level.getRotation(), new Vector3f(x, 0,z));
         level.getPlayerG().setLocalRotation(ballRotate);
         if (c != null) level.getWalkDirection().addLocal(c);
     }
-    private void tiltMap ()
-    {
-        mapTilt = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * tiltMapX, new Vector3f(0, 0, 1.0f));
-        Quaternion q = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * tiltMapY, new Vector3f(1.0f, 0, 0));
-        Quaternion m = mapTilt.mult(q);
+
+    private void tiltMap() {
+        level.setMapTilt(new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * level.getTiltMapX(), new Vector3f(0, 0, 1.0f)));
+        Quaternion q = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * level.getTiltMapY(), new Vector3f(1.0f, 0, 0));
+        Quaternion m = level.getMapTilt().mult(q);
         level.getTerrain().setLocalRotation(m);
         level.getLandscape().setPhysicsRotation(m);
     }

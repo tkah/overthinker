@@ -41,5 +41,10 @@ public class Maze1 extends Level {
         setHeightMapLocation("overthinker/assets/terrains/tieredmaze1.png");
         setMatTerrainLocation("Common/MatDefs/Terrain/Terrain.j3md");
         setMatTerrainAlphaTextureLocation("overthinker/assets/terrains/tieredmaze1color.png");
+
+        setAudioOceanLocation("overthinker/assets/sounds/wavesLoop.ogg");
+        setAudioCollectLocation("overthinker/assets/sounds/collect.ogg");
+        setAudioFootstepsLocation("overthinker/assets/sounds/footsteps.ogg");
+        setAudioJumpLocation("overthinker/assets/sounds/pop.ogg");
     }
 }
