@@ -4,109 +4,25 @@ import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 import overthinker.client.eeg.Edk;
 import overthinker.client.eeg.EdkErrorCode;
-import overthinker.client.eeg.EmoProfileManagement;
 import overthinker.client.eeg.EmoState;
 
-
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-
-/**
- * Created by Sid Holman on 11/20/14.  Most code reused from eMotiv SDK examples.
- */
-public class OverthinkerLauncher extends JFrame {
-    public static JButton trainBtt,saveBtt,loadBtt;
-    public static JComboBox comboBox;
-    public static int[] cognitivActionList ={EmoState.EE_CognitivAction_t.COG_NEUTRAL.ToInt(),
-            EmoState.EE_CognitivAction_t.COG_PUSH.ToInt(),
-            EmoState.EE_CognitivAction_t.COG_PULL.ToInt(),
-            EmoState.EE_CognitivAction_t.COG_LIFT.ToInt(),
-            EmoState.EE_CognitivAction_t.COG_DROP.ToInt(),
-            EmoState.EE_CognitivAction_t.COG_LEFT.ToInt(),
-            EmoState.EE_CognitivAction_t.COG_RIGHT.ToInt(),
-            EmoState.EE_CognitivAction_t.COG_ROTATE_LEFT.ToInt(),
-            EmoState.EE_CognitivAction_t.COG_ROTATE_RIGHT.ToInt(),
-            EmoState.EE_CognitivAction_t.COG_ROTATE_CLOCKWISE.ToInt(),
-            EmoState.EE_CognitivAction_t.COG_ROTATE_COUNTER_CLOCKWISE.ToInt(),
-            EmoState.EE_CognitivAction_t.COG_ROTATE_FORWARDS.ToInt(),
-            EmoState.EE_CognitivAction_t.COG_ROTATE_REVERSE.ToInt(),
-            EmoState.EE_CognitivAction_t.COG_DISAPPEAR.ToInt()
-    };
-    public static Boolean[] cognitivActionsEnabled = new Boolean[cognitivActionList.length];
-
-    /// <summary>
-    /// Start traning cognitiv action
-    /// </summary>
-    /// <param name="cognitivAction">Cognitiv Action</param>
-    public static void StartTrainingCognitiv(EmoState.EE_CognitivAction_t cognitivAction)
+public class OverthinkerLauncher {
+    public static void main(String[] args)
     {
-        if (cognitivAction == EmoState.EE_CognitivAction_t.COG_NEUTRAL)
-        {
-            Edk.INSTANCE.EE_CognitivSetTrainingAction(0,EmoState.EE_CognitivAction_t.COG_NEUTRAL.ToInt());
-            Edk.INSTANCE.EE_CognitivSetTrainingControl(0, Edk.EE_CognitivTrainingControl_t.COG_START.getType());
-        }
-        else
-            for (int i = 1; i < cognitivActionList.length; i++)
-            {
-                if (cognitivAction.ToInt() == cognitivActionList[i])
-                {
+        Pointer eEvent				= Edk.INSTANCE.EE_EmoEngineEventCreate();
+        Pointer eState				= Edk.INSTANCE.EE_EmoStateCreate();
+        IntByReference userID 		= null;
+        IntByReference nSamplesTaken= null;
+        short composerPort			= 1726;
+        int option 					= 1;
+        int state  					= 0;
+        float secs 					= 1;
+        boolean readytocollect 		= false;
+        IntByReference gyroX = new IntByReference(0);
+        IntByReference gyroY = new IntByReference(0);
 
-                    if (cognitivActionsEnabled[i])
-                    {
-                        Edk.INSTANCE.EE_CognitivSetTrainingAction(0, cognitivAction.ToInt());
-                        Edk.INSTANCE.EE_CognitivSetTrainingControl(0, Edk.EE_CognitivTrainingControl_t.COG_START.getType());
-                    }
-
-                }
-            }
-
-    }
-    /// <summary>
-    /// Enable cognitiv action in arraylist
-    /// </summary>
-    /// <param name="cognitivAction">Cognitiv Action</param>
-    /// <param name="iBool">True = Enable/False = Disable</param>
-    public static void EnableCognitivAction(EmoState.EE_CognitivAction_t cognitivAction, Boolean iBool)
-    {
-        for (int i = 1; i < cognitivActionList.length; i++)
-        {
-            if (cognitivAction.ToInt() == cognitivActionList[i])
-            {
-                cognitivActionsEnabled[i] = iBool;
-
-            }
-        }
-
-    }
-
-    public static void EnableCognitivActionsList()
-    {
-        long cognitivActions = 0x0000;
-        for (int i = 1; i < cognitivActionList.length; i++)
-        {
-            if (cognitivActionsEnabled[i])
-            {
-                cognitivActions = cognitivActions | ((long)cognitivActionList[i]);
-
-            }
-        }
-        Edk.INSTANCE.EE_CognitivSetActiveActions(0, cognitivActions);
-
-    }
-    public static void main(String args[]) {
-        new OverthinkerLauncher();
-        Pointer eEvent			= Edk.INSTANCE.EE_EmoEngineEventCreate();
-        Pointer eState			= Edk.INSTANCE.EE_EmoStateCreate();
-        IntByReference userID 	= null;
-        short composerPort		= 1726;
-        int option 				= 1;
-        int state  				= 0;
-
-
-
-        userID = new IntByReference(0);
+        userID 			= new IntByReference(0);
+        nSamplesTaken	= new IntByReference(0);
 
         switch (option) {
             case 1:
@@ -133,163 +49,73 @@ public class OverthinkerLauncher extends JFrame {
                 return;
         }
 
+        Pointer hData = Edk.INSTANCE.EE_DataCreate();
+        Edk.INSTANCE.EE_DataSetBufferSizeInSec(secs);
+        System.out.print("Buffer size in secs: ");
+        System.out.println(secs);
+
+        System.out.println("Start receiving EEG Data!");
         while (true)
         {
             state = Edk.INSTANCE.EE_EngineGetNextEvent(eEvent);
 
             // New event needs to be handled
-            if (state == EdkErrorCode.EDK_OK.ToInt()) {
-
+            if (state == EdkErrorCode.EDK_OK.ToInt())
+            {
                 int eventType = Edk.INSTANCE.EE_EmoEngineEventGetType(eEvent);
                 Edk.INSTANCE.EE_EmoEngineEventGetUserId(eEvent, userID);
-                if(eventType == Edk.EE_Event_t.EE_UserAdded.ToInt())
-                {
-                    EmoProfileManagement.AddNewProfile("3");
-                    JOptionPane.showMessageDialog(new JFrame(), "User add", "Dialog",
-                            JOptionPane.ERROR_MESSAGE);
-                }
 
-                if(eventType == Edk.EE_Event_t.EE_CognitivEvent.ToInt())
-                {
-                    int cogType = Edk.INSTANCE.EE_CognitivEventGetType(eEvent);
-
-                    if(cogType ==Edk.EE_CognitivEvent_t.EE_CognitivTrainingStarted.getType())
+                // Log the EmoState if it has been updated
+                if (eventType == Edk.EE_Event_t.EE_UserAdded.ToInt())
+                    if (userID != null)
                     {
-                        JOptionPane.showMessageDialog(new JFrame(), "Cognitiv Training Start", "Dialog",
-                                JOptionPane.ERROR_MESSAGE);
+                        System.out.println("User added");
+                        Edk.INSTANCE.EE_DataAcquisitionEnable(userID.getValue(),true);
+                        readytocollect = true;
                     }
-                    if(cogType == Edk.EE_CognitivEvent_t.EE_CognitivTrainingCompleted.getType())
-                    {
-                        JOptionPane.showMessageDialog(new JFrame(), "Cognitiv Training Complete", "Dialog",
-                                JOptionPane.ERROR_MESSAGE);
-                    }
-                    if(cogType == Edk.EE_CognitivEvent_t.EE_CognitivTrainingSucceeded.getType())
-                    {
-                        Edk.INSTANCE.EE_CognitivSetTrainingControl(0,Edk.EE_CognitivTrainingControl_t.COG_ACCEPT.getType());
-                        JOptionPane.showMessageDialog(new JFrame(), "Cognitiv Training Succeeded", "Dialog",
-                                JOptionPane.ERROR_MESSAGE);
-                    }
-                    if(cogType == Edk.EE_CognitivEvent_t.EE_CognitivTrainingFailed.getType())
-                    {
-                        JOptionPane.showMessageDialog(new JFrame(), "Cognitiv Training Failed", "Dialog",
-                                JOptionPane.ERROR_MESSAGE);
-                    }
-                    if(cogType == Edk.EE_CognitivEvent_t.EE_CognitivTrainingRejected.getType())
-                    {
-                        JOptionPane.showMessageDialog(new JFrame(), "Cognitiv Training Rejected", "Dialog",
-                                JOptionPane.ERROR_MESSAGE);
-                    }
-                }
-                if(eventType == Edk.EE_Event_t.EE_EmoStateUpdated.ToInt())
-                {
-                    Edk.INSTANCE.EE_EmoEngineEventGetEmoState(eEvent, eState);
-
-                    //{
-                    int action = EmoState.INSTANCE.ES_CognitivGetCurrentAction(eState);
-                    double power = EmoState.INSTANCE.ES_CognitivGetCurrentActionPower(eState);
-                    if(power!=0)
-                    {
-                        System.out.println("Action:" + action);
-                        System.out.println("Power:" + power);
-                    }
-                    //}
-                }
             }
             else if (state != EdkErrorCode.EDK_NO_EVENT.ToInt()) {
                 System.out.println("Internal error in Emotiv Engine!");
                 break;
             }
+
+            if (readytocollect)
+            {
+                Edk.INSTANCE.EE_DataUpdateHandle(0, hData);
+
+                Edk.INSTANCE.EE_DataGetNumberOfSample(hData, nSamplesTaken);
+
+                if (nSamplesTaken != null)
+                {
+                    if (nSamplesTaken.getValue() != 0) {
+
+                        System.out.print("Updated: ");
+                        System.out.println(nSamplesTaken.getValue());
+
+                        double[] data = new double[nSamplesTaken.getValue()];
+                        for (int sampleIdx=0 ; sampleIdx<nSamplesTaken.getValue() ; ++ sampleIdx) {
+//                            for (int i = 0 ; i < 14 ; i++) {
+//
+//                                Edk.INSTANCE.EE_DataGet(hData, i, data, nSamplesTaken.getValue());
+//                                System.out.print(data[sampleIdx]);
+//                                System.out.print(",");
+//
+//                            }
+                            Edk.INSTANCE.EE_HeadsetGetGyroDelta(userID.getValue(), gyroX, gyroY);
+                            System.out.print(" GyroDelta[X]: "+gyroX.getValue()+" GyroDelta[Y]: "+gyroY.getValue());
+                            //Edk.INSTANCE. dot HOW DO I ACCESS FRUSTRATION dot BAD API
+                            Edk.INSTANCE.EE_EmoEngineEventGetEmoState(hData, eState);
+                            System.out.print(", Frust: "+EmoState.INSTANCE.ES_AffectivGetFrustrationScore(eState));
+                            System.out.println();
+                        }
+                    }
+                }
+            }
         }
 
         Edk.INSTANCE.EE_EngineDisconnect();
+        Edk.INSTANCE.EE_EmoStateFree(eState);
+        Edk.INSTANCE.EE_EmoEngineEventFree(eEvent);
         System.out.println("Disconnected!");
-    }
-
-    OverthinkerLauncher() {
-        cognitivActionsEnabled[0] = true;
-        for (int i = 1; i < cognitivActionList.length; i++)
-        {
-            cognitivActionsEnabled[i] = false;
-        }
-        this.setSize(600, 300);
-        setVisible(true);
-        Container content = getContentPane();
-        content.setBackground(Color.white);
-        content.setLayout(new FlowLayout());
-        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-        String [] options = {"Neutral","Push","Lift"};
-        comboBox = new JComboBox(options);
-
-        add(comboBox);
-        trainBtt = new JButton("Train");
-        trainBtt.addActionListener(new ActionListener() {
-
-            @Override
-            public void actionPerformed(ActionEvent e) {
-
-                int index = comboBox.getSelectedIndex();
-                if(index == 0)
-                {
-                    Edk.INSTANCE.EE_CognitivSetTrainingAction(0,EmoState.EE_CognitivAction_t.COG_NEUTRAL.ToInt());
-                    Edk.INSTANCE.EE_CognitivSetTrainingControl(0, Edk.EE_CognitivTrainingControl_t.COG_START.getType());
-                }
-                if(index ==1)
-                {
-                    try
-                    {
-                        EnableCognitivAction(EmoState.EE_CognitivAction_t.COG_PUSH, true);
-                        EnableCognitivActionsList();
-                        StartTrainingCognitiv(EmoState.EE_CognitivAction_t.COG_PUSH);
-                    }
-                    catch(Exception ex){
-                        ex.printStackTrace();
-                    }
-                }
-                if(index == 2)
-                {
-                    try
-                    {
-                        EnableCognitivAction(EmoState.EE_CognitivAction_t.COG_LIFT, true);
-                        EnableCognitivActionsList();
-                        StartTrainingCognitiv(EmoState.EE_CognitivAction_t.COG_LIFT);
-                    }
-                    catch(Exception ex){
-                        ex.printStackTrace();
-                    }
-                }
-            }
-        });
-
-        add(trainBtt);
-
-        /// Save Profile handle
-        saveBtt = new JButton("Save Profile");
-        saveBtt.addActionListener(new ActionListener() {
-
-            @Override
-            public void actionPerformed(ActionEvent e) {
-
-                EmoProfileManagement.SaveCurrentProfile();
-                EmoProfileManagement.SaveProfilesToFile();
-            }
-        });
-        add(saveBtt);
-
-        /// Load Profile handle
-        loadBtt = new JButton("Load Profile");
-        loadBtt.addActionListener(new ActionListener() {
-
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                EmoProfileManagement.LoadProfilesFromFile();
-                EmoProfileManagement.SetUserProfile("1");
-                String actionList = EmoProfileManagement.CheckCurrentProfile();
-                long cognitivActions = Long.valueOf(actionList);
-                Edk.INSTANCE.EE_CognitivSetActiveActions(0, cognitivActions);
-            }
-        });
-        add(loadBtt);
-        pack();
     }
 }
