@@ -6,7 +6,6 @@ import com.jme3.app.SimpleApplication;
 import com.jme3.audio.AudioNode;
 import com.jme3.bullet.BulletAppState;
 import com.jme3.bullet.collision.shapes.CollisionShape;
-import com.jme3.bullet.collision.shapes.SphereCollisionShape;
 import com.jme3.bullet.control.GhostControl;
 import com.jme3.bullet.util.CollisionShapeFactory;
 import com.jme3.collision.CollisionResult;
@@ -23,18 +22,15 @@ import com.jme3.material.Material;
 import com.jme3.light.Light;
 import com.jme3.math.*;
 import com.jme3.post.FilterPostProcessor;
-import com.jme3.post.filters.BloomFilter;
 import com.jme3.post.filters.FadeFilter;
 import com.jme3.post.filters.LightScatteringFilter;
 import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.CameraNode;
 import com.jme3.scene.Geometry;
-import com.jme3.scene.LightNode;
 import com.jme3.scene.Node;
 import com.jme3.scene.control.CameraControl;
 import com.jme3.scene.shape.Sphere;
 import com.jme3.shadow.DirectionalLightShadowFilter;
-import com.jme3.shadow.DirectionalLightShadowRenderer;
 import com.jme3.shadow.EdgeFilteringMode;
 import com.jme3.terrain.geomipmap.TerrainLodControl;
 import com.jme3.terrain.geomipmap.TerrainQuad;
@@ -45,9 +41,8 @@ import com.jme3.texture.Texture.WrapMode;
 import com.jme3.util.TangentBinormalGenerator;
 import com.jme3.water.WaterFilter;
 import jme3utilities.sky.SkyControl;
-import jme3utilities.sky.Updater;
-import org.lwjgl.Sys;
 
+import java.lang.reflect.Array;
 import java.util.Calendar;
 import java.util.ArrayList;
 
@@ -56,43 +51,24 @@ public class UClient extends SimpleApplication
 {
   private static final int SPHERE_RESOURCE_COUNT = 250;
   private static final float SPHERE_RESOURCE_RADIUS = 1.0f;
-  private static final float PLAYER_SPHERE_START_RADIUS = 2.0f;
-  private static final float GRAVITY = 50;
-  private static final float GROUND_RAY_ALLOWANCE = 0.5f;
-  private static final float WATER_HEIGHT_DEFAULT_RATE = 0.005f;
-  private static final float WATER_HEIGHT_PLAYER_RATE = 0.001f; // Should be somewhat lower than the DEFAULT_RATE,
-                                                                // but water height should continue increase no matter what
-  private static final float MAX_PLAYER_SIZE = 6f;
-
-  private float waterHeight = 20.0f;
-  private float waterHeightRate = 0.005f;
-  private float verticalAngle = 30 * FastMath.DEG_TO_RAD;
-  private float maxVerticalAngle = 85 * FastMath.DEG_TO_RAD;
-  private float minVerticalAngle = -85 * FastMath.DEG_TO_RAD;
 
   private Vector3f lightDir = new Vector3f(4.1f, -2.0f, 6.9f);
   private AmbientLight ambientLight = null;
   private DirectionalLight mainLight = null;
   private LightScatteringFilter sunLightFilter;
 
-
-  private Vector3f walkDirection = new Vector3f();
-
   private Node lightNode;
   private Node rayTraceableNode;
   private Node resources;
   private PlayerNode playerNode;
   private Node lvl5Node;
-  private Node pivot;
-  private CameraNode camNode;
+  private int playerType = 0;
 
-  private GhostControl camControl;
+  private float waterHeight = 20.0f;
+  private float waterHeightRate = 0.005f;
+
   private BulletAppState bulletAppState;
   private LandscapeControl landscape;
-  private PlayerControl playerControl;
-
-  private Sphere playerSphere;
-  private Geometry playerG;
 
   private FadeFilter fade;
   private FilterPostProcessor fpp;
@@ -100,18 +76,9 @@ public class UClient extends SimpleApplication
   private TerrainQuad terrain;
   private Material mat_terrain;
 
-  private boolean playerNeedsScalingUp = false;
-  private int scaleUpStartTime;
-
-  private boolean left = false, right = false, up = false, down = false, slowWater = false, jump = false;
-  private boolean gravityLeft = false, gravityRight = false, gravityForward = false, gravityBack = false;
-  private boolean speedBoost = false, dead = false;
   private ArrayList<SphereResource> sphereResourceArrayList = new ArrayList<SphereResource>();
   private ArrayList<SphereResource> sphereResourcesToShrink = new ArrayList<SphereResource>();
 
-  float rotation;
-  float rotSpeed = 300f;
-  float moveSpeed = 20f;
 
   /** Server Communcation - Not yet implemented **/
   private Vector3f myLoc = new Vector3f(); // Might replace with 'walkDirection' from above
@@ -119,8 +86,6 @@ public class UClient extends SimpleApplication
 
   /** Create AudioNodes **/
   private AudioNode audio_ocean;
-  private AudioNode audio_footsteps;
-  private AudioNode audio_jump;
   private AudioNode audio_collect;
 
   /**
@@ -145,18 +110,14 @@ public class UClient extends SimpleApplication
     //bulletAppState.getPhysicsSpace().enableDebug(assetManager);
     resources = new Node("Resources");
     rootNode.attachChild(resources);
-    playerNode = new PlayerNode("player");
-    pivot = new Node("Pivot");
+
     lvl5Node = new Node ("SceneNode");
     rayTraceableNode = new Node ("RayNode");
     lightNode = new Node("LightNode");
-
-    setUpKeys();
     //setUpLight();
 
-
-    setUpPlayer();
-    setUpCamera();
+    flyCam.setMoveSpeed(100);
+    mouseInput.setCursorVisible(false);
     createSphereResources();
 
     mainLight = new DirectionalLight();
@@ -185,7 +146,27 @@ public class UClient extends SimpleApplication
     rootNode.attachChild(lightNode);
     rootNode.addControl(sc);
     setUpWater();
-    setUpLandscape(0);
+    setUpLandscape();
+
+    if (playerType == 0)
+    {
+      playerNode = new OverNode("OverThinker");
+      cam.setLocation(new Vector3f(0,300,0));
+      cam.lookAtDirection(new Vector3f(0,-1,0), Vector3f.UNIT_Y);
+    }
+    else
+    {
+      playerNode = new UnderNode("player", cam, terrain, assetManager, bulletAppState);
+      flyCam.setEnabled(false);
+    }
+    playerNode.setUpPlayer();
+    ArrayList<String> actionStrings = playerNode.setUpControls(inputManager);
+    for (String s : actionStrings)
+    {
+      inputManager.addListener(this, s);
+    }
+    rootNode.attachChild(playerNode);
+    bulletAppState.getPhysicsSpace().addAll(playerNode);
 
     sunLightFilter = new LightScatteringFilter(lightDir.mult(-3000));
     fpp.addFilter(sunLightFilter);
@@ -210,16 +191,6 @@ public class UClient extends SimpleApplication
 
     sc.setEnabled(true);
 
-    /*
-    Updater updater = sc.getUpdater();
-      DirectionalLightShadowRenderer dlsr =
-        new DirectionalLightShadowRenderer(assetManager,
-          Globals.MAP_WIDTH, 2);
-      dlsr.setEdgeFilteringMode(EdgeFilteringMode.PCF8);
-      dlsr.setLight(mainLight);
-      updater.addShadowRenderer(dlsr);
-      viewPort.addProcessor(dlsr);*/
-
     Globals.setUpTimer();
     Globals.startTimer();
     initAudio();
@@ -233,34 +204,7 @@ public class UClient extends SimpleApplication
    */
   public void onAnalog(String binding, float value, float tpf)
   {
-    if (binding.equals("TurnLeft"))
-    {
-      Quaternion turn = new Quaternion();
-      turn.fromAngleAxis(FastMath.PI * value, Vector3f.UNIT_Y);
-      playerControl.setViewDirection(turn.mult(playerControl.getViewDirection()));
-    }
-    else if (binding.equals("TurnRight"))
-    {
-      Quaternion turn = new Quaternion();
-      turn.fromAngleAxis(-FastMath.PI * value, Vector3f.UNIT_Y);
-      playerControl.setViewDirection(turn.mult(playerControl.getViewDirection()));
-    }
-    else if (binding.equals("MouseDown")) checkVertAngle(value);
-    else if (binding.equals("MouseUp")) checkVertAngle(-value);
-    else if (binding.equals("ZoomIn")) camNode.setLocalTranslation(new Vector3f(0, camNode.getLocalTranslation().getY() - .22f,
-                                                                                camNode.getLocalTranslation().getZ() + 1));
-    else if (binding.equals("ZoomOut")) camNode.setLocalTranslation(new Vector3f(0, camNode.getLocalTranslation().getY() + .22f,
-                                                                                 camNode.getLocalTranslation().getZ() - 1));
-
-    pivot.getLocalRotation().fromAngleAxis(verticalAngle, Vector3f.UNIT_X);
-  }
-
-  private void checkVertAngle(float value)
-  {
-    float angle = FastMath.PI * value;
-    verticalAngle += angle;
-    if (verticalAngle > maxVerticalAngle) verticalAngle = maxVerticalAngle;
-    else if (verticalAngle < minVerticalAngle) verticalAngle = minVerticalAngle;
+    playerNode.onAnalog(binding, value, tpf);
   }
 
   /**
@@ -271,23 +215,7 @@ public class UClient extends SimpleApplication
    */
   public void onAction(String binding, boolean isPressed, float tpf)
   {
-    if (binding.equals("Left")) left = isPressed;
-    else if (binding.equals("Right")) right = isPressed;
-    else if (binding.equals("Up")) up = isPressed;
-    else if (binding.equals("Down")) down = isPressed;
-    else if (binding.equals("SlowWater")) slowWater = isPressed;
-    else if (binding.equals("MapTiltBack")) gravityBack = isPressed;
-    else if (binding.equals("MapTiltForward")) gravityForward = isPressed;
-    else if (binding.equals("MapTiltLeft")) gravityLeft = isPressed;
-    else if (binding.equals("MapTiltRight")) gravityRight = isPressed;
-    else if (binding.equals("SpeedBoost")) speedBoost = isPressed;
-    else if (binding.equals("Jump"))
-    {
-      if (isPressed)
-      {
-        if (playerNode.isOnGround()) playerControl.jump();
-      }
-    }
+    playerNode.onAction(binding, isPressed, tpf);
   }
 
   /**
@@ -299,50 +227,50 @@ public class UClient extends SimpleApplication
   public void simpleUpdate(float tpf)
   {
     // Raise Water Level, to be controlled by EEG
-    if (!slowWater) water.setWaterHeight(water.getWaterHeight() + WATER_HEIGHT_DEFAULT_RATE);
-    else water.setWaterHeight(water.getWaterHeight() + WATER_HEIGHT_PLAYER_RATE);
+    if (!playerNode.isSlowWater()) water.setWaterHeight(water.getWaterHeight() + Globals.WATER_HEIGHT_DEFAULT_RATE);
+    else water.setWaterHeight(water.getWaterHeight() + Globals.WATER_HEIGHT_PLAYER_RATE);
     //water.setWaterHeight(water.getWaterHeight() + waterHeightRate);
 
-
-    if ((playerG.getWorldTranslation().getY() <= water.getWaterHeight()) || speedBoost)
-    {
-      scalePlayerDown();
-    }
-
     // Player died
-    if (playerControl.getHeight() < .1f && !dead)
+    if (playerType == 1 && playerNode.getHeight() < .1f && !playerNode.isDead())
     {
       fade.fadeOut();
-      dead = true;
+      playerNode.setDead(true);
     }
 
-    checkGravity();
+    playerNode.update(tpf);
 
-    if (left || right || up || down) rotation += tpf*rotSpeed;
+    if (playerType == 1)
+    {
+      if ((playerNode.getGeometry().getWorldTranslation().getY() <= water.getWaterHeight()) || playerNode.getShrink())
+      {
+        playerNode.scalePlayerDown();
+      }
 
-    if (left) moveBall(0, -1.0f);
-    if (right) moveBall(0, 1.0f);
-    if (up) moveBall(1.0f, 0);
-    if (down) moveBall(-1.0f, 0);
-    if (up && right) moveBall(1.0f, 1.0f);
-    if (up && left) moveBall(1.0f, -1.0f);
-    if (down && right) moveBall(-1.0f, 1.0f);
-    if (down && left) moveBall(-1.0f, -1.0f);
+      CollisionResults results = new CollisionResults();
+      resources.collideWith(playerNode.getGeometry().getWorldBound(), results);
 
-    Vector3f modelForwardDir = playerNode.getWorldRotation().mult(Vector3f.UNIT_Z);
-    Vector3f modelLeftDir = playerNode.getWorldRotation().mult(Vector3f.UNIT_X);
-    walkDirection.set(0,0,0);
-    if (up) walkDirection.addLocal(modelForwardDir.mult(moveSpeed));
-    else if (down) walkDirection.addLocal(modelForwardDir.mult(moveSpeed).negate());
-    if (left) walkDirection.addLocal(modelLeftDir.mult(moveSpeed));
-    else if (right) walkDirection.addLocal(modelLeftDir.mult(moveSpeed).negate());
+      if (results.size() > 0)
+      {
+        audio_collect.play();
+        CollisionResult closest = results.getClosestCollision();
+        System.out.println("What was hit? " + closest.getGeometry().getName());
 
-    addMovementSound((up || down || left || right));
+        boolean isHit = closest.getGeometry().getUserData("isHit");
+        if (!isHit)
+        {
+          int sResId = closest.getGeometry().getUserData("id");
+          closest.getGeometry().setUserData("isHit", true);
+          SphereResource s = sphereResourceArrayList.get(sResId);
+          s.setShrink(true);
+          sphereResourcesToShrink.add(s);
+          playerNode.setScaleStartTime(Globals.getTotSecs());
+          playerNode.setPlayerNeedsScaling(true);
+          if (playerNode.getHeight() < Globals.MAX_PLAYER_SIZE) playerNode.scalePlayerUp();
+        }
+      }
+    }
 
-    playerControl.setWalkDirection(walkDirection);
-
-    // Collision Scaling
-    if (playerNeedsScalingUp && playerControl.getHeight() < MAX_PLAYER_SIZE) scalePlayerUp();
     ArrayList<SphereResource> toRemove = new ArrayList<SphereResource>();
     for (SphereResource s : sphereResourcesToShrink)
     {
@@ -362,30 +290,6 @@ public class UClient extends SimpleApplication
       }
     }
     for (SphereResource s : toRemove) sphereResourcesToShrink.remove(s);
-
-    CollisionResults results = new CollisionResults();
-    resources.collideWith(playerG.getWorldBound(), results);
-
-
-    if (results.size() > 0)
-    {
-      audio_collect.play();
-      CollisionResult closest = results.getClosestCollision();
-      System.out.println("What was hit? " + closest.getGeometry().getName());
-
-      boolean isHit = closest.getGeometry().getUserData("isHit");
-      if (!isHit)
-      {
-        int sResId = closest.getGeometry().getUserData("id");
-        closest.getGeometry().setUserData("isHit", true);
-        SphereResource s = sphereResourceArrayList.get(sResId);
-        s.setShrink(true);
-        sphereResourcesToShrink.add(s);
-        scaleUpStartTime = Globals.getTotSecs();
-        playerNeedsScalingUp = true;
-        if (playerControl.getHeight() < MAX_PLAYER_SIZE) scalePlayerUp();
-      }
-    }
 
     CollisionResults lightResults = new CollisionResults();
     Vector3f lNodeV = playerNode.getWorldTranslation();
@@ -419,281 +323,9 @@ public class UClient extends SimpleApplication
     listener.setRotation(cam.getRotation());
   }
 
-  private void moveBall(float x, float z)//, Vector3f c)
-  {
-    Quaternion ballRotate = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * rotation, new Vector3f(x, 0, z));
-    playerG.setLocalRotation(ballRotate);
-    //if (c != null) walkDirection.addLocal(c);
-  }
-
-  private void scalePlayerDown()
-  {
-    //int curTime = Globals.getTotSecs();
-    //int duration;
-
-    rotSpeed += 2f;
-    moveSpeed += .01f;
-    playerNode.scale(.99f);
-    playerControl.setScale(.99f);
-    //duration = curTime - scaleDownStartTime;
-    //if (duration >= Globals.SCALE_ANIM_TIME) playerNeedsScalingDown = false;
-  }
-
-  private void scalePlayerUp()
-  {
-    int curTime = Globals.getTotSecs();
-    int duration;
-
-    rotSpeed -= 1f;
-    moveSpeed -= .01f;
-    playerNode.scale(Globals.SCALE_BY);
-    playerControl.setScale(Globals.SCALE_BY);
-    duration = curTime - scaleUpStartTime;
-    if (duration >= Globals.SCALE_ANIM_TIME) playerNeedsScalingUp = false;
-  }
-
-  private void checkGravity()
-  {
-    boolean onGround = playerNode.isOnGround();
-    Vector3f dir;
-    CollisionResults coll;
-
-    if (gravityForward && gravityLeft)
-    {
-      coll = new CollisionResults();
-      dir = new Vector3f(1,0,-1);
-      Ray ray = new Ray(playerNode.getLocalTranslation(), dir);
-      terrain.collideWith(ray, coll);
-      if ((coll.size() > 0 && coll.getClosestCollision().getDistance() > playerControl.getHeight() + GROUND_RAY_ALLOWANCE) || coll.size() == 0)
-      {
-        onGround = false;
-      }
-      playerControl.setGravity(new Vector3f(GRAVITY, 0, -GRAVITY));
-    }
-    else if (gravityForward && gravityRight)
-    {
-      coll = new CollisionResults();
-      dir = new Vector3f(-1,0,-1);
-      Ray ray = new Ray(playerNode.getLocalTranslation(), dir);
-      terrain.collideWith(ray, coll);
-      if ((coll.size() > 0 && coll.getClosestCollision().getDistance() > playerControl.getHeight() + GROUND_RAY_ALLOWANCE) || coll.size() == 0)
-      {
-        onGround = false;
-      }
-      playerControl.setGravity(new Vector3f(-GRAVITY, 0, -GRAVITY));
-    }
-    else if (gravityBack && gravityRight)
-    {
-      coll = new CollisionResults();
-      dir = new Vector3f(-1,0,1);
-      Ray ray = new Ray(playerNode.getLocalTranslation(), dir);
-      terrain.collideWith(ray, coll);
-      if ((coll.size() > 0 && coll.getClosestCollision().getDistance() > playerControl.getHeight() + GROUND_RAY_ALLOWANCE) || coll.size() == 0)
-      {
-        onGround = false;
-      }
-      playerControl.setGravity(new Vector3f(-GRAVITY, 0, GRAVITY));
-    }
-    else if (gravityBack && gravityLeft)
-    {
-      coll = new CollisionResults();
-      dir = new Vector3f(1,0,1);
-      Ray ray = new Ray(playerNode.getLocalTranslation(), dir);
-      terrain.collideWith(ray, coll);
-      if ((coll.size() > 0 && coll.getClosestCollision().getDistance() > playerControl.getHeight() + GROUND_RAY_ALLOWANCE) || coll.size() == 0)
-      {
-        onGround = false;
-      }
-      playerControl.setGravity(new Vector3f(GRAVITY, 0, GRAVITY));
-    }
-    else if (gravityLeft)
-    {
-      coll = new CollisionResults();
-      dir = new Vector3f(1,0,0);
-      Ray rayL = new Ray(playerNode.getLocalTranslation(), dir);
-      terrain.collideWith(rayL, coll);
-      if (coll.size() > 0 && coll.getClosestCollision().getDistance() > playerControl.getHeight() + GROUND_RAY_ALLOWANCE || coll.size() == 0)
-      {
-        onGround = false;
-      }
-      playerControl.setGravity(new Vector3f(GRAVITY, 0, 0));
-    }
-    else if (gravityRight)
-    {
-      coll = new CollisionResults();
-      dir = new Vector3f(-1,0,0);
-      Ray rayR = new Ray(playerNode.getLocalTranslation(), dir);
-      terrain.collideWith(rayR, coll);
-      if (coll.size() > 0 && coll.getClosestCollision().getDistance() > playerControl.getHeight() + GROUND_RAY_ALLOWANCE || coll.size() == 0)
-      {
-        onGround = false;
-      }
-      playerControl.setGravity(new Vector3f(-GRAVITY, 0, 0));
-    }
-    else if (gravityForward)
-    {
-      coll = new CollisionResults();
-      dir = new Vector3f(0,0,-1);
-      Ray rayF = new Ray(playerNode.getLocalTranslation(), dir);
-      terrain.collideWith(rayF, coll);
-      if ((coll.size() > 0 && coll.getClosestCollision().getDistance() > playerControl.getHeight() + GROUND_RAY_ALLOWANCE) || coll.size() == 0)
-      {
-        onGround = false;
-      }
-      playerControl.setGravity(new Vector3f(0, 0, -GRAVITY));
-    }
-    else if (gravityBack)
-    {
-      coll = new CollisionResults();
-      dir = new Vector3f(0,0,1);
-      Ray rayB = new Ray(playerNode.getLocalTranslation(), dir);
-      terrain.collideWith(rayB, coll);
-      if ((coll.size() > 0 && coll.getClosestCollision().getDistance() > playerControl.getHeight() + GROUND_RAY_ALLOWANCE) || coll.size() == 0)
-      {
-        onGround = false;
-      }
-      playerControl.setGravity(new Vector3f(0, 0, GRAVITY));
-    }
-    else
-    {
-      coll = new CollisionResults();
-      dir = new Vector3f(0,-1,0);
-      Ray rayD = new Ray(playerNode.getLocalTranslation(), dir);
-      terrain.collideWith(rayD, coll);
-      if (coll.size() > 0 && coll.getClosestCollision().getDistance() > playerControl.getHeight() + GROUND_RAY_ALLOWANCE || coll.size() == 0)
-      {
-        onGround = false;
-      }
-      if (!jump) playerControl.setGravity(new Vector3f(0, -GRAVITY, 0));
-    }
-    playerNode.setIsOnGround(onGround);
-  }
-
-  /** ---Setters/Getters--- **/
-
-  /**
-   * Setter for water height. Water level always increasing.
-   * Value comes from EEG to determine just how fast.
-   * Range: .001 - .005
-   *
-   * @param val - water height value from EEG
-   */
-  public void setWaterHeight (float val)
-  {
-    waterHeightRate = val;
-  }
-
-  /**
-   * Setters for left gravity. Determined by EEG gyroscope.
-   * @param val - left gravity val
-   */
-  public void setGravityLeft (boolean val)
-  {
-    gravityLeft = val;
-  }
-
-  /**
-   * Setters for right gravity. Determined by EEG gyroscope.
-   * @param val - right gravity val
-   */
-  public void setGravityRight (boolean val)
-  {
-    gravityRight = val;
-  }
-
-  /**
-   * Setters for forward gravity. Determined by EEG gyroscope.
-   * @param val - forward gravity val
-   */
-  public void setGravityForward (boolean val)
-  {
-    gravityForward = val;
-  }
-
-  /**
-   * Setters for back gravity. Determined by EEG gyroscope.
-   * @param val - back gravity val
-   */
-  public void setGravityBack (boolean val)
-  {
-    gravityBack = val;
-  }
-
   /** ---Initialization methods--- **/
 
-  private void setUpCamera()
-  {
-    flyCam.setMoveSpeed(100);
-
-    // For third person cam
-    // pivot node allows for mouse tracking of player character
-    //camControl = new GhostControl(new SphereCollisionShape(0.2f));
-    //camControl.setPhysicsLocation(new Vector3f(-340, 84, -418));
-    //RigidBodyControl sC = new RigidBodyControl(new SphereCollisionShape(1.0f), 0.0f);
-    mouseInput.setCursorVisible(false);
-
-    camNode = new CameraNode("Camera Node", cam);
-    camNode.setControlDir(CameraControl.ControlDirection.SpatialToCamera);
-    camNode.setLocalTranslation(new Vector3f(0, 4, -18));
-    pivot.attachChild(camNode);
-    Quaternion quat = new Quaternion();
-    quat.lookAt(Vector3f.UNIT_Z, Vector3f.UNIT_Y);
-    playerNode.attachChild(pivot);
-    camNode.setEnabled(true);
-    flyCam.setEnabled(false);
-    pivot.getLocalRotation().fromAngleAxis(verticalAngle, Vector3f.UNIT_X);
-    //sC.setPhysicsLocation(new Vector3f(-340, 80, -400));
-    //camNode.addControl(camControl);
-    //bulletAppState.getPhysicsSpace().add(sC);
-    //bulletAppState.getPhysicsSpace().add(camControl);
-
-    // For first person camera
-    //camNode.lookAt(playerNode.getLocalTranslation(), Vector3f.UNIT_Y);
-  }
-
-  private void setUpPlayer()
-  {
-    playerSphere = new Sphere(32, 32, PLAYER_SPHERE_START_RADIUS);
-
-    // Tutorial pond ball
-    playerG = new Geometry("Shiny rock", playerSphere);
-    playerSphere.setTextureMode(Sphere.TextureMode.Projected);
-    TangentBinormalGenerator.generate(playerSphere);
-    Material mat = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
-    mat.setTexture("DiffuseMap", assetManager.loadTexture("Textures/Terrain/Pond/Pond.jpg"));
-    mat.setTexture("NormalMap", assetManager.loadTexture("Textures/Terrain/Pond/Pond_normal.png"));
-    mat.setBoolean("UseMaterialColors", true);
-    mat.setColor("Diffuse", ColorRGBA.White.clone());
-    mat.setColor("Ambient", ColorRGBA.White.mult(0.5f));
-    //mat.setFloat("Shininess", 64f);
-    playerG.setMaterial(mat);
-    playerG.setShadowMode(RenderQueue.ShadowMode.CastAndReceive);
-    playerNode.attachChild(playerG);
-
-
-    /* Red Player Ball
-    playerG = new Geometry("Sphere", playerSphere);
-    Material mat = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
-    mat.setBoolean("UseMaterialColors", true);
-    mat.setColor("Diffuse", ColorRGBA.Red);
-    mat.setColor("Specular", ColorRGBA.White);
-    mat.setFloat("Shininess", 64f);
-    playerG.setMaterial(mat);
-    playerNode.attachChild(playerG);
-    */
-
-    //BetterCharacteControl moves, but bounces and falls through ground
-    playerControl = new PlayerControl(PLAYER_SPHERE_START_RADIUS, PLAYER_SPHERE_START_RADIUS, 10f);
-    playerControl.setJumpForce(new Vector3f(0,300,0));
-    playerControl.setGravity(new Vector3f(0, -10, 0));
-    playerNode.setLocalTranslation(new Vector3f((-340, 80, -400));
-    playerNode.addControl(playerControl);
-    bulletAppState.getPhysicsSpace().add(playerControl);
-    bulletAppState.getPhysicsSpace().addAll(playerNode);
-    rootNode.attachChild(playerNode);
-  }
-
-  private void setUpLandscape(int mapNum)
+  private void setUpLandscape()
   {
     /** Create terrain material and load four textures into it. */
     mat_terrain = new Material(assetManager,
@@ -738,8 +370,8 @@ public class UClient extends SimpleApplication
     /** Create the height map */
     Texture heightMapImage;
 
-    if (mapNum == 0) heightMapImage = assetManager.loadTexture("assets/terrains/tieredmaze1.png");
-    else heightMapImage = assetManager.loadTexture("assets/terrains/tieredmaze1_nowalls.png");
+    if (playerType == 0) heightMapImage = assetManager.loadTexture("assets/terrains/tieredmaze1_nowalls.png");
+    else heightMapImage = assetManager.loadTexture("assets/terrains/tieredmaze1.png");
 
     AbstractHeightMap heightMap = null;
 
@@ -821,50 +453,16 @@ public class UClient extends SimpleApplication
     rootNode.addLight(dl);
   }
 
-  private void setUpKeys()
+  /**
+   * Setter for water height. Water level always increasing.
+   * Value comes from EEG to determine just how fast.
+   * Range: .001 - .005
+   *
+   * @param val - water height value from EEG
+   */
+  public void setWaterHeight (float val)
   {
-    // Mouse pivoting for 3rd person cam
-    inputManager.addMapping("TurnLeft", new MouseAxisTrigger(MouseInput.AXIS_X, true));
-    inputManager.addMapping("TurnRight", new MouseAxisTrigger(MouseInput.AXIS_X, false));
-    inputManager.addMapping("MouseDown", new MouseAxisTrigger(MouseInput.AXIS_Y, true));
-    inputManager.addMapping("MouseUp", new MouseAxisTrigger(MouseInput.AXIS_Y, false));
-    inputManager.addMapping("ZoomIn", new MouseAxisTrigger(MouseInput.AXIS_WHEEL, false));
-    inputManager.addMapping("ZoomOut", new MouseAxisTrigger(MouseInput.AXIS_WHEEL, true));
-    inputManager.addListener(this, "TurnLeft");
-    inputManager.addListener(this, "TurnRight");
-    inputManager.addListener(this, "MouseDown");
-    inputManager.addListener(this, "MouseUp");
-    inputManager.addListener(this, "ZoomIn");
-    inputManager.addListener(this, "ZoomOut");
-
-    // Basic character movement
-    inputManager.addMapping("Left", new KeyTrigger(KeyInput.KEY_A));
-    inputManager.addMapping("Right", new KeyTrigger(KeyInput.KEY_D));
-    inputManager.addMapping("Up", new KeyTrigger(KeyInput.KEY_W));
-    inputManager.addMapping("Down", new KeyTrigger(KeyInput.KEY_S));
-    inputManager.addMapping("Jump", new KeyTrigger(KeyInput.KEY_SPACE));
-    inputManager.addMapping("SpeedBoost", new KeyTrigger(KeyInput.KEY_E));
-    inputManager.addListener(this, "Left");
-    inputManager.addListener(this, "Right");
-    inputManager.addListener(this, "Up");
-    inputManager.addListener(this, "Down");
-    inputManager.addListener(this, "Jump");
-    inputManager.addListener(this, "SpeedBoost");
-    inputManager.addListener(jumpActionListener,"Jump");
-
-    // Tilting map, to be replaced by headset commands
-    inputManager.addMapping("MapTiltForward", new KeyTrigger(KeyInput.KEY_I));
-    inputManager.addMapping("MapTiltLeft", new KeyTrigger(KeyInput.KEY_J));
-    inputManager.addMapping("MapTiltRight", new KeyTrigger(KeyInput.KEY_L));
-    inputManager.addMapping("MapTiltBack", new KeyTrigger(KeyInput.KEY_K));
-    inputManager.addListener(this, "MapTiltBack");
-    inputManager.addListener(this, "MapTiltLeft");
-    inputManager.addListener(this, "MapTiltRight");
-    inputManager.addListener(this, "MapTiltForward");
-
-    // Lower water level, to be replaced by headset commands
-    inputManager.addMapping("SlowWater", new KeyTrigger(KeyInput.KEY_LSHIFT));
-    inputManager.addListener(this, "SlowWater");
+    waterHeightRate = val;
   }
 
   private void createSphereResources()
@@ -881,7 +479,8 @@ public class UClient extends SimpleApplication
   }
 
 
-  private void initAudio(){
+  private void initAudio()
+  {
 
     //collect object
     audio_collect = new AudioNode(assetManager, "assets/sounds/collect.ogg",false);
@@ -889,20 +488,13 @@ public class UClient extends SimpleApplication
     audio_collect.setVolume(2);
     rootNode.attachChild(audio_collect);
 
-    //walking sounds
-    audio_footsteps = new AudioNode(assetManager, "assets/sounds/footsteps.ogg",true);
-    audio_footsteps.setPositional(false);
-    audio_footsteps.setLooping(true);
-    audio_footsteps.setVolume(2);
-    rootNode.attachChild(audio_footsteps);
-
-
-    //jumping sound
-    audio_jump = new AudioNode(assetManager, "assets/sounds/pop.ogg",false);
-    audio_jump.setPositional(false);
-    audio_jump.setLooping(false);
-    audio_jump.setVolume(2);
-    rootNode.attachChild(audio_jump);
+    if (playerNode.getAudio().size() > 0)
+    {
+      for (AudioNode a : (ArrayList<AudioNode>) playerNode.getAudio())
+      {
+        rootNode.attachChild(a);
+      }
+    }
 
     //ambient map sounds
     audio_ocean = new AudioNode(assetManager,"assets/sounds/wavesLoop.ogg",true);
@@ -912,21 +504,4 @@ public class UClient extends SimpleApplication
     rootNode.attachChild(audio_ocean);
     audio_ocean.play();
   }
-  /** Method to add sounds when buttons are pressed **/
-  private void addMovementSound(boolean emmit){
-    if(emmit){
-      audio_footsteps.play();
-    }else{
-      audio_footsteps.stop();
-    }
-  }
-
-  private ActionListener jumpActionListener = new ActionListener() {
-    @Override
-    public void onAction(String name, boolean keyPressed, float v) {
-      if (name.equals("Jump") && keyPressed)
-        audio_jump.playInstance();
-
-    }
-  };
 }

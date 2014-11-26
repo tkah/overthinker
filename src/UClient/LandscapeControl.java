@@ -22,12 +22,12 @@ public class LandscapeControl extends RigidBodyControl implements PhysicsCollisi
   {
     if (event.getNodeA().getName().equals("player"))
     {
-      final PlayerNode node = (PlayerNode) event.getNodeA();
+      final UnderNode node = (UnderNode) event.getNodeA();
       node.setIsOnGround(true);
     }
     else if (event.getNodeB().getName().equals("player"))
     {
-      final PlayerNode node = (PlayerNode) event.getNodeB();
+      final UnderNode node = (UnderNode) event.getNodeB();
       node.setIsOnGround(true);
     }
   }

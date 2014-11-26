@@ -15,6 +15,14 @@ public class Globals
   public static final int TIMER_DELAY = 1000;
   public static final int SCALE_ANIM_TIME = 1;
   public static final float SCALE_BY = 1.005f;
+  public static final float PLAYER_SPHERE_START_RADIUS = 2.0f;
+  public static final float GRAVITY = 50;
+  public static final float GROUND_RAY_ALLOWANCE = 0.5f;
+  public static final float WATER_HEIGHT_DEFAULT_RATE = 0.005f;
+  public static final float WATER_HEIGHT_PLAYER_RATE = 0.001f; // Should be somewhat lower than the DEFAULT_RATE,
+                                                                // but water height should continue increase no matter what
+  public static final float MAX_PLAYER_SIZE = 6f;
+
   private static Random rand = new Random();
 
   private static Timer timer;

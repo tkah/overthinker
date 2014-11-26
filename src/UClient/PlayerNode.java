@@ -1,40 +1,83 @@
 package UClient;
 
-import com.jme3.bullet.PhysicsSpace;
-import com.jme3.bullet.PhysicsTickListener;
+import com.jme3.input.InputManager;
+import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+
 /**
- * Created by Torran on 11/21/14.
+ * Created by Torran on 11/26/14.
  */
-public class PlayerNode extends Node implements PhysicsTickListener
+abstract class PlayerNode extends Node
 {
-  private boolean onGround = false;
+  ArrayList<String> actionStrings = new ArrayList<String>();
 
   public PlayerNode(String name)
   {
     super(name);
   }
 
-  @Override
-  public void prePhysicsTick(PhysicsSpace space, float tpf){
-    System.out.println("PlayerNode: prePhysicsTick() - not on ground");
-    onGround = false;
-  }
+  abstract void setUpPlayer();
 
-  @Override
-  public void physicsTick(PhysicsSpace space, float tpf){
-    System.out.println("PlayerNode: physicsTick() - not on ground");
-    // poll game state ...
-  }
+  abstract ArrayList setUpControls(InputManager inputManager);
 
-  public boolean isOnGround()
+  abstract void onAction(String binding, boolean isPressed, float tpf);
+
+  abstract void onAnalog(String binding, float value, float tpf);
+
+  abstract void update(float tpf);
+
+  abstract ArrayList getAudio();
+
+  public Geometry getGeometry()
   {
-    return onGround;
+    return null;
   }
 
-  public void setIsOnGround (boolean status)
+  public boolean isDead()
   {
-    onGround = status;
+    return false;
   }
+
+  public void setDead(boolean val)
+  {
+  }
+
+  public boolean isSlowWater()
+  {
+    return false;
+  }
+
+  public float getHeight()
+  {
+    return 0;
+  }
+
+  public void setScaleStartTime(int time)
+  {
+
+  }
+
+  public void setPlayerNeedsScaling(boolean val)
+  {
+
+  }
+
+  public void scalePlayerUp()
+  {
+
+  }
+
+  public void scalePlayerDown()
+  {
+
+  }
+
+  public boolean getShrink()
+  {
+    return false;
+  }
+
 }
