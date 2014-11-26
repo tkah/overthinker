@@ -37,6 +37,7 @@ import com.jme3.terrain.heightmap.ImageBasedHeightMap;
 import com.jme3.texture.Texture;
 import com.jme3.util.TangentBinormalGenerator;
 import com.jme3.water.WaterFilter;
+import overthinker.client.eeg.OtherPlayer;
 import overthinker.server.ServerModel;
 import overthinker.levels.Level;
 import overthinker.net.ModelChangeRequest;
@@ -75,6 +76,7 @@ public class ClientMain extends SimpleApplication implements ActionListener, Ana
         setUpPlayer();
         setUpCamera();
         createSphereResources();
+        createOtherPlayers();
 
         Globals.setUpTimer();
         Globals.startTimer();
@@ -178,6 +180,17 @@ public class ClientMain extends SimpleApplication implements ActionListener, Ana
             level.getBulletAppState().getPhysicsSpace().add(sRes.getSphereResourcePhy());
             level.getSphereResource().add(sRes);
             level.getResources().attachChild(sRes.getGeometry());
+        }
+    }
+
+    private void createOtherPlayers()
+    {
+        for (int i = 0; i < level.getPlayer_player_count(); i++)
+        {
+            OtherPlayer oP = new OtherPlayer(level.getPlayer_sphere_start_radius(), i, level.getSpawnLocations().get(i), assetManager);
+            level.getBulletAppState().getPhysicsSpace().add(oP.getSphereResourcePhy());
+            level.getOtherPlayers().add(oP);
+            level.getResources().attachChild(oP.getGeometry());
         }
     }
 
@@ -462,6 +475,14 @@ public class ClientMain extends SimpleApplication implements ActionListener, Ana
             else if (level.getTiltMapX() > 0) level.setTiltMapX(level.getTiltMapX() - level.getMap_tilt_rate());
             else if (level.getTiltMapX() > 0) level.setTiltMapY(level.getTiltMapY() - level.getMap_tilt_rate());
             else if (level.getTiltMapX() < 0) level.setTiltMapY(level.getTiltMapY() + level.getMap_tilt_rate());
+        }
+
+        //TODO: Code for updating OtherPlayer Locations
+        for (int i = 0; i < level.getPlayer_player_count(); i++)
+        {
+            OtherPlayer p = level.getOtherPlayers().get(i);
+            if (getPlayerScale(i) > 1 || getPlayerScale(i) < 1) p.scale(getPlayerScale(i)); // Where are other scale amts coming from?
+            p.move(getPlayerMove(i)); // Where are other player moves coming from?
         }
 
         //TODO: CHECK FOR CONSISTANCY

@@ -16,12 +16,15 @@ import com.jme3.scene.shape.Sphere;
 import com.jme3.terrain.geomipmap.TerrainQuad;
 import com.jme3.water.WaterFilter;
 import overthinker.client.SphereResource;
+import overthinker.client.eeg.OtherPlayer;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 public abstract class Level {
 
     private int sphere_resource_count;
+    private int player_count;
     private float sphere_resource_radius;
     private float player_sphere_start_radius;
     private float map_tilt_rate;
@@ -75,6 +78,8 @@ public abstract class Level {
 
     private ArrayList<SphereResource> sphereResource = new ArrayList<SphereResource>();
     private ArrayList<SphereResource> sphereResourcesToShrink = new ArrayList<SphereResource>();
+    private ArrayList<OtherPlayer> otherPlayers = new ArrayList<OtherPlayer>();
+    private ArrayList<Vector3f> spawnLocations = new ArrayList<Vector3f>();
 
     private Quaternion mapTilt = new Quaternion();
     private float rotation;
@@ -95,6 +100,8 @@ public abstract class Level {
     public int getSphere_resource_count() {
         return sphere_resource_count;
     }
+
+    public int getPlayer_player_count() { return player_count; }
 
     public void setSphere_resource_count(int sphere_resource_count) {
         this.sphere_resource_count = sphere_resource_count;
@@ -427,6 +434,10 @@ public abstract class Level {
     public void setMapTiltBack(boolean mapTiltBack) {
         this.mapTiltBack = mapTiltBack;
     }
+
+    public ArrayList<OtherPlayer> getOtherPlayers() { return otherPlayers; }
+
+    public ArrayList<Vector3f> getSpawnLocations() { return spawnLocations; }
 
     public ArrayList<SphereResource> getSphereResource() {
         return sphereResource;
