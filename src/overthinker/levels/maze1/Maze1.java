@@ -22,6 +22,11 @@ public class Maze1 extends Level {
         setWater_height_default_rate(0.005f);
         setWater_height_player_rate(0.001f);
 
+        setPlayer_spawn_points(new Vector3f(340, 80, -400), new Vector3f(340, 80, 350));
+        setSpawnX(-340);
+        setSpawnY(80);
+        setSpawnZ(-400);
+
         setWaterHeight(20.0f);
         setVerticalAngle(30 * FastMath.DEG_TO_RAD);
         setMaxVerticalAngle(85 * FastMath.DEG_TO_RAD);
