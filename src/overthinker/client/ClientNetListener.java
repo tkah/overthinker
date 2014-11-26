@@ -20,11 +20,7 @@ public class ClientNetListener implements MessageListener<Client> {
 
     public void messageReceived(Client source, Message message) {
         if (message instanceof ModelUpdate){
-//            if(Globals.DEBUG)System.out.println("Received new model");
-//
-//            if(clientMain.getLocalModel() == null)clientMain.setLocalModel(new Util.Model());
-//            clientMain.getLocalModel().update((ModelUpdate)message);
-
+            System.out.println(((ModelUpdate) message).getPlayerLocations());
         } else if (message instanceof NewClientResponse) {
             if(Globals.DEBUG)System.out.println("Received new client response");
             switch (((NewClientResponse) message).getLevelType())

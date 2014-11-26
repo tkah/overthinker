@@ -4,6 +4,9 @@ import com.jme3.math.Vector3f;
 import com.jme3.network.AbstractMessage;
 import com.jme3.network.serializing.Serializable;
 
+import java.io.ObjectOutputStream;
+import java.util.HashMap;
+
 /**
  * Created by Peter on 11/13/2014.
  */
@@ -11,13 +14,14 @@ import com.jme3.network.serializing.Serializable;
 @Serializable
 public class ModelUpdate extends AbstractMessage {
     public long version;
-    private Vector3f[] playerLocations;
+    private HashMap<Integer, Vector3f> playerLocations;
 
-    public Vector3f[] getPlayerLocations() {
+    public HashMap<Integer, Vector3f> getPlayerLocations() {
+
         return playerLocations;
     }
 
-    public void setPlayerLocations(Vector3f[] playerLocations) {
+    public void setPlayerLocations(HashMap<Integer, Vector3f> playerLocations) {
         this.playerLocations = playerLocations;
     }
 }

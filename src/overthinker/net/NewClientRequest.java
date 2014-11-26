@@ -8,5 +8,6 @@ import com.jme3.network.serializing.Serializable;
  */
 @Serializable
 public class NewClientRequest extends AbstractMessage {
+
     public NewClientRequest() {}
 }

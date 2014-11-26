@@ -21,15 +21,13 @@ public class ServerNetListener implements MessageListener<HostedConnection> {
     public void messageReceived(HostedConnection source, Message message) {
         if (message instanceof NewClientRequest) {
             if(Globals.DEBUG)System.out.println("New client request from: " + source.getAddress());
-
-            server.getClients().add(source);
+            server.addClient(source);
             server.getClientModelVersions().put(source, 0f);
 
             initClient(source);
 
         } else if (message instanceof ModelChangeRequest) {
-
-
+            server.updateModel(source, ((ModelChangeRequest) message).getPlayerLocation());
         }
     }
 
@@ -38,10 +36,7 @@ public class ServerNetListener implements MessageListener<HostedConnection> {
         response.setLevelType(LevelType.MAZE1);
         response.setSpawnPoint(-340, 80, -400);
         server.getNetServer().broadcast(Filters.in(source), response);
-
-        server.getModel().getPlayerLocations().add(new Vector3f(-340, 80, -400));
         server.getModel().version += 1;
-
         server.broadcastModelUpdate();
     }
 

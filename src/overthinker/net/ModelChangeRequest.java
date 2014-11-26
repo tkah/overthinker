@@ -10,7 +10,6 @@ import com.jme3.network.serializing.Serializable;
 @Serializable
 public class ModelChangeRequest extends AbstractMessage{
     private Vector3f playerLocation;
-    public long version;
 
     public ModelChangeRequest () {}
 

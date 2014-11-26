@@ -9,14 +9,14 @@ import java.util.HashMap;
  * Created by Peter on 11/25/2014.
  */
 public class ServerModel {
-    private HashMap<HostedConnection, Vector3f> playerLocations = new HashMap<HostedConnection, Vector3f>();
+    private HashMap<Integer, Vector3f> playerLocations = new HashMap<Integer, Vector3f>();
     public long version = 0L;
 
     public ServerModel() {
         version = 0L;
     }
 
-    public HashMap<HostedConnection, Vector3f> getPlayerLocations()
+    public HashMap<Integer, Vector3f> getPlayerLocations()
     {
         return playerLocations;
     }

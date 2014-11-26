@@ -420,6 +420,10 @@ public class ClientMain extends SimpleApplication implements ActionListener, Ana
         {
             if (isPressed) level.getPlayerControl().jump();
         }
+
+        ModelChangeRequest modelChangeRequest = new ModelChangeRequest();
+        modelChangeRequest.setPlayerLocation(level.getPlayerControl().getPhysicsLocation());
+        netClient.send(modelChangeRequest);
     }
 
     /**
@@ -514,6 +518,8 @@ public class ClientMain extends SimpleApplication implements ActionListener, Ana
 
         level.getPlayerControl().setWalkDirection(level.getWalkDirection());
 
+        //Send new client location to server
+
         // Collision Scaling
         if (level.isPlayerNeedsScaling()) scalePlayer();
         boolean clear = true;
@@ -552,6 +558,7 @@ public class ClientMain extends SimpleApplication implements ActionListener, Ana
         //move the audio with the camera
         listener.setLocation(cam.getLocation());
         listener.setRotation(cam.getRotation());
+
     }
 
     private void moveBall(float x, float z, Vector3f c)
