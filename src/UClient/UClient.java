@@ -685,8 +685,8 @@ public class UClient extends SimpleApplication
     //BetterCharacteControl moves, but bounces and falls through ground
     playerControl = new PlayerControl(PLAYER_SPHERE_START_RADIUS, PLAYER_SPHERE_START_RADIUS, 10f);
     playerControl.setJumpForce(new Vector3f(0,300,0));
-    playerControl.setGravity(new Vector3f(0,-10,0));
-    playerNode.setLocalTranslation(new Vector3f(-340, 80, -400));
+    playerControl.setGravity(new Vector3f(0, -10, 0));
+    playerNode.setLocalTranslation(new Vector3f((-340, 80, -400));
     playerNode.addControl(playerControl);
     bulletAppState.getPhysicsSpace().add(playerControl);
     bulletAppState.getPhysicsSpace().addAll(playerNode);
