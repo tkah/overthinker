@@ -16,10 +16,10 @@ import com.jme3.scene.shape.Sphere;
 import com.jme3.terrain.geomipmap.TerrainQuad;
 import com.jme3.water.WaterFilter;
 import overthinker.client.SphereResource;
-import overthinker.client.eeg.OtherPlayer;
+import overthinker.client.OtherPlayer;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public abstract class Level {
 
@@ -78,7 +78,7 @@ public abstract class Level {
 
     private ArrayList<SphereResource> sphereResource = new ArrayList<SphereResource>();
     private ArrayList<SphereResource> sphereResourcesToShrink = new ArrayList<SphereResource>();
-    private ArrayList<OtherPlayer> otherPlayers = new ArrayList<OtherPlayer>();
+    private HashMap<Integer, OtherPlayer> otherPlayers = new HashMap<Integer, OtherPlayer>();
     private ArrayList<Vector3f> spawnLocations = new ArrayList<Vector3f>();
 
     private Quaternion mapTilt = new Quaternion();
@@ -441,7 +441,7 @@ public abstract class Level {
         this.mapTiltBack = mapTiltBack;
     }
 
-    public ArrayList<OtherPlayer> getOtherPlayers() { return otherPlayers; }
+    public HashMap<Integer, OtherPlayer> getOtherPlayers() { return otherPlayers; }
 
     public ArrayList<Vector3f> getSpawnLocations() { return spawnLocations; }
 
