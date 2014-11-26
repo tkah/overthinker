@@ -25,11 +25,15 @@ import com.jme3.math.*;
 import com.jme3.post.FilterPostProcessor;
 import com.jme3.post.filters.BloomFilter;
 import com.jme3.post.filters.FadeFilter;
+import com.jme3.post.filters.LightScatteringFilter;
+import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.CameraNode;
 import com.jme3.scene.Geometry;
+import com.jme3.scene.LightNode;
 import com.jme3.scene.Node;
 import com.jme3.scene.control.CameraControl;
 import com.jme3.scene.shape.Sphere;
+import com.jme3.shadow.DirectionalLightShadowFilter;
 import com.jme3.shadow.DirectionalLightShadowRenderer;
 import com.jme3.shadow.EdgeFilteringMode;
 import com.jme3.terrain.geomipmap.TerrainLodControl;
@@ -66,12 +70,16 @@ public class UClient extends SimpleApplication
   private float maxVerticalAngle = 85 * FastMath.DEG_TO_RAD;
   private float minVerticalAngle = -85 * FastMath.DEG_TO_RAD;
 
-  private Vector3f lightDir = new Vector3f(-4.9f, -2.3f, 5.9f);
+  private Vector3f lightDir = new Vector3f(4.1f, -2.0f, 6.9f);
   private AmbientLight ambientLight = null;
   private DirectionalLight mainLight = null;
+  private LightScatteringFilter sunLightFilter;
+
 
   private Vector3f walkDirection = new Vector3f();
 
+  private Node lightNode;
+  private Node rayTraceableNode;
   private Node resources;
   private PlayerNode playerNode;
   private Node lvl5Node;
@@ -140,6 +148,8 @@ public class UClient extends SimpleApplication
     playerNode = new PlayerNode("player");
     pivot = new Node("Pivot");
     lvl5Node = new Node ("SceneNode");
+    rayTraceableNode = new Node ("RayNode");
+    lightNode = new Node("LightNode");
 
     setUpKeys();
     //setUpLight();
@@ -151,13 +161,13 @@ public class UClient extends SimpleApplication
 
     mainLight = new DirectionalLight();
     mainLight.setName("main");
-    mainLight.setColor(ColorRGBA.White);
-    //mainLight.setDirection(lightDir);
+    mainLight.setColor(ColorRGBA.White.clone().multLocal(1.3f));
+    mainLight.setDirection(lightDir);
     ambientLight = new AmbientLight();
     ambientLight.setName("ambient");
 
     SkyControl sc = new SkyControl(assetManager, cam, 0.9f, true, true);
-    sc.getSunAndStars().setHour(15f);
+    sc.getSunAndStars().setHour(16f);
     sc.getSunAndStars().setObserverLatitude(37.4046f * FastMath.DEG_TO_RAD);
     sc.getSunAndStars().setSolarLongitude(Calendar.FEBRUARY, 10);
     sc.setCloudiness(0.3f);
@@ -166,25 +176,41 @@ public class UClient extends SimpleApplication
       if (light.getName().equals("ambient")) sc.getUpdater().setAmbientLight((AmbientLight) light);
       else if (light.getName().equals("main")) sc.getUpdater().setMainLight((DirectionalLight) light);
     }
+
+    //lightNode = new LightNode(mainLight);
     rootNode.addLight(mainLight);
     rootNode.addLight(ambientLight);
+    lightNode.setLocalTranslation(new Vector3f(-540, 200, -400));
+    System.out.println(lightNode.getWorldTranslation());
+    rootNode.attachChild(lightNode);
     rootNode.addControl(sc);
     setUpWater();
     setUpLandscape(0);
 
+    sunLightFilter = new LightScatteringFilter(lightDir.mult(-3000));
+    fpp.addFilter(sunLightFilter);
     fade = new FadeFilter(2); // e.g. 2 seconds
     fpp.addFilter(fade);
-    viewPort.addProcessor(fpp);
 
-    /* Bloom is nice, but burns through walls
-    BloomFilter bloom = new BloomFilter(BloomFilter.GlowMode.Objects);
-    bloom.setBlurScale(2.5f);
-    bloom.setExposurePower(1f);
-    Misc.getFpp(viewPort, assetManager).addFilter(bloom);
-    sc.getUpdater().addBloomFilter(bloom);*/
+
+    final int SHADOWMAP_SIZE=1024;
+    /*DirectionalLightShadowRenderer dlsr = new DirectionalLightShadowRenderer(assetManager, SHADOWMAP_SIZE, 3);
+    dlsr.setLight(mainLight);
+    viewPort.addProcessor(dlsr);*/
+
+    DirectionalLightShadowFilter dlsf = new DirectionalLightShadowFilter(assetManager, SHADOWMAP_SIZE, 3);
+    dlsf.setLight(mainLight);
+    dlsf.setLambda(0.55f);
+    dlsf.setShadowIntensity(0.6f);
+    dlsf.setEdgeFilteringMode(EdgeFilteringMode.Nearest);
+    dlsf.setEnabled(true);
+    fpp.addFilter(dlsf);
+
+    viewPort.addProcessor(fpp);
 
     sc.setEnabled(true);
 
+    /*
     Updater updater = sc.getUpdater();
       DirectionalLightShadowRenderer dlsr =
         new DirectionalLightShadowRenderer(assetManager,
@@ -192,7 +218,7 @@ public class UClient extends SimpleApplication
       dlsr.setEdgeFilteringMode(EdgeFilteringMode.PCF8);
       dlsr.setLight(mainLight);
       updater.addShadowRenderer(dlsr);
-      viewPort.addProcessor(dlsr);
+      viewPort.addProcessor(dlsr);*/
 
     Globals.setUpTimer();
     Globals.startTimer();
@@ -284,13 +310,10 @@ public class UClient extends SimpleApplication
     }
 
     // Player died
-    if (playerControl.getHeight() < .2f && !dead)
+    if (playerControl.getHeight() < .1f && !dead)
     {
       fade.fadeOut();
       dead = true;
-      bulletAppState.getPhysicsSpace().remove(landscape);
-      lvl5Node.removeFromParent();
-      //setUpLandscape(1);
     }
 
     checkGravity();
@@ -361,6 +384,33 @@ public class UClient extends SimpleApplication
         scaleUpStartTime = Globals.getTotSecs();
         playerNeedsScalingUp = true;
         if (playerControl.getHeight() < MAX_PLAYER_SIZE) scalePlayerUp();
+      }
+    }
+
+    CollisionResults lightResults = new CollisionResults();
+    Vector3f lNodeV = playerNode.getWorldTranslation();
+    Vector3f lightVect = lNodeV.subtract(lightNode.getWorldTranslation());
+    lightVect.normalize();
+
+    Ray ray = new Ray(playerNode.getLocalTranslation(), lightVect);
+    playerNode.collideWith(ray, lightResults);
+    if (lightResults.size() > 0) {
+      System.out.println("getting results");
+      CollisionResult closest = lightResults.getClosestCollision();
+      System.out.println(closest.getDistance() + " " + lightNode.getWorldTranslation().distance(playerNode.getWorldTranslation()));
+      if(closest.getDistance() >= lightNode.getWorldTranslation().distance(playerNode.getWorldTranslation())){
+        System.out.println("WE STAND IN LIGHT");
+        sunLightFilter.setLightDensity(1.4f);
+      }
+      else{
+        System.out.println("WE STAND IN SHADOW");
+        sunLightFilter.setLightDensity(0f);
+      }
+    } else {
+      // On some occasions, especially if your sun is out of bounds, there may be no collision at all
+      if(sunLightFilter.getLightDensity() == 0f){
+        System.out.println("WE’RE NOT SURE, SO DEFAULT TO STAND IN LIGHT");
+        sunLightFilter.setLightDensity(1.4f);
       }
     }
 
@@ -613,10 +663,11 @@ public class UClient extends SimpleApplication
     mat.setTexture("DiffuseMap", assetManager.loadTexture("Textures/Terrain/Pond/Pond.jpg"));
     mat.setTexture("NormalMap", assetManager.loadTexture("Textures/Terrain/Pond/Pond_normal.png"));
     mat.setBoolean("UseMaterialColors", true);
-    mat.setColor("Diffuse", ColorRGBA.White);
-    mat.setColor("Specular", ColorRGBA.White);
-    mat.setFloat("Shininess", 64f);
+    mat.setColor("Diffuse", ColorRGBA.White.clone());
+    mat.setColor("Ambient", ColorRGBA.White.mult(0.5f));
+    //mat.setFloat("Shininess", 64f);
     playerG.setMaterial(mat);
+    playerG.setShadowMode(RenderQueue.ShadowMode.CastAndReceive);
     playerNode.attachChild(playerG);
 
 
@@ -724,9 +775,12 @@ public class UClient extends SimpleApplication
     terrain = new TerrainQuad("my terrain", patchSize, 513, heightMap.getHeightMap());
 
     /** We give the terrain its material, position & scale it, and attach it. */
+    mat_terrain.setReceivesShadows(true);
     terrain.setMaterial(mat_terrain);
     terrain.setLocalTranslation(0, 0, 0);
     terrain.setLocalScale(2f, 1f, 2f);
+
+    terrain.setShadowMode(RenderQueue.ShadowMode.CastAndReceive);
     lvl5Node.attachChild(terrain);
     rootNode.attachChild(lvl5Node);
 
