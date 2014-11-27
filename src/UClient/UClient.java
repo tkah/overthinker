@@ -31,6 +31,7 @@ import com.jme3.scene.Node;
 import com.jme3.scene.control.CameraControl;
 import com.jme3.scene.shape.Sphere;
 import com.jme3.shadow.DirectionalLightShadowFilter;
+import com.jme3.shadow.DirectionalLightShadowRenderer;
 import com.jme3.shadow.EdgeFilteringMode;
 import com.jme3.terrain.geomipmap.TerrainLodControl;
 import com.jme3.terrain.geomipmap.TerrainQuad;
@@ -42,6 +43,7 @@ import com.jme3.util.TangentBinormalGenerator;
 import com.jme3.water.WaterFilter;
 import jme3utilities.sky.SkyControl;
 
+import java.awt.*;
 import java.lang.reflect.Array;
 import java.util.Calendar;
 import java.util.ArrayList;
@@ -62,7 +64,7 @@ public class UClient extends SimpleApplication
   private Node resources;
   private PlayerNode playerNode;
   private Node lvl5Node;
-  private int playerType = 0;
+  private int playerType = 1;
 
   private float waterHeight = 20.0f;
   private float waterHeightRate = 0.005f;
@@ -125,7 +127,12 @@ public class UClient extends SimpleApplication
     mainLight.setColor(ColorRGBA.White.clone().multLocal(1.3f));
     mainLight.setDirection(lightDir);
     ambientLight = new AmbientLight();
+    //ambientLight.setColor(ColorRGBA.White.mult(1.2f));
     ambientLight.setName("ambient");
+
+    DirectionalLightShadowRenderer dlsr = new DirectionalLightShadowRenderer(assetManager, 1024, 3);
+    dlsr.setLight(mainLight);
+    viewPort.addProcessor(dlsr);
 
     SkyControl sc = new SkyControl(assetManager, cam, 0.9f, true, true);
     sc.getSunAndStars().setHour(16f);
@@ -141,7 +148,20 @@ public class UClient extends SimpleApplication
     //lightNode = new LightNode(mainLight);
     rootNode.addLight(mainLight);
     rootNode.addLight(ambientLight);
-    lightNode.setLocalTranslation(new Vector3f(-540, 200, -400));
+
+    Sphere sphere = new Sphere(32, 32, 5.0f);
+    Geometry geom = new Geometry("Sphere", sphere);
+    geom.setLocalTranslation(new Vector3f(-650, 150, -800));
+    geom.setUserData("isHit", false);
+    Material mat = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
+    mat.setBoolean("UseMaterialColors", true);
+    mat.setColor("Diffuse", ColorRGBA.Red);
+    mat.setColor("Specular", ColorRGBA.White);
+    mat.setFloat("Shininess", 64f);
+    geom.setMaterial(mat);
+    rootNode.attachChild(geom);
+
+    lightNode.setLocalTranslation(new Vector3f(-650, 150, -800));
     System.out.println(lightNode.getWorldTranslation());
     rootNode.attachChild(lightNode);
     rootNode.addControl(sc);
@@ -151,7 +171,7 @@ public class UClient extends SimpleApplication
     if (playerType == 0)
     {
       playerNode = new OverNode("OverThinker");
-      cam.setLocation(new Vector3f(0,300,0));
+      cam.setLocation(new Vector3f(0,250,0));
       cam.lookAtDirection(new Vector3f(0,-1,0), Vector3f.UNIT_Y);
     }
     else
@@ -165,6 +185,7 @@ public class UClient extends SimpleApplication
     {
       inputManager.addListener(this, s);
     }
+    playerNode.setShadowMode(RenderQueue.ShadowMode.CastAndReceive);
     rootNode.attachChild(playerNode);
     bulletAppState.getPhysicsSpace().addAll(playerNode);
 
@@ -172,20 +193,6 @@ public class UClient extends SimpleApplication
     fpp.addFilter(sunLightFilter);
     fade = new FadeFilter(2); // e.g. 2 seconds
     fpp.addFilter(fade);
-
-
-    final int SHADOWMAP_SIZE=1024;
-    /*DirectionalLightShadowRenderer dlsr = new DirectionalLightShadowRenderer(assetManager, SHADOWMAP_SIZE, 3);
-    dlsr.setLight(mainLight);
-    viewPort.addProcessor(dlsr);*/
-
-    DirectionalLightShadowFilter dlsf = new DirectionalLightShadowFilter(assetManager, SHADOWMAP_SIZE, 3);
-    dlsf.setLight(mainLight);
-    dlsf.setLambda(0.55f);
-    dlsf.setShadowIntensity(0.6f);
-    dlsf.setEdgeFilteringMode(EdgeFilteringMode.Nearest);
-    dlsf.setEnabled(true);
-    fpp.addFilter(dlsf);
 
     viewPort.addProcessor(fpp);
 
@@ -292,14 +299,17 @@ public class UClient extends SimpleApplication
     for (SphereResource s : toRemove) sphereResourcesToShrink.remove(s);
 
     CollisionResults lightResults = new CollisionResults();
-    Vector3f lNodeV = playerNode.getWorldTranslation();
-    Vector3f lightVect = lNodeV.subtract(lightNode.getWorldTranslation());
-    lightVect.normalize();
+    Vector3f lNodeV = lightNode.getWorldTranslation();
+    Vector3f lightVect = lNodeV.subtract(playerNode.getWorldTranslation());
 
-    Ray ray = new Ray(playerNode.getLocalTranslation(), lightVect);
-    playerNode.collideWith(ray, lightResults);
+    System.out.println("light: " + lightNode.getWorldTranslation());
+    System.out.println("player: " + playerNode.getWorldTranslation());
+    System.out.println("diff: " + lightVect);
+
+    Ray ray = new Ray(lightNode.getLocalTranslation(), lightVect);
+    terrain.collideWith(ray, lightResults);
     if (lightResults.size() > 0) {
-      System.out.println("getting results");
+      System.out.println("getting results: " + lightResults.size());
       CollisionResult closest = lightResults.getClosestCollision();
       System.out.println(closest.getDistance() + " " + lightNode.getWorldTranslation().distance(playerNode.getWorldTranslation()));
       if(closest.getDistance() >= lightNode.getWorldTranslation().distance(playerNode.getWorldTranslation())){
@@ -332,6 +342,7 @@ public class UClient extends SimpleApplication
       "Common/MatDefs/Terrain/TerrainLighting.j3md");
     mat_terrain.setBoolean("useTriPlanarMapping", false);
     mat_terrain.setFloat("Shininess", 0.0f);
+    mat_terrain.setFloat("Ambient", 10.0f);
 
     /** Add ALPHA map (for red-blue-green coded splat textures) */
     mat_terrain.setTexture("AlphaMap", assetManager.loadTexture(
@@ -377,7 +388,7 @@ public class UClient extends SimpleApplication
 
     try
     {
-      heightMap = new ImageBasedHeightMap(heightMapImage.getImage());
+      heightMap = new ImageBasedHeightMap(heightMapImage.getImage(), 0.8f);
       heightMap.load();
       //heightMap.smooth(0.9f, 1);
     }
@@ -436,7 +447,6 @@ public class UClient extends SimpleApplication
     water.setWaterHeight(waterHeight);
     water.setDeepWaterColor(new ColorRGBA(0.0f, 0.5f, 0.5f, 1.0f));
     fpp.addFilter(water);
-    viewPort.addProcessor(fpp);
   }
 
   private void setUpLight()

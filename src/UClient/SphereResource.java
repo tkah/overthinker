@@ -6,6 +6,7 @@ import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
+import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.shape.Sphere;
 
@@ -39,6 +40,7 @@ public class SphereResource
     geom.setLocalTranslation(new Vector3f(x, 250, z));
     geom.setUserData("id", id);
     geom.setUserData("isHit", false);
+    geom.setShadowMode(RenderQueue.ShadowMode.CastAndReceive);
     Material mat = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
     mat.setBoolean("UseMaterialColors", true);
     mat.setColor("Diffuse", ColorRGBA.Red);
