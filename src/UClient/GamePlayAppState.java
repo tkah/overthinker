@@ -26,7 +26,6 @@ import com.jme3.math.*;
 import com.jme3.post.FilterPostProcessor;
 import com.jme3.post.filters.BloomFilter;
 import com.jme3.post.filters.FadeFilter;
-import com.jme3.post.filters.LightScatteringFilter;
 import com.jme3.renderer.Camera;
 import com.jme3.renderer.ViewPort;
 import com.jme3.renderer.queue.RenderQueue;
@@ -54,6 +53,7 @@ public class GamePlayAppState extends AbstractAppState
   private SimpleApplication app;
   private Camera cam;
   private Node rootNode;
+  private Node localRootNode;
   private AssetManager assetManager;
   private InputManager inputManager;
   private FlyByCamera flyCam;
@@ -64,17 +64,14 @@ public class GamePlayAppState extends AbstractAppState
   private Vector3f lightDir = new Vector3f(4.1f, -3.2f, 0.1f);
   private AmbientLight ambientLight = null;
   private DirectionalLight mainLight = null;
-  private LightScatteringFilter sunLightFilter;
 
-  private Node lightNode;
   private Node collidableNode;
   private Node resources;
   private PlayerNode playerNode;
-  private Node lvl5Node;
   private int playerType = 1;
 
   private float waterHeight = 20.0f;
-  private float waterHeightRate = 0.005f;
+  private float waterHeightRate = 0.05f;
 
   private BulletAppState bulletAppState;
   private LandscapeControl landscape;
@@ -88,23 +85,16 @@ public class GamePlayAppState extends AbstractAppState
   private ArrayList<SphereResource> sphereResourceArrayList = new ArrayList<SphereResource>();
   private ArrayList<SphereResource> sphereResourcesToShrink = new ArrayList<SphereResource>();
 
-
-  /** Server Communcation - Not yet implemented **/
-  private Vector3f myLoc = new Vector3f(); // Might replace with 'walkDirection' from above
-  private ArrayList<Vector3f> playerLocs = new ArrayList<Vector3f>();
-
   /** Create AudioNodes **/
   private AudioNode audio_ocean;
   private AudioNode audio_collect;
 
   /**
-   * Class entry point
+   * Class initialization
    */
   public void initialize(AppStateManager stateManager, Application app)
   {
     super.initialize(stateManager, app);
-
-    System.out.println("game init");
     this.app = (SimpleApplication) app;
     this.cam = this.app.getCamera();
     this.rootNode = this.app.getRootNode();
@@ -117,83 +107,25 @@ public class GamePlayAppState extends AbstractAppState
     /** Set up Physics */
     bulletAppState = new BulletAppState();
     stateManager.attach(bulletAppState);
-    //bulletAppState.getPhysicsSpace().enableDebug(assetManager);
     resources = new Node("Resources");
-    rootNode.attachChild(resources);
-
-    lvl5Node = new Node ("SceneNode");
+    localRootNode = new Node("LocalRoot");
+    localRootNode.attachChild(resources);
     collidableNode = new Node ("CollidableNode");
-    lightNode = new Node("LightNode");
 
     flyCam.setMoveSpeed(100);
 
     createSphereResources();
-
-    mainLight = new DirectionalLight();
-    mainLight.setName("main");
-    mainLight.setColor(ColorRGBA.White.clone().multLocal(1.1f));
-    mainLight.setDirection(lightDir);
-    ambientLight = new AmbientLight();
-    //ambientLight.setColor(ColorRGBA.White.mult(1.2f));
-    ambientLight.setName("ambient");
-
-    DirectionalLightShadowRenderer dlsr = new DirectionalLightShadowRenderer(assetManager, 1024, 3);
-    dlsr.setLight(mainLight);
-    viewPort.addProcessor(dlsr);
-
-    sc = new SkyControl(assetManager, cam, 0.9f, true, true);
-    sc.getSunAndStars().setHour(12f);
-    sc.getSunAndStars().setObserverLatitude(37.4046f * FastMath.DEG_TO_RAD);
-    sc.getSunAndStars().setSolarLongitude(Calendar.FEBRUARY, 10);
-    sc.setCloudiness(0.3f);
-    for (Light light : rootNode.getLocalLightList())
-    {
-      if (light.getName().equals("ambient")) sc.getUpdater().setAmbientLight((AmbientLight) light);
-      else if (light.getName().equals("main")) sc.getUpdater().setMainLight((DirectionalLight) light);
-    }
-
-    rootNode.addLight(mainLight);
-    rootNode.addLight(ambientLight);
-
-    rootNode.addControl(sc);
-    setUpWater();
-    // Sunray effect great looking, but doesn't shut off at the right time
-    // sunLightFilter = new LightScatteringFilter(lightDir.mult(-3000));
-    // fpp.addFilter(sunLightFilter);
-    BloomFilter bloom = new BloomFilter(BloomFilter.GlowMode.Objects);
-    bloom.setBlurScale(2.5f);
-    bloom.setExposurePower(1f);
-    Misc.getFpp(viewPort, assetManager).addFilter(bloom);
-    sc.getUpdater().addBloomFilter(bloom);
-
+    createKeyAndBarrier();
+    setUpLight();
     setUpLandscape();
+    setUpPlayer();
 
-    if (playerType == 0)
-    {
-      playerNode = new OverNode("OverThinker");
-      cam.setLocation(new Vector3f(0,250,0));
-      cam.lookAtDirection(new Vector3f(0,-1,0), Vector3f.UNIT_Y);
-    }
-    else
-    {
-      playerNode = new UnderNode("player", cam, terrain, assetManager, bulletAppState);
-      flyCam.setEnabled(false);
-    }
-    playerNode.setUpPlayer();
-    ArrayList<String> actionStrings = playerNode.setUpControls(inputManager);
-    for (String s : actionStrings)
-    {
-      inputManager.addListener(this, s);
-    }
-    playerNode.setShadowMode(RenderQueue.ShadowMode.CastAndReceive);
-    collidableNode.attachChild(playerNode);
-    bulletAppState.getPhysicsSpace().addAll(playerNode);
-
-    fade = new FadeFilter(2); // e.g. 2 seconds
+    fade = new FadeFilter(2); // 2 seconds
     fpp.addFilter(fade);
 
     viewPort.addProcessor(fpp);
-    rootNode.attachChild(collidableNode);
+    localRootNode.attachChild(collidableNode);
+    rootNode.attachChild(localRootNode);
 
     sc.setEnabled(true);
 
@@ -306,6 +238,67 @@ public class GamePlayAppState extends AbstractAppState
 
   /** ---Initialization methods--- **/
 
+  private void setUpLight()
+  {
+    mainLight = new DirectionalLight();
+    mainLight.setName("main");
+    mainLight.setColor(ColorRGBA.White.clone().multLocal(1.1f));
+    mainLight.setDirection(lightDir);
+    ambientLight = new AmbientLight();
+    //ambientLight.setColor(ColorRGBA.White.mult(1.2f));
+    ambientLight.setName("ambient");
+
+    DirectionalLightShadowRenderer dlsr = new DirectionalLightShadowRenderer(assetManager, 1024, 3);
+    dlsr.setLight(mainLight);
+    viewPort.addProcessor(dlsr);
+
+    sc = new SkyControl(assetManager, cam, 0.9f, true, true);
+    sc.getSunAndStars().setHour(12f);
+    sc.getSunAndStars().setObserverLatitude(37.4046f * FastMath.DEG_TO_RAD);
+    sc.getSunAndStars().setSolarLongitude(Calendar.FEBRUARY, 10);
+    sc.setCloudiness(0.3f);
+    for (Light light : rootNode.getLocalLightList())
+    {
+      if (light.getName().equals("ambient")) sc.getUpdater().setAmbientLight((AmbientLight) light);
+      else if (light.getName().equals("main")) sc.getUpdater().setMainLight((DirectionalLight) light);
+    }
+
+    localRootNode.addLight(mainLight);
+    localRootNode.addLight(ambientLight);
+
+    localRootNode.addControl(sc);
+    setUpWater();
+    BloomFilter bloom = new BloomFilter(BloomFilter.GlowMode.Objects);
+    bloom.setBlurScale(2.5f);
+    bloom.setExposurePower(1f);
+    Misc.getFpp(viewPort, assetManager).addFilter(bloom);
+    sc.getUpdater().addBloomFilter(bloom);
+  }
+
+  private void setUpPlayer()
+  {
+    if (playerType == 0)
+    {
+      playerNode = new OverNode("OverThinker");
+      cam.setLocation(new Vector3f(0,250,0));
+      cam.lookAtDirection(new Vector3f(0,-1,0), Vector3f.UNIT_Y);
+    }
+    else
+    {
+      playerNode = new UnderNode("player", cam, terrain, assetManager, bulletAppState);
+      flyCam.setEnabled(false);
+    }
+    playerNode.setUpPlayer();
+    ArrayList<String> actionStrings = playerNode.setUpControls(inputManager);
+    for (String s : actionStrings)
+    {
+      inputManager.addListener(this, s);
+    }
+    playerNode.setShadowMode(RenderQueue.ShadowMode.CastAndReceive);
+    collidableNode.attachChild(playerNode);
+    bulletAppState.getPhysicsSpace().addAll(playerNode);
+  }
+
   private void setUpLandscape()
   {
     /** Create terrain material and load four textures into it. */
@@ -361,30 +354,11 @@ public class GamePlayAppState extends AbstractAppState
     {
       heightMap = new ImageBasedHeightMap(heightMapImage.getImage(), 0.8f);
       heightMap.load();
-      //heightMap.smooth(0.9f, 1);
     }
     catch (Exception e)
     {
       e.printStackTrace();
     }
-
-    // Height Map Randomization
-        /*HillHeightMap heightmap = null;
-        HillHeightMap.NORMALIZE_RANGE = 100; // optional
-        try {
-            heightmap = new HillHeightMap(513, 1000, 5, 1000, (byte) 3); // byte 3 is a random seed
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }*/
-
-    /** We have prepared material and heightmap.
-     * Now we create the actual terrain:
-     * -Create a TerrainQuad and name it "my terrain".
-     * -A good value for terrain tiles is 64x64 -- so we supply 64+1=65.
-     * -We prepared a heightmap of size 512x512 -- so we supply 512+1=513.
-     * -As LOD step scale we supply Vector3f(1,1,1).
-     * -We supply the prepared heightmap itself.
-     */
     int patchSize = 65;
     terrain = new TerrainQuad("my terrain", patchSize, 513, heightMap.getHeightMap());
 
@@ -396,8 +370,6 @@ public class GamePlayAppState extends AbstractAppState
     terrain.setLocalScale(2f, 1f, 2f);
 
     terrain.setShadowMode(RenderQueue.ShadowMode.CastAndReceive);
-    //lvl5Node.attachChild(terrain);
-    //rootNode.attachChild(lvl5Node);
 
     /** The LOD (level of detail) depends on were the camera is: */
     TerrainLodControl control = new TerrainLodControl(terrain, app.getCamera());
@@ -422,20 +394,6 @@ public class GamePlayAppState extends AbstractAppState
     fpp.addFilter(water);
   }
 
-  private void setUpLight()
-  {
-    // We add light so we see the scene
-    AmbientLight al = new AmbientLight();
-    al.setColor(ColorRGBA.White.mult(1.3f));
-    rootNode.addLight(al);
-
-    DirectionalLight dl = new DirectionalLight();
-    dl.setColor(ColorRGBA.White);
-    //dl.setDirection(new Vector3f(2.8f, -2.8f, -2.8f).normalizeLocal());
-    //dl.setDirection(lightDir.normalizeLocal());
-    rootNode.addLight(dl);
-  }
-
   /**
    * Setter for water height. Water level always increasing.
    * Value comes from EEG to determine just how fast.
@@ -446,6 +404,11 @@ public class GamePlayAppState extends AbstractAppState
   public void setWaterHeight (float val)
   {
     waterHeightRate = val;
+  }
+
+  public void setPlayerType(int type)
+  {
+    playerType = type;
   }
 
   private void createSphereResources()
@@ -461,6 +424,10 @@ public class GamePlayAppState extends AbstractAppState
     }
   }
 
+  private void createKeyAndBarrier()
+  {
+
+  }
 
   private void initAudio()
   {
@@ -469,13 +436,13 @@ public class GamePlayAppState extends AbstractAppState
     audio_collect = new AudioNode(assetManager, "assets/sounds/collect.ogg",false);
     audio_collect.setPositional(false);
     audio_collect.setVolume(2);
-    rootNode.attachChild(audio_collect);
+    localRootNode.attachChild(audio_collect);
 
     if (playerNode.getAudio().size() > 0)
     {
       for (AudioNode a : (ArrayList<AudioNode>) playerNode.getAudio())
       {
-        rootNode.attachChild(a);
+        localRootNode.attachChild(a);
       }
     }
 
@@ -484,7 +451,7 @@ public class GamePlayAppState extends AbstractAppState
     audio_ocean.setLooping(true);
     audio_ocean.setPositional(true);
     audio_ocean.setVolume(1);
-    rootNode.attachChild(audio_ocean);
+    localRootNode.attachChild(audio_ocean);
     audio_ocean.play();
   }
 
@@ -492,10 +459,6 @@ public class GamePlayAppState extends AbstractAppState
   public void cleanup()
   {
     super.cleanup();
-    rootNode.detachChild(collidableNode);
-    rootNode.detachChild(audio_collect);
-    rootNode.removeControl(sc);
-    rootNode.removeLight(mainLight);
-    rootNode.removeLight(ambientLight);
+    rootNode.detachChild(localRootNode);
   }
 }

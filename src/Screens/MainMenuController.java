@@ -65,11 +65,21 @@ public class MainMenuController extends AbstractAppState implements ScreenContro
         guiViewPort.addProcessor(nDisplay);
     }
 
-    public void menuStartGame()
+    public void menuStartUnderthinker()
     {
       GamePlayAppState gamePlay = new GamePlayAppState();
       stateManager.detach(this);
       nifty.exit();
+      gamePlay.setPlayerType(1);
+      stateManager.attach(gamePlay);
+    }
+
+    public void menuStartOverthinker()
+    {
+      GamePlayAppState gamePlay = new GamePlayAppState();
+      stateManager.detach(this);
+      nifty.exit();
+      gamePlay.setPlayerType(0);
       stateManager.attach(gamePlay);
     }
 

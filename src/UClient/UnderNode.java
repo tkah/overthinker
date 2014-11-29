@@ -196,7 +196,6 @@ public class UnderNode extends PlayerNode
     setUpCamera(cam);
     playerSphere = new Sphere(32, 32, Globals.PLAYER_SPHERE_START_RADIUS);
 
-    // Tutorial pond ball
     playerG = new Geometry("Shiny rock", playerSphere);
     playerSphere.setTextureMode(Sphere.TextureMode.Projected);
     TangentBinormalGenerator.generate(playerSphere);

@@ -15,16 +15,26 @@
         <layer id="layer" backgroundColor="#0000" childLayout="center">
         <panel id="panel" align="left" valign="bottom"  childLayout="vertical" visibleToMouse="true">
 
-        <image id="btnStartGame" filename="assets/interface/btnStartGame.png" align="left" childLayout="overlay">
+        <image id="btnStartUnder" filename="assets/interface/btnStartGame.png" align="left" childLayout="overlay">
             <effect>
                 <onStartScreen name="hide" targetElement="btnStartGame_hover"></onStartScreen>
                 <onStartHover name="show" targetElement="btnStartGame_hover" onStartEffect="methodToBeCalledWhenEffectStarted()"></onStartHover>
                 <onEndHover name="hide" targetElement="btnStartGame_hover" onStartEffect="methodToBeCalledWhenEffectStarted()"></onEndHover>
             </effect>
-            <interact onClick="menuStartGame()"/>
+            <interact onClick="menuStartUnderthinker()"/>
             <image id="btnStartGame_hover" name="hide" filename="assets/interface/btnStartGame_hover.png" align="left" >
             </image>
         </image>
+            <image id="btnStartOver" filename="assets/interface/btnStartGame.png" align="left" childLayout="overlay">
+                <effect>
+                    <onStartScreen name="hide" targetElement="btnStartGame_hover"></onStartScreen>
+                    <onStartHover name="show" targetElement="btnStartGame_hover" onStartEffect="methodToBeCalledWhenEffectStarted()"></onStartHover>
+                    <onEndHover name="hide" targetElement="btnStartGame_hover" onStartEffect="methodToBeCalledWhenEffectStarted()"></onEndHover>
+                </effect>
+                <interact onClick="menuStartOverthinker()"/>
+                <image id="btnStartGame_hover" name="hide" filename="assets/interface/btnStartGame_hover.png" align="left" >
+                </image>
+            </image>
             <image id="btnQuitGame" filename="assets/interface/btnQuitGame.png" align="left" childLayout="overlay">
                 <effect>
                     <onStartScreen name="hide" targetElement="btnQuitGame_hover"></onStartScreen>
