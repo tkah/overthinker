@@ -7,6 +7,7 @@ import com.jme3.audio.AudioNode;
 import com.jme3.bullet.BulletAppState;
 import com.jme3.bullet.collision.shapes.CollisionShape;
 import com.jme3.bullet.control.GhostControl;
+import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.bullet.util.CollisionShapeFactory;
 import com.jme3.collision.CollisionResult;
 import com.jme3.collision.CollisionResults;
@@ -22,6 +23,7 @@ import com.jme3.material.Material;
 import com.jme3.light.Light;
 import com.jme3.math.*;
 import com.jme3.post.FilterPostProcessor;
+import com.jme3.post.filters.BloomFilter;
 import com.jme3.post.filters.FadeFilter;
 import com.jme3.post.filters.LightScatteringFilter;
 import com.jme3.renderer.queue.RenderQueue;
@@ -41,7 +43,10 @@ import com.jme3.texture.Texture;
 import com.jme3.texture.Texture.WrapMode;
 import com.jme3.util.TangentBinormalGenerator;
 import com.jme3.water.WaterFilter;
+import jme3utilities.Misc;
 import jme3utilities.sky.SkyControl;
+
+import com.jme3.scene.shape.Line;
 
 import java.awt.*;
 import java.lang.reflect.Array;
@@ -54,13 +59,13 @@ public class UClient extends SimpleApplication
   private static final int SPHERE_RESOURCE_COUNT = 250;
   private static final float SPHERE_RESOURCE_RADIUS = 1.0f;
 
-  private Vector3f lightDir = new Vector3f(4.1f, -2.0f, 6.9f);
+  private Vector3f lightDir = new Vector3f(4.1f, -3.2f, 0.1f);
   private AmbientLight ambientLight = null;
   private DirectionalLight mainLight = null;
   private LightScatteringFilter sunLightFilter;
 
   private Node lightNode;
-  private Node rayTraceableNode;
+  private Node collidableNode;
   private Node resources;
   private PlayerNode playerNode;
   private Node lvl5Node;
@@ -114,7 +119,7 @@ public class UClient extends SimpleApplication
     rootNode.attachChild(resources);
 
     lvl5Node = new Node ("SceneNode");
-    rayTraceableNode = new Node ("RayNode");
+    collidableNode = new Node ("CollidableNode");
     lightNode = new Node("LightNode");
     //setUpLight();
 
@@ -124,7 +129,7 @@ public class UClient extends SimpleApplication
 
     mainLight = new DirectionalLight();
     mainLight.setName("main");
-    mainLight.setColor(ColorRGBA.White.clone().multLocal(1.3f));
+    mainLight.setColor(ColorRGBA.White.clone().multLocal(1.1f));
     mainLight.setDirection(lightDir);
     ambientLight = new AmbientLight();
     //ambientLight.setColor(ColorRGBA.White.mult(1.2f));
@@ -135,7 +140,7 @@ public class UClient extends SimpleApplication
     viewPort.addProcessor(dlsr);
 
     SkyControl sc = new SkyControl(assetManager, cam, 0.9f, true, true);
-    sc.getSunAndStars().setHour(16f);
+    sc.getSunAndStars().setHour(12f);
     sc.getSunAndStars().setObserverLatitude(37.4046f * FastMath.DEG_TO_RAD);
     sc.getSunAndStars().setSolarLongitude(Calendar.FEBRUARY, 10);
     sc.setCloudiness(0.3f);
@@ -149,23 +154,17 @@ public class UClient extends SimpleApplication
     rootNode.addLight(mainLight);
     rootNode.addLight(ambientLight);
 
-    Sphere sphere = new Sphere(32, 32, 5.0f);
-    Geometry geom = new Geometry("Sphere", sphere);
-    geom.setLocalTranslation(new Vector3f(-650, 150, -800));
-    geom.setUserData("isHit", false);
-    Material mat = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
-    mat.setBoolean("UseMaterialColors", true);
-    mat.setColor("Diffuse", ColorRGBA.Red);
-    mat.setColor("Specular", ColorRGBA.White);
-    mat.setFloat("Shininess", 64f);
-    geom.setMaterial(mat);
-    rootNode.attachChild(geom);
-
-    lightNode.setLocalTranslation(new Vector3f(-650, 150, -800));
-    System.out.println(lightNode.getWorldTranslation());
-    rootNode.attachChild(lightNode);
     rootNode.addControl(sc);
     setUpWater();
+    // Sunray effect great looking, but doesn't shut off at the right time
+    sunLightFilter = new LightScatteringFilter(lightDir.mult(-3000));
+    //fpp.addFilter(sunLightFilter);
+    BloomFilter bloom = new BloomFilter(BloomFilter.GlowMode.Objects);
+    bloom.setBlurScale(2.5f);
+    bloom.setExposurePower(1f);
+    Misc.getFpp(viewPort, assetManager).addFilter(bloom);
+    sc.getUpdater().addBloomFilter(bloom);
+
     setUpLandscape();
 
     if (playerType == 0)
@@ -186,15 +185,14 @@ public class UClient extends SimpleApplication
       inputManager.addListener(this, s);
     }
     playerNode.setShadowMode(RenderQueue.ShadowMode.CastAndReceive);
-    rootNode.attachChild(playerNode);
+    collidableNode.attachChild(playerNode);
     bulletAppState.getPhysicsSpace().addAll(playerNode);
 
-    sunLightFilter = new LightScatteringFilter(lightDir.mult(-3000));
-    fpp.addFilter(sunLightFilter);
     fade = new FadeFilter(2); // e.g. 2 seconds
     fpp.addFilter(fade);
 
     viewPort.addProcessor(fpp);
+    rootNode.attachChild(collidableNode);
 
     sc.setEnabled(true);
 
@@ -298,36 +296,6 @@ public class UClient extends SimpleApplication
     }
     for (SphereResource s : toRemove) sphereResourcesToShrink.remove(s);
 
-    CollisionResults lightResults = new CollisionResults();
-    Vector3f lNodeV = lightNode.getWorldTranslation();
-    Vector3f lightVect = lNodeV.subtract(playerNode.getWorldTranslation());
-
-    System.out.println("light: " + lightNode.getWorldTranslation());
-    System.out.println("player: " + playerNode.getWorldTranslation());
-    System.out.println("diff: " + lightVect);
-
-    Ray ray = new Ray(lightNode.getLocalTranslation(), lightVect);
-    terrain.collideWith(ray, lightResults);
-    if (lightResults.size() > 0) {
-      System.out.println("getting results: " + lightResults.size());
-      CollisionResult closest = lightResults.getClosestCollision();
-      System.out.println(closest.getDistance() + " " + lightNode.getWorldTranslation().distance(playerNode.getWorldTranslation()));
-      if(closest.getDistance() >= lightNode.getWorldTranslation().distance(playerNode.getWorldTranslation())){
-        System.out.println("WE STAND IN LIGHT");
-        sunLightFilter.setLightDensity(1.4f);
-      }
-      else{
-        System.out.println("WE STAND IN SHADOW");
-        sunLightFilter.setLightDensity(0f);
-      }
-    } else {
-      // On some occasions, especially if your sun is out of bounds, there may be no collision at all
-      if(sunLightFilter.getLightDensity() == 0f){
-        System.out.println("WE’RE NOT SURE, SO DEFAULT TO STAND IN LIGHT");
-        sunLightFilter.setLightDensity(1.4f);
-      }
-    }
-
     //move the audio with the camera
     listener.setLocation(cam.getLocation());
     listener.setRotation(cam.getRotation());
@@ -419,13 +387,14 @@ public class UClient extends SimpleApplication
 
     /** We give the terrain its material, position & scale it, and attach it. */
     mat_terrain.setReceivesShadows(true);
+    mat_terrain.setFloat("Ambient", 5.0f);
     terrain.setMaterial(mat_terrain);
     terrain.setLocalTranslation(0, 0, 0);
     terrain.setLocalScale(2f, 1f, 2f);
 
     terrain.setShadowMode(RenderQueue.ShadowMode.CastAndReceive);
-    lvl5Node.attachChild(terrain);
-    rootNode.attachChild(lvl5Node);
+    //lvl5Node.attachChild(terrain);
+    //rootNode.attachChild(lvl5Node);
 
     /** The LOD (level of detail) depends on were the camera is: */
     TerrainLodControl control = new TerrainLodControl(terrain, getCamera());
@@ -438,6 +407,7 @@ public class UClient extends SimpleApplication
     landscape = new LandscapeControl(sceneShape, 0, bulletAppState.getPhysicsSpace());
     terrain.addControl(landscape);
     bulletAppState.getPhysicsSpace().add(landscape);
+    collidableNode.attachChild(terrain);
   }
 
   private void setUpWater()

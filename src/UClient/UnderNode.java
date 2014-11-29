@@ -49,7 +49,7 @@ public class UnderNode extends PlayerNode
 
   private float verticalAngle = 30 * FastMath.DEG_TO_RAD;
   private float maxVerticalAngle = 85 * FastMath.DEG_TO_RAD;
-  private float minVerticalAngle = -10 * FastMath.DEG_TO_RAD;
+  private float minVerticalAngle = -15 * FastMath.DEG_TO_RAD;
   private float rotation;
   private float rotSpeed = 300f;
   private float moveSpeed = 20f;
