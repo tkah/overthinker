@@ -2,21 +2,22 @@ package UClient; /**
  * Created by Torran on 11/9/14.
  */
 
+import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
+import com.jme3.app.state.AbstractAppState;
+import com.jme3.app.state.AppStateManager;
+import com.jme3.asset.AssetManager;
 import com.jme3.audio.AudioNode;
+import com.jme3.audio.Listener;
 import com.jme3.bullet.BulletAppState;
 import com.jme3.bullet.collision.shapes.CollisionShape;
-import com.jme3.bullet.control.GhostControl;
-import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.bullet.util.CollisionShapeFactory;
 import com.jme3.collision.CollisionResult;
 import com.jme3.collision.CollisionResults;
-import com.jme3.input.KeyInput;
-import com.jme3.input.MouseInput;
+import com.jme3.input.FlyByCamera;
+import com.jme3.input.InputManager;
 import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.AnalogListener;
-import com.jme3.input.controls.KeyTrigger;
-import com.jme3.input.controls.MouseAxisTrigger;
 import com.jme3.light.AmbientLight;
 import com.jme3.light.DirectionalLight;
 import com.jme3.material.Material;
@@ -26,38 +27,39 @@ import com.jme3.post.FilterPostProcessor;
 import com.jme3.post.filters.BloomFilter;
 import com.jme3.post.filters.FadeFilter;
 import com.jme3.post.filters.LightScatteringFilter;
+import com.jme3.renderer.Camera;
+import com.jme3.renderer.ViewPort;
 import com.jme3.renderer.queue.RenderQueue;
-import com.jme3.scene.CameraNode;
-import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
-import com.jme3.scene.control.CameraControl;
-import com.jme3.scene.shape.Sphere;
-import com.jme3.shadow.DirectionalLightShadowFilter;
 import com.jme3.shadow.DirectionalLightShadowRenderer;
-import com.jme3.shadow.EdgeFilteringMode;
 import com.jme3.terrain.geomipmap.TerrainLodControl;
 import com.jme3.terrain.geomipmap.TerrainQuad;
 import com.jme3.terrain.heightmap.AbstractHeightMap;
 import com.jme3.terrain.heightmap.ImageBasedHeightMap;
 import com.jme3.texture.Texture;
 import com.jme3.texture.Texture.WrapMode;
-import com.jme3.util.TangentBinormalGenerator;
 import com.jme3.water.WaterFilter;
 import jme3utilities.Misc;
 import jme3utilities.sky.SkyControl;
 
-import com.jme3.scene.shape.Line;
-
-import java.awt.*;
-import java.lang.reflect.Array;
 import java.util.Calendar;
 import java.util.ArrayList;
 
-public class UClient extends SimpleApplication
+public class GamePlayAppState extends AbstractAppState
   implements ActionListener, AnalogListener
 {
   private static final int SPHERE_RESOURCE_COUNT = 250;
   private static final float SPHERE_RESOURCE_RADIUS = 1.0f;
+
+  private SimpleApplication app;
+  private Camera cam;
+  private Node rootNode;
+  private AssetManager assetManager;
+  private InputManager inputManager;
+  private FlyByCamera flyCam;
+  private ViewPort viewPort;
+  private Listener listener;
+  private SkyControl sc;
 
   private Vector3f lightDir = new Vector3f(4.1f, -3.2f, 0.1f);
   private AmbientLight ambientLight = null;
@@ -97,20 +99,21 @@ public class UClient extends SimpleApplication
 
   /**
    * Class entry point
-   * @param args - command line arguments
    */
-  public static void main(String[] args)
+  public void initialize(AppStateManager stateManager, Application app)
   {
-    UClient app = new UClient();
-    app.start();
-  }
+    super.initialize(stateManager, app);
 
-  /**
-   * Overrides SimpleApplication initialization
-   */
-  @Override
-  public void simpleInitApp()
-  {
+    System.out.println("game init");
+    this.app = (SimpleApplication) app;
+    this.cam = this.app.getCamera();
+    this.rootNode = this.app.getRootNode();
+    this.assetManager = this.app.getAssetManager();
+    this.listener = this.app.getListener();
+    viewPort = this.app.getViewPort();
+    inputManager = this.app.getInputManager();
+    flyCam = this.app.getFlyByCamera();
+
     /** Set up Physics */
     bulletAppState = new BulletAppState();
     stateManager.attach(bulletAppState);
@@ -121,10 +124,9 @@ public class UClient extends SimpleApplication
     lvl5Node = new Node ("SceneNode");
     collidableNode = new Node ("CollidableNode");
     lightNode = new Node("LightNode");
-    //setUpLight();
 
     flyCam.setMoveSpeed(100);
-    mouseInput.setCursorVisible(false);
+
     createSphereResources();
 
     mainLight = new DirectionalLight();
@@ -139,7 +141,7 @@ public class UClient extends SimpleApplication
     dlsr.setLight(mainLight);
     viewPort.addProcessor(dlsr);
 
-    SkyControl sc = new SkyControl(assetManager, cam, 0.9f, true, true);
+    sc = new SkyControl(assetManager, cam, 0.9f, true, true);
     sc.getSunAndStars().setHour(12f);
     sc.getSunAndStars().setObserverLatitude(37.4046f * FastMath.DEG_TO_RAD);
     sc.getSunAndStars().setSolarLongitude(Calendar.FEBRUARY, 10);
@@ -150,15 +152,14 @@ public class UClient extends SimpleApplication
       else if (light.getName().equals("main")) sc.getUpdater().setMainLight((DirectionalLight) light);
     }
 
-    //lightNode = new LightNode(mainLight);
     rootNode.addLight(mainLight);
     rootNode.addLight(ambientLight);
 
     rootNode.addControl(sc);
     setUpWater();
     // Sunray effect great looking, but doesn't shut off at the right time
-    sunLightFilter = new LightScatteringFilter(lightDir.mult(-3000));
-    //fpp.addFilter(sunLightFilter);
+    // sunLightFilter = new LightScatteringFilter(lightDir.mult(-3000));
+    // fpp.addFilter(sunLightFilter);
     BloomFilter bloom = new BloomFilter(BloomFilter.GlowMode.Objects);
     bloom.setBlurScale(2.5f);
     bloom.setExposurePower(1f);
@@ -199,6 +200,8 @@ public class UClient extends SimpleApplication
     Globals.setUpTimer();
     Globals.startTimer();
     initAudio();
+
+    inputManager.setCursorVisible(false);
   }
 
   /**
@@ -229,7 +232,7 @@ public class UClient extends SimpleApplication
    * @param tpf - timer per frame
    */
   @Override
-  public void simpleUpdate(float tpf)
+  public void update(float tpf)
   {
     // Raise Water Level, to be controlled by EEG
     if (!playerNode.isSlowWater()) water.setWaterHeight(water.getWaterHeight() + Globals.WATER_HEIGHT_DEFAULT_RATE);
@@ -397,7 +400,7 @@ public class UClient extends SimpleApplication
     //rootNode.attachChild(lvl5Node);
 
     /** The LOD (level of detail) depends on were the camera is: */
-    TerrainLodControl control = new TerrainLodControl(terrain, getCamera());
+    TerrainLodControl control = new TerrainLodControl(terrain, app.getCamera());
     terrain.addControl(control);
 
     // We set up collision detection for the scene by creating a
@@ -483,5 +486,16 @@ public class UClient extends SimpleApplication
     audio_ocean.setVolume(1);
     rootNode.attachChild(audio_ocean);
     audio_ocean.play();
+  }
+
+  @Override
+  public void cleanup()
+  {
+    super.cleanup();
+    rootNode.detachChild(collidableNode);
+    rootNode.detachChild(audio_collect);
+    rootNode.removeControl(sc);
+    rootNode.removeLight(mainLight);
+    rootNode.removeLight(ambientLight);
   }
 }

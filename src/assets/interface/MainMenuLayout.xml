@@ -9,6 +9,9 @@
         <layer childLayout="horizontal" id="layer1">
             <image filename="assets/interface/background.png" height="100%" width="100%" />
         </layer>
+        <layer childLayout="horizontal" id="title">
+            <image filename="assets/interface/overthinker-title.png" height="100%" width="100%" />
+        </layer>
         <layer id="layer" backgroundColor="#0000" childLayout="center">
         <panel id="panel" align="left" valign="bottom"  childLayout="vertical" visibleToMouse="true">
 

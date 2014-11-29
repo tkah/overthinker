@@ -1,6 +1,6 @@
 package Screens;
 
-import UClient.UClient;
+import UClient.GamePlayAppState;
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.app.state.AbstractAppState;
@@ -57,16 +57,20 @@ public class MainMenuController extends AbstractAppState implements ScreenContro
       initNifty();
   }
 
-    private void initNifty(){
+    private void initNifty()
+    {
         nDisplay = new NiftyJmeDisplay(assetManager,inputManager,audioRenderer,guiViewPort);
         nifty = nDisplay.getNifty();
         nifty.fromXml("assets/interface/MainMenuLayout.xml", "start", this);
         guiViewPort.addProcessor(nDisplay);
     }
-    public void menuStartGame() {
-       //UClient uc = new UClient();
-        //uc.start();
 
+    public void menuStartGame()
+    {
+      GamePlayAppState gamePlay = new GamePlayAppState();
+      stateManager.detach(this);
+      nifty.exit();
+      stateManager.attach(gamePlay);
     }
 
     public void menuQuitGame(){
@@ -85,7 +89,7 @@ public class MainMenuController extends AbstractAppState implements ScreenContro
         nifty.gotoScreen("loading");
     }
 
-    public void setLoadedScreen(){nifty.gotoScreen("loaded");}
+    public void setLoadedScreen() {nifty.gotoScreen("loaded");}
 
     public void bind(Nifty nifty, Screen screen){
         System.out.println("bind(" + screen.getScreenId() + ") ");
