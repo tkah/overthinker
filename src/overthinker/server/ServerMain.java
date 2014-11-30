@@ -3,6 +3,9 @@ package overthinker.server;
 
 import com.jme3.math.Vector3f;
 import com.jme3.network.HostedConnection;
+import overthinker.client.Globals;
+import overthinker.levels.Level;
+import overthinker.levels.maze1.Maze1;
 import overthinker.net.ModelChangeRequest;
 import overthinker.net.ModelUpdate;
 import com.jme3.app.SimpleApplication;
@@ -25,9 +28,9 @@ import java.util.HashMap;
 public class ServerMain extends SimpleApplication {
     private Server netServer;
     private ServerModel model;
-    private int clientCount = 0;
+    private Level level;
     private HashMap<HostedConnection, Integer> clientIndex = new HashMap<HostedConnection, Integer>();
-    private HashMap<HostedConnection, Float> clientModelVersions = new HashMap<HostedConnection, Float>();
+    private HashMap<HostedConnection, Long> clientModelVersions = new HashMap<HostedConnection, Long>();
 
     public static void main(String[] args) {
         ServerMain app = new ServerMain();
@@ -55,6 +58,11 @@ public class ServerMain extends SimpleApplication {
 
     private void initModel() {
         model = new ServerModel();
+        level = new Maze1();
+        for(int i = 0; i < level.getPlayerCount(); i++)
+        {
+            model.getPlayerLocations().put(i, null);
+        }
     }
 
     private void initNetServer() {
@@ -70,7 +78,7 @@ public class ServerMain extends SimpleApplication {
     }
 
 
-    public HashMap<HostedConnection, Float> getClientModelVersions() {
+    public HashMap<HostedConnection, Long> getClientModelVersions() {
         return clientModelVersions;
     }
 
@@ -78,10 +86,29 @@ public class ServerMain extends SimpleApplication {
         return netServer;
     }
 
-    public void addClient(HostedConnection sources)
+    public NewClientResponse addClient(HostedConnection sources)
     {
-        clientIndex.put(sources, clientCount);
-        model.getPlayerLocations().put(clientCount++, new Vector3f(-340, 80, -400));
+        Vector3f spawnLocation = null;
+        for(int i = 0; i < level.getPlayerCount(); i++)
+        {
+            if(model.getPlayerLocations().get(i) == null)
+            {
+                spawnLocation = level.getRandomSpawnLocation();
+                model.getPlayerLocations().put(i, spawnLocation);
+                clientIndex.put(sources, i);
+                clientModelVersions.put(sources, model.version);
+            }
+        }
+
+        NewClientResponse response = new NewClientResponse();
+        if(spawnLocation != null)
+        {
+            response.setLevelType(level.getLevelType());
+            response.setSpawnLocation(spawnLocation);
+            response.setConnected(true);
+        }
+        else response.setConnected(false);
+        return response;
     }
 
     public ServerModel getModel() {

@@ -55,7 +55,8 @@ public class ClientMain extends SimpleApplication implements ActionListener, Ana
     private ServerModel model;
     private Client netClient = null;
     private Level level;
-    private PhysicsSpace physicsSpace;
+    private Vector3f spawnLocation;
+
     public static void main(String[] args) {
         ClientMain app = new ClientMain();
         app.start(); // standard display type
@@ -239,10 +240,8 @@ public class ClientMain extends SimpleApplication implements ActionListener, Ana
         level.getPlayerControl().setJumpSpeed(20);
         level.getPlayerControl().setFallSpeed(30);
         level.getPlayerControl().setGravity(30);
-        level.getPlayerControl().setPhysicsLocation(new Vector3f(level.getSpawnX(),
-                level.getSpawnY(), level.getSpawnZ()));
-        level.getPlayerNode().setLocalTranslation(new Vector3f(level.getSpawnX(),
-                level.getSpawnY(), level.getSpawnZ()));
+        level.getPlayerControl().setPhysicsLocation(spawnLocation);
+        level.getPlayerNode().setLocalTranslation(spawnLocation);
         level.getPlayerNode().addControl(level.getPlayerControl());
         rootNode.attachChild(level.getPlayerNode());
         level.getBulletAppState().getPhysicsSpace().add(level.getPlayerControl());
@@ -556,6 +555,7 @@ public class ClientMain extends SimpleApplication implements ActionListener, Ana
             CollisionResult closest = results.getClosestCollision();
             System.out.println("What was hit? " + closest.getGeometry().getName());
 
+            System.out.println(closest);
             boolean isHit = closest.getGeometry().getUserData("isHit");
             if (!isHit)
             {
@@ -613,5 +613,13 @@ public class ClientMain extends SimpleApplication implements ActionListener, Ana
 
     public Level getLevel(){
         return level;
+    }
+
+    public Vector3f getSpawnLocation() {
+        return spawnLocation;
+    }
+
+    public void setSpawnLocation(Vector3f spawnLocation) {
+        this.spawnLocation = spawnLocation;
     }
 }

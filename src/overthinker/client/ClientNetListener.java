@@ -30,14 +30,15 @@ public class ClientNetListener implements MessageListener<Client> {
 //            }
         } else if (message instanceof NewClientResponse) {
             if(Globals.DEBUG)System.out.println("Received new client response");
-            switch (((NewClientResponse) message).getLevelType())
+            if(((NewClientResponse) message).isConnected())
             {
-                case MAZE1:
-                    clientMain.setLevel(new Maze1());
+                switch (((NewClientResponse) message).getLevelType())
+                {
+                    case MAZE1:
+                        clientMain.setLevel(new Maze1());
+                }
+                clientMain.setSpawnLocation(((NewClientResponse) message).getSpawnLocation());
             }
-            clientMain.getLevel().setSpawnX(((NewClientResponse) message).getSpawnX());
-            clientMain.getLevel().setSpawnY(((NewClientResponse) message).getSpawnY());
-            clientMain.getLevel().setSpawnZ(((NewClientResponse) message).getSpawnZ());
         }
     }
 }

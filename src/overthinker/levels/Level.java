@@ -15,6 +15,7 @@ import com.jme3.scene.Node;
 import com.jme3.scene.shape.Sphere;
 import com.jme3.terrain.geomipmap.TerrainQuad;
 import com.jme3.water.WaterFilter;
+import overthinker.client.Globals;
 import overthinker.client.SphereResource;
 import overthinker.client.OtherPlayer;
 
@@ -22,6 +23,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public abstract class Level {
+
+    private LevelType levelType;
 
     private int sphere_resource_count;
     private int player_count;
@@ -94,8 +97,6 @@ public abstract class Level {
     private String audioFootstepsLocation;
     private String audioJumpLocation;
     private String audioCollectLocation;
-
-    private int spawnX, spawnY, spawnZ;
 
     public int getSphere_resource_count() {
         return sphere_resource_count;
@@ -553,27 +554,15 @@ public abstract class Level {
         this.audioCollectLocation = audioCollectLocation;
     }
 
-    public int getSpawnX() {
-        return spawnX;
+    public Vector3f getRandomSpawnLocation() {
+        return spawnLocations.get(Globals.getRandInt(spawnLocations.size()));
     }
 
-    public void setSpawnX(int spawnX) {
-        this.spawnX = spawnX;
+    public LevelType getLevelType() {
+        return levelType;
     }
 
-    public int getSpawnY() {
-        return spawnY;
-    }
-
-    public void setSpawnY(int spawnY) {
-        this.spawnY = spawnY;
-    }
-
-    public int getSpawnZ() {
-        return spawnZ;
-    }
-
-    public void setSpawnZ(int spawnZ) {
-        this.spawnZ = spawnZ;
+    public void setLevelType(LevelType levelType) {
+        this.levelType = levelType;
     }
 }

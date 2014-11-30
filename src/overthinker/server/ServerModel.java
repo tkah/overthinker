@@ -2,6 +2,9 @@ package overthinker.server;
 
 import com.jme3.math.Vector3f;
 import com.jme3.network.HostedConnection;
+import overthinker.levels.Level;
+import overthinker.levels.LevelType;
+import overthinker.levels.maze1.Maze1;
 
 import java.util.HashMap;
 
@@ -20,4 +23,6 @@ public class ServerModel {
     {
         return playerLocations;
     }
+
+
 }

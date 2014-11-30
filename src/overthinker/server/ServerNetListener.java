@@ -21,9 +21,6 @@ public class ServerNetListener implements MessageListener<HostedConnection> {
     public void messageReceived(HostedConnection source, Message message) {
         if (message instanceof NewClientRequest) {
             if(Globals.DEBUG)System.out.println("New client request from: " + source.getAddress());
-            server.addClient(source);
-            server.getClientModelVersions().put(source, 0f);
-
             initClient(source);
 
         } else if (message instanceof ModelChangeRequest) {
@@ -32,9 +29,7 @@ public class ServerNetListener implements MessageListener<HostedConnection> {
     }
 
     private void initClient(HostedConnection source) {
-        NewClientResponse response = new NewClientResponse();
-        response.setLevelType(LevelType.MAZE1);
-        response.setSpawnPoint(-340, 80, -400);
+        NewClientResponse response = server.addClient(source);
         server.getNetServer().broadcast(Filters.in(source), response);
         server.getModel().version += 1;
         server.broadcastModelUpdate();

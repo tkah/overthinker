@@ -1,5 +1,6 @@
 package overthinker.net;
 
+import com.jme3.math.Vector3f;
 import com.jme3.network.AbstractMessage;
 import com.jme3.network.serializing.Serializable;
 import overthinker.levels.LevelType;
@@ -11,25 +12,20 @@ import java.awt.*;
  */
 @Serializable
 public class NewClientResponse extends AbstractMessage {
-    private int spawnX, spawnY, spawnZ;
+    private Vector3f spawnLocation;
     private LevelType levelType;
+
+    private boolean connected;
 
     public NewClientResponse() {}
 
-    public int getSpawnX() {
-        return spawnX;
+    public Vector3f getSpawnLocation()
+    {
+        return spawnLocation;
     }
 
-    public int getSpawnY() {
-        return spawnY;
-    }
-
-    public int getSpawnZ() { return spawnZ; }
-
-    public void setSpawnPoint(int x, int y, int z){
-        spawnX = x;
-        spawnY = y;
-        spawnZ = z;
+    public void setSpawnLocation(Vector3f spawnLocation){
+        this.spawnLocation = spawnLocation;
     }
 
     public LevelType getLevelType() {
@@ -38,5 +34,13 @@ public class NewClientResponse extends AbstractMessage {
 
     public void setLevelType(LevelType levelType) {
         this.levelType = levelType;
+    }
+
+    public boolean isConnected() {
+        return connected;
+    }
+
+    public void setConnected(boolean connected) {
+        this.connected = connected;
     }
 }
