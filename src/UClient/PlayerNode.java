@@ -1,8 +1,10 @@
 package UClient;
 
+import com.jme3.effect.ParticleEmitter;
 import com.jme3.input.InputManager;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
+import org.omg.Dynamic.Parameter;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
@@ -70,9 +72,14 @@ abstract class PlayerNode extends Node
 
   }
 
-  public void scalePlayerDown()
+  public void scalePlayerDown(float tpf)
   {
 
+  }
+
+  public ParticleEmitter getDustEmitter()
+  {
+    return null;
   }
 
   public boolean getShrink()

@@ -1,11 +1,10 @@
 package UClient;
 
 import com.jme3.asset.AssetManager;
-import com.jme3.audio.AudioNode;
 import com.jme3.bullet.BulletAppState;
 import com.jme3.bullet.control.BetterCharacterControl;
-import com.jme3.collision.CollisionResult;
-import com.jme3.collision.CollisionResults;
+import com.jme3.effect.ParticleEmitter;
+import com.jme3.effect.ParticleMesh;
 import com.jme3.input.InputManager;
 import com.jme3.input.KeyInput;
 import com.jme3.input.MouseInput;
@@ -34,12 +33,15 @@ import java.util.ArrayList;
  */
 public class UnderNode extends PlayerNode
 {
+  private static int DUST_PER_SEC = 100;
+
   private PlayerControl playerControl;
   private Sphere playerSphere;
   private Geometry playerG;
   private Node pivot;
   private CameraNode camNode;
   private Camera cam;
+  private ParticleEmitter dustEmitter;
 
   // Possibly move to abstract class
   private TerrainQuad terrain;
@@ -69,7 +71,9 @@ public class UnderNode extends PlayerNode
     this.terrain = terrain;
     this.assetManager = assetManager;
     this.bulletAppState = bulletAppState;
+
     pivot = new Node("Pivot");
+    dustEmitter = new ParticleEmitter("dust emitter", ParticleMesh.Type.Triangle, 100);
   }
 
   public void onAction(String binding, boolean isPressed, float tpf)
@@ -125,6 +129,7 @@ public class UnderNode extends PlayerNode
   public void update(float tpf)
   {
     onGround = playerControl.checkGravity(onGround, getLocalTranslation(), terrain);
+    dustEmitter.setParticlesPerSec(0);
 
     if (left || right || up || down) rotation += tpf*rotSpeed;
 
@@ -157,15 +162,19 @@ public class UnderNode extends PlayerNode
   {
     Quaternion ballRotate = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * rotation, new Vector3f(x, 0, z));
     playerG.setLocalRotation(ballRotate);
+    dustEmitter.setParticlesPerSec(DUST_PER_SEC);
   }
 
   @Override
-  public void scalePlayerDown()
+  public void scalePlayerDown(float tpf)
   {
     rotSpeed += 2f;
     moveSpeed += .01f;
     scale(.99f);
     playerControl.setScale(.99f);
+    walkDirection.addLocal(new Vector3f(0,0,.5f));
+    playerControl.setWalkDirection(walkDirection);
+    dustEmitter.setParticlesPerSec(DUST_PER_SEC);
   }
 
   @Override
@@ -217,6 +226,24 @@ public class UnderNode extends PlayerNode
     setLocalTranslation(new Vector3f(-340, 80, -400));
     addControl(playerControl);
     bulletAppState.getPhysicsSpace().add(playerControl);
+
+    Material dustMat = new Material(assetManager, "Common/MatDefs/Misc/Particle.j3md");
+    dustMat.setTexture("Texture", assetManager.loadTexture("assets/effects/smoke.png"));
+    dustEmitter.setLocalTranslation(new Vector3f(0, -0.7f,-3f));
+    dustEmitter.setMaterial(dustMat);
+    dustEmitter.setImagesX(2);
+    dustEmitter.setImagesY(2);
+    dustEmitter.setStartColor(new ColorRGBA(.254f, .1568f, 0.098f, 1));   // brown
+    dustEmitter.setEndColor(new ColorRGBA(1f, 1f, 1f, 0.5f)); // white
+    dustEmitter.setLowLife(3f);
+    dustEmitter.setHighLife(4f);
+    dustEmitter.setRotateSpeed(4);
+    dustEmitter.getParticleInfluencer().setInitialVelocity(new Vector3f(3,3,3));
+    dustEmitter.setSelectRandomImage(true);
+    dustEmitter.setParticlesPerSec(DUST_PER_SEC);
+    dustEmitter.setRandomAngle(true);
+    dustEmitter.getParticleInfluencer().setVelocityVariation(1.0f);
+    attachChild(dustEmitter);
   }
 
   public ArrayList setUpControls(InputManager inputManager)
@@ -326,6 +353,12 @@ public class UnderNode extends PlayerNode
   public boolean getShrink()
   {
     return shrink;
+  }
+
+  @Override
+  public ParticleEmitter getDustEmitter()
+  {
+    return dustEmitter;
   }
 
   public ArrayList getAudio()

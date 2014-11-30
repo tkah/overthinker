@@ -11,9 +11,12 @@ import com.jme3.audio.AudioNode;
 import com.jme3.audio.Listener;
 import com.jme3.bullet.BulletAppState;
 import com.jme3.bullet.collision.shapes.CollisionShape;
+import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.bullet.util.CollisionShapeFactory;
 import com.jme3.collision.CollisionResult;
 import com.jme3.collision.CollisionResults;
+import com.jme3.effect.ParticleEmitter;
+import com.jme3.effect.ParticleMesh;
 import com.jme3.input.FlyByCamera;
 import com.jme3.input.InputManager;
 import com.jme3.input.controls.ActionListener;
@@ -83,6 +86,7 @@ public class GamePlayAppState extends AbstractAppState
   private WaterFilter water;
   private TerrainQuad terrain;
   private Material mat_terrain;
+  private ParticleEmitter sparkEmitter;
 
   private ArrayList<SphereResource> sphereResourceArrayList = new ArrayList<SphereResource>();
   private ArrayList<SphereResource> sphereResourcesToShrink = new ArrayList<SphereResource>();
@@ -105,6 +109,7 @@ public class GamePlayAppState extends AbstractAppState
     viewPort = this.app.getViewPort();
     inputManager = this.app.getInputManager();
     flyCam = this.app.getFlyByCamera();
+    sparkEmitter = new ParticleEmitter("spark emitter", ParticleMesh.Type.Triangle, 60);
 
     /** Set up Physics */
     bulletAppState = new BulletAppState();
@@ -118,8 +123,8 @@ public class GamePlayAppState extends AbstractAppState
 
     createSphereResources();
     createKeyAndBarrier();
-    setUpLight();
     setUpLandscape();
+    setUpLight();
     setUpPlayer();
 
     fade = new FadeFilter(2); // 2 seconds
@@ -174,7 +179,7 @@ public class GamePlayAppState extends AbstractAppState
     //water.setWaterHeight(water.getWaterHeight() + waterHeightRate);
 
     // Player died
-    if (playerType == 1 && playerNode.getHeight() < .1f && !playerNode.isDead())
+    if (playerType == 1 && playerNode.getHeight() < .3f && !playerNode.isDead())
     {
       fade.fadeOut();
       playerNode.setDead(true);
@@ -186,7 +191,7 @@ public class GamePlayAppState extends AbstractAppState
     {
       if ((playerNode.getGeometry().getWorldTranslation().getY() <= water.getWaterHeight()) || playerNode.getShrink())
       {
-        playerNode.scalePlayerDown();
+        playerNode.scalePlayerDown(tpf);
       }
 
       CollisionResults results = new CollisionResults();
@@ -434,6 +439,11 @@ public class GamePlayAppState extends AbstractAppState
     wood.setTexture("ColorMap", assetManager.loadTexture("assets/textures/wood_texture.jpg"));
     boxG.setMaterial(wood);
     boxG.setLocalTranslation(new Vector3f(-330, 50, -400));
+    boxG.setShadowMode(RenderQueue.ShadowMode.CastAndReceive);
+    RigidBodyControl doorPhy = new RigidBodyControl(0f);
+    doorPhy.setSpatial(boxG);
+    doorPhy.setApplyPhysicsLocal(true);
+    doorPhy.setEnabled(true);
     collidableNode.attachChild(boxG);
 
     Box key = new Box(1.0f, 2.0f, 1.0f);
@@ -441,8 +451,38 @@ public class GamePlayAppState extends AbstractAppState
     Material keyMat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
     keyMat.setColor("Color", ColorRGBA.Yellow);
     keyG.setMaterial(keyMat);
-    keyG.setLocalTranslation(new Vector3f(-320, 50, -400));
+    keyG.setLocalTranslation(new Vector3f(-300, 45, -400));
+    keyG.setShadowMode(RenderQueue.ShadowMode.CastAndReceive);
+    RigidBodyControl keyPhy = new RigidBodyControl(0f);
+    keyPhy.setSpatial(keyG);
+    keyPhy.setApplyPhysicsLocal(true);
+    keyPhy.setEnabled(true);
+
+    Material sparkMat = new Material(assetManager, "Common/MatDefs/Misc/Particle.j3md");
+    sparkMat.setTexture("Texture", assetManager.loadTexture("assets/effects/spark.png"));
+    sparkEmitter.setLocalTranslation(new Vector3f(-300, 47, -400));
+    sparkEmitter.setMaterial(sparkMat);
+    sparkEmitter.setImagesX(1);
+    sparkEmitter.setImagesY(1);
+    sparkEmitter.setStartColor(ColorRGBA.Yellow);
+    sparkEmitter.setEndColor(ColorRGBA.Red);
+    sparkEmitter.setGravity(0, 50, 0);
+    sparkEmitter.setFacingVelocity(true);
+    sparkEmitter.setStartSize(.5f);
+    sparkEmitter.setEndSize(.5f);
+    sparkEmitter.setLowLife(.9f);
+    sparkEmitter.setHighLife(1.1f);
+    sparkEmitter.setRotateSpeed(4);
+    sparkEmitter.getParticleInfluencer().setInitialVelocity(new Vector3f(0, 10, 0));
+    sparkEmitter.setSelectRandomImage(true);
+    sparkEmitter.setRandomAngle(true);
+    sparkEmitter.getParticleInfluencer().setVelocityVariation(1.0f);
+    localRootNode.attachChild(sparkEmitter);
+
     collidableNode.attachChild(keyG);
+
+    bulletAppState.getPhysicsSpace().add(doorPhy);
+    bulletAppState.getPhysicsSpace().add(keyPhy);
   }
 
   private void initAudio()
