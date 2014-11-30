@@ -194,6 +194,7 @@ public class ClientMain extends SimpleApplication implements ActionListener, Ana
             level.getBulletAppState().getPhysicsSpace().add(otherPlayer.getSphereResourcePhy());
             level.getOtherPlayers().put(i, otherPlayer);
             level.getResources().attachChild(otherPlayer.getGeometry());
+            rootNode.attachChild(otherPlayer.getGeometry());
         }
     }
 
@@ -547,8 +548,6 @@ public class ClientMain extends SimpleApplication implements ActionListener, Ana
 
         CollisionResults results = new CollisionResults();
         level.getResources().collideWith(level.getPlayerG().getWorldBound(), results);
-
-
         if (results.size() > 0)
         {
             level.getAudioCollect().play();
@@ -570,6 +569,7 @@ public class ClientMain extends SimpleApplication implements ActionListener, Ana
 
             }
         }
+
         //move the audio with the camera
         listener.setLocation(cam.getLocation());
         listener.setRotation(cam.getRotation());
