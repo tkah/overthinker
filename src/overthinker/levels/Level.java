@@ -101,7 +101,11 @@ public abstract class Level {
         return sphere_resource_count;
     }
 
-    public int getPlayer_player_count() { return player_count; }
+    public int getPlayerCount() { return player_count; }
+
+    public void setPlayerCount(int player_count) {
+        this.player_count = player_count;
+    }
 
     public void setSphere_resource_count(int sphere_resource_count) {
         this.sphere_resource_count = sphere_resource_count;

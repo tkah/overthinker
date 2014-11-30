@@ -76,7 +76,7 @@ public class ClientMain extends SimpleApplication implements ActionListener, Ana
         setUpPlayer();
         setUpCamera();
         createSphereResources();
-//        createOtherPlayers();
+        createOtherPlayers();
 
         Globals.setUpTimer();
         Globals.startTimer();
@@ -183,10 +183,17 @@ public class ClientMain extends SimpleApplication implements ActionListener, Ana
         }
     }
 
-    public void createOtherPlayer(OtherPlayer otherPlayer)
+    private void createOtherPlayers()
     {
-        level.getBulletAppState().getPhysicsSpace().add(otherPlayer.getSphereResourcePhy());
-        level.getResources().attachChild(otherPlayer.getGeometry());
+        for(int i = 0; i < level.getPlayerCount(); i++)
+        {
+            System.out.println("Creating new Player Objects");
+            OtherPlayer otherPlayer = new OtherPlayer(level.getPlayer_sphere_start_radius(), i,
+                    level.getSpawnLocations().get(0), assetManager);
+            level.getBulletAppState().getPhysicsSpace().add(otherPlayer.getSphereResourcePhy());
+            level.getOtherPlayers().put(i, otherPlayer);
+            level.getResources().attachChild(otherPlayer.getGeometry());
+        }
     }
 
     private void setUpCamera()  {

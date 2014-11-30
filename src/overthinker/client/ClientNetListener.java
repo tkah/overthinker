@@ -11,9 +11,6 @@ import overthinker.net.NewClientResponse;
 import javax.print.attribute.standard.MediaSize;
 import java.util.HashMap;
 
-/**
- * Created by Peter on 11/11/2014.
- */
 public class ClientNetListener implements MessageListener<Client> {
     private ClientMain clientMain;
 
@@ -23,24 +20,14 @@ public class ClientNetListener implements MessageListener<Client> {
     }
 
     public void messageReceived(Client source, Message message) {
-        if (message instanceof ModelUpdate){
-            HashMap<Integer, Vector3f> playerLocationMap = ((ModelUpdate) message).getPlayerLocations();
-            for(Integer playerIndex : playerLocationMap.keySet())
-            {
-                if(clientMain.getLevel().getOtherPlayers().containsKey(playerIndex))
-                {
-                    clientMain.getLevel().getOtherPlayers().get(playerIndex).move(playerLocationMap.get(playerIndex));
-                }
-                else
-                {
-                    System.out.println("New Other Player");
-                    OtherPlayer player = new OtherPlayer(clientMain.getLevel().getPlayer_sphere_start_radius(),
-                            playerIndex, playerLocationMap.get(playerIndex), clientMain.getAssetManager());
+        if (message instanceof ModelUpdate) {
+            System.out.println(((ModelUpdate) message).getPlayerLocations());
 
-                    clientMain.createOtherPlayer(player);
-                    clientMain.getLevel().getOtherPlayers().put(playerIndex, player);
-                }
-            }
+//            HashMap<Integer, Vector3f> playerLocationMap = ((ModelUpdate) message).getPlayerLocations();
+//            for(Integer playerIndex : playerLocationMap.keySet())
+//            {
+//                clientMain.getLevel().getOtherPlayers().get(playerIndex).move(playerLocationMap.get(playerIndex));
+//            }
         } else if (message instanceof NewClientResponse) {
             if(Globals.DEBUG)System.out.println("Received new client response");
             switch (((NewClientResponse) message).getLevelType())

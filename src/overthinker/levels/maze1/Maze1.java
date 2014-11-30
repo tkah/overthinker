@@ -51,5 +51,7 @@ public class Maze1 extends Level {
         setAudioCollectLocation("overthinker/assets/sounds/collect.ogg");
         setAudioFootstepsLocation("overthinker/assets/sounds/footsteps.ogg");
         setAudioJumpLocation("overthinker/assets/sounds/pop.ogg");
+
+        setPlayerCount(4);
     }
 }
