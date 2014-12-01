@@ -2,7 +2,6 @@ package overthinker.client;
 
 import com.jme3.app.SimpleApplication;
 import com.jme3.audio.AudioNode;
-import com.jme3.bullet.PhysicsSpace;
 import com.jme3.bullet.collision.shapes.CollisionShape;
 import com.jme3.bullet.collision.shapes.SphereCollisionShape;
 import com.jme3.bullet.control.CharacterControl;
@@ -38,6 +37,7 @@ import com.jme3.terrain.heightmap.ImageBasedHeightMap;
 import com.jme3.texture.Texture;
 import com.jme3.util.TangentBinormalGenerator;
 import com.jme3.water.WaterFilter;
+import overthinker.levels.maze1.Maze1;
 import overthinker.server.ServerModel;
 import overthinker.levels.Level;
 import overthinker.net.ModelChangeRequest;
@@ -52,10 +52,12 @@ import java.io.IOException;
  */
 public class ClientMain extends SimpleApplication implements ActionListener, AnalogListener {
 
-    private ServerModel model;
+    private ServerModel model = new ServerModel();
     private Client netClient = null;
     private Level level;
     private Vector3f spawnLocation;
+    private long activeVersion;
+    private int clientIndex;
 
     public static void main(String[] args) {
         ClientMain app = new ClientMain();
@@ -351,10 +353,10 @@ public class ClientMain extends SimpleApplication implements ActionListener, Ana
         netClient.addMessageListener(listener, NewClientResponse.class);
 
         netClient.start();
-        netClient.send(new NewClientRequest());
 
         while(level == null)
         {
+            netClient.send(new NewClientRequest());
             System.out.println("Waiting For Model Data...");
             try {
                 Thread.sleep(1000);
@@ -533,7 +535,18 @@ public class ClientMain extends SimpleApplication implements ActionListener, Ana
 
         level.getPlayerControl().setWalkDirection(level.getWalkDirection());
 
-        //Send new client location to server
+        // Move the other players
+        if(activeVersion < model.getVersion())
+        {
+            for(int i : level.getOtherPlayers().keySet())
+            {
+                if(i != clientIndex)
+                {
+                    moveOtherPlayer(level.getOtherPlayers().get(i), model.getPlayerLocations().get(i));
+                }
+            }
+            activeVersion = model.getVersion();
+        }
 
         // Collision Scaling
         if (level.isPlayerNeedsScaling()) scalePlayer();
@@ -576,6 +589,15 @@ public class ClientMain extends SimpleApplication implements ActionListener, Ana
 
     }
 
+    private void moveOtherPlayer(OtherPlayer otherPlayer, Vector3f location) {
+        if(location != null)
+        {
+            System.out.println("Moving other player");
+            otherPlayer.move(location);
+        }
+    }
+
+
     private void moveBall(float x, float z, Vector3f c)
     {
         Quaternion ballRotate = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * level.getRotation(), new Vector3f(x, 0,z));
@@ -606,7 +628,6 @@ public class ClientMain extends SimpleApplication implements ActionListener, Ana
         return level.getPlayerControl();
     }
 
-
     public void setLevel(Level level){
         this.level = level;
     }
@@ -615,11 +636,22 @@ public class ClientMain extends SimpleApplication implements ActionListener, Ana
         return level;
     }
 
-    public Vector3f getSpawnLocation() {
-        return spawnLocation;
+
+    public synchronized void updateModel(ModelUpdate message) {
+        model.setPlayerLocations(message.getPlayerLocations());
+        model.setVersion(message.version);
+        System.out.println("Update Model Version " + model.getVersion());
     }
 
-    public void setSpawnLocation(Vector3f spawnLocation) {
-        this.spawnLocation = spawnLocation;
+    public void handleNewClientResponse(NewClientResponse message) {
+        switch (message.getLevelType())
+        {
+            case MAZE1:
+                level = new Maze1();
+        }
+        spawnLocation = message.getSpawnLocation();
+        activeVersion = message.getVersion();
+        clientIndex = message.getClientIndex();
+        model.setPlayerLocations(message.getPlayerLocations());
     }
 }

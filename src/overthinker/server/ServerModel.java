@@ -13,10 +13,9 @@ import java.util.HashMap;
  */
 public class ServerModel {
     private HashMap<Integer, Vector3f> playerLocations = new HashMap<Integer, Vector3f>();
-    public long version = 0L;
+    private long version;
 
     public ServerModel() {
-        version = 0L;
     }
 
     public HashMap<Integer, Vector3f> getPlayerLocations()
@@ -24,5 +23,16 @@ public class ServerModel {
         return playerLocations;
     }
 
+    public void setPlayerLocations(HashMap<Integer, Vector3f> playerLocations)
+    {
+        this.playerLocations = playerLocations;
+    }
 
+    public long getVersion() {
+        return version;
+    }
+
+    public void setVersion(long version) {
+        this.version = version;
+    }
 }

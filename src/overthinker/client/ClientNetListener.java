@@ -22,22 +22,12 @@ public class ClientNetListener implements MessageListener<Client> {
     public void messageReceived(Client source, Message message) {
         if (message instanceof ModelUpdate) {
             System.out.println(((ModelUpdate) message).getPlayerLocations());
+            clientMain.updateModel((ModelUpdate) message);
 
-//            HashMap<Integer, Vector3f> playerLocationMap = ((ModelUpdate) message).getPlayerLocations();
-//            for(Integer playerIndex : playerLocationMap.keySet())
-//            {
-//                clientMain.getLevel().getOtherPlayers().get(playerIndex).move(playerLocationMap.get(playerIndex));
-//            }
         } else if (message instanceof NewClientResponse) {
             if(Globals.DEBUG)System.out.println("Received new client response");
-            if(((NewClientResponse) message).isConnected())
-            {
-                switch (((NewClientResponse) message).getLevelType())
-                {
-                    case MAZE1:
-                        clientMain.setLevel(new Maze1());
-                }
-                clientMain.setSpawnLocation(((NewClientResponse) message).getSpawnLocation());
+            if(((NewClientResponse) message).isConnected()) {
+                clientMain.handleNewClientResponse((NewClientResponse) message);
             }
         }
     }

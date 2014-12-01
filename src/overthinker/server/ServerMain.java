@@ -2,6 +2,7 @@ package overthinker.server;
 
 
 import com.jme3.math.Vector3f;
+import com.jme3.network.Filters;
 import com.jme3.network.HostedConnection;
 import overthinker.client.Globals;
 import overthinker.levels.Level;
@@ -29,13 +30,15 @@ public class ServerMain extends SimpleApplication {
     private Server netServer;
     private ServerModel model;
     private Level level;
+    private int clientCount = 0;
     private HashMap<HostedConnection, Integer> clientIndex = new HashMap<HostedConnection, Integer>();
-    private HashMap<HostedConnection, Long> clientModelVersions = new HashMap<HostedConnection, Long>();
+//    private HashMap<HostedConnection, Long> clientModelVersions = new HashMap<HostedConnection, Long>();
 
     public static void main(String[] args) {
         ServerMain app = new ServerMain();
         app.start(JmeContext.Type.Headless);
     }
+
     @Override
     public void simpleInitApp() {
         try {
@@ -48,21 +51,28 @@ public class ServerMain extends SimpleApplication {
         netServer.start();
     }
 
+    @Override
+    public void simpleUpdate(float tpf) {
+        for(HostedConnection client : clientIndex.keySet())
+        {
+            if (!client.getServer().hasConnections())
+            {
+                clientIndex.remove(client);
+                clientCount--;
+            }
+        }
+    }
     public void broadcastModelUpdate()
     {
         ModelUpdate modelUpdate = new ModelUpdate();
         modelUpdate.setPlayerLocations(model.getPlayerLocations());
-        modelUpdate.version = model.version;
+        modelUpdate.version = model.getVersion();
         netServer.broadcast(modelUpdate);
     }
 
     private void initModel() {
         model = new ServerModel();
         level = new Maze1();
-        for(int i = 0; i < level.getPlayerCount(); i++)
-        {
-            model.getPlayerLocations().put(i, null);
-        }
     }
 
     private void initNetServer() {
@@ -77,38 +87,32 @@ public class ServerMain extends SimpleApplication {
         netServer.addMessageListener(listener, ModelChangeRequest.class);
     }
 
-
-    public HashMap<HostedConnection, Long> getClientModelVersions() {
-        return clientModelVersions;
-    }
-
-    public Server getNetServer(){
-        return netServer;
-    }
-
-    public NewClientResponse addClient(HostedConnection sources)
+    public void initClient(HostedConnection source)
     {
-        Vector3f spawnLocation = null;
-        for(int i = 0; i < level.getPlayerCount(); i++)
-        {
-            if(model.getPlayerLocations().get(i) == null)
-            {
-                spawnLocation = level.getRandomSpawnLocation();
-                model.getPlayerLocations().put(i, spawnLocation);
-                clientIndex.put(sources, i);
-                clientModelVersions.put(sources, model.version);
-            }
-        }
-
+        Vector3f spawnLocation = level.getRandomSpawnLocation();
         NewClientResponse response = new NewClientResponse();
-        if(spawnLocation != null)
+
+        // Check if there is room on the current level
+        if(clientIndex.values().size() < level.getPlayerCount())
         {
-            response.setLevelType(level.getLevelType());
-            response.setSpawnLocation(spawnLocation);
+            model.getPlayerLocations().put(clientCount, spawnLocation);
+            clientIndex.put(source, clientCount);
+//            clientModelVersions.put(sources, model.version);
             response.setConnected(true);
+            response.setClientIndex(clientCount);
+            clientCount++;
+            model.setVersion(model.getVersion() + 1);
+            broadcastModelUpdate();
         }
         else response.setConnected(false);
-        return response;
+
+        // Send response
+        response.setLevelType(level.getLevelType());
+        response.setSpawnLocation(spawnLocation);
+        response.setVersion(model.getVersion());
+        response.setPlayerLocations(model.getPlayerLocations());
+        netServer.broadcast(Filters.in(source), response);
+
     }
 
     public ServerModel getModel() {
@@ -117,7 +121,7 @@ public class ServerMain extends SimpleApplication {
 
     public synchronized void updateModel(HostedConnection source, Vector3f playerLocation) {
         model.getPlayerLocations().replace(clientIndex.get(source), playerLocation);
-        model.version += 1;
+        model.setVersion(model.getVersion() + 1);
         broadcastModelUpdate();
     }
 }
