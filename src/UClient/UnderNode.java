@@ -229,18 +229,20 @@ public class UnderNode extends PlayerNode
 
     Material dustMat = new Material(assetManager, "Common/MatDefs/Misc/Particle.j3md");
     dustMat.setTexture("Texture", assetManager.loadTexture("assets/effects/smoke.png"));
-    dustEmitter.setLocalTranslation(new Vector3f(0, -0.7f,-3f));
+    dustEmitter.setLocalTranslation(new Vector3f(0, -getHeight()/2, 0));
     dustEmitter.setMaterial(dustMat);
     dustEmitter.setImagesX(2);
     dustEmitter.setImagesY(2);
     dustEmitter.setStartColor(new ColorRGBA(.254f, .1568f, 0.098f, 1));   // brown
     dustEmitter.setEndColor(new ColorRGBA(1f, 1f, 1f, 0.5f)); // white
-    dustEmitter.setLowLife(3f);
-    dustEmitter.setHighLife(4f);
+    dustEmitter.setFacingVelocity(true);
+    dustEmitter.setStartSize(.5f);
+    dustEmitter.setEndSize(.5f);
+    dustEmitter.setLowLife(.9f);
+    dustEmitter.setHighLife(1.1f);
     dustEmitter.setRotateSpeed(4);
-    dustEmitter.getParticleInfluencer().setInitialVelocity(new Vector3f(3,3,3));
+    dustEmitter.getParticleInfluencer().setInitialVelocity(new Vector3f(0, 10, 0));
     dustEmitter.setSelectRandomImage(true);
-    dustEmitter.setParticlesPerSec(DUST_PER_SEC);
     dustEmitter.setRandomAngle(true);
     dustEmitter.getParticleInfluencer().setVelocityVariation(1.0f);
     attachChild(dustEmitter);

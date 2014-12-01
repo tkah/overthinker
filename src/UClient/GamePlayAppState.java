@@ -90,6 +90,10 @@ public class GamePlayAppState extends AbstractAppState
 
   private ArrayList<SphereResource> sphereResourceArrayList = new ArrayList<SphereResource>();
   private ArrayList<SphereResource> sphereResourcesToShrink = new ArrayList<SphereResource>();
+  private Vector3f[] keyLocArray = {new Vector3f(60, 65, -330), new Vector3f(35, 65, 345), new Vector3f(115, 65, -353)};
+  private Vector3f[] doorLocArray = {new Vector3f(-293, 98, 143), new Vector3f(330, 98, -68), new Vector3f(-236, 98, 208)};
+  private float[] doorSizeXArray = {15f, 15f, 17f};
+  private float[] doorRotationArray = {-55f, 100f, -43f};
 
   /** Create AudioNodes **/
   private AudioNode audio_ocean;
@@ -122,7 +126,7 @@ public class GamePlayAppState extends AbstractAppState
     flyCam.setMoveSpeed(100);
 
     createSphereResources();
-    createKeyAndBarrier();
+    createDoorsAndKeys();
     setUpLandscape();
     setUpLight();
     setUpPlayer();
@@ -431,58 +435,23 @@ public class GamePlayAppState extends AbstractAppState
     }
   }
 
-  private void createKeyAndBarrier()
+  private void createDoorsAndKeys()
   {
-    Box door = new Box(10.0f, 10.0f, 1.0f);
-    Geometry boxG = new Geometry("Door", door);
-    Material wood = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
-    wood.setTexture("ColorMap", assetManager.loadTexture("assets/textures/wood_texture.jpg"));
-    boxG.setMaterial(wood);
-    boxG.setLocalTranslation(new Vector3f(-330, 50, -400));
-    boxG.setShadowMode(RenderQueue.ShadowMode.CastAndReceive);
-    RigidBodyControl doorPhy = new RigidBodyControl(0f);
-    doorPhy.setSpatial(boxG);
-    doorPhy.setApplyPhysicsLocal(true);
-    doorPhy.setEnabled(true);
-    collidableNode.attachChild(boxG);
+    for (int i = 0; i < doorLocArray.length; i++)
+    {
+      Door door = new Door("Door_" + i);
+      door.createDoor(assetManager, doorSizeXArray[i], doorRotationArray[i], doorLocArray[i]);
+      collidableNode.attachChild(door);
+      bulletAppState.getPhysicsSpace().add(door.getPhy());
+    }
 
-    Box key = new Box(1.0f, 2.0f, 1.0f);
-    Geometry keyG = new Geometry("Key", key);
-    Material keyMat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
-    keyMat.setColor("Color", ColorRGBA.Yellow);
-    keyG.setMaterial(keyMat);
-    keyG.setLocalTranslation(new Vector3f(-300, 45, -400));
-    keyG.setShadowMode(RenderQueue.ShadowMode.CastAndReceive);
-    RigidBodyControl keyPhy = new RigidBodyControl(0f);
-    keyPhy.setSpatial(keyG);
-    keyPhy.setApplyPhysicsLocal(true);
-    keyPhy.setEnabled(true);
-
-    Material sparkMat = new Material(assetManager, "Common/MatDefs/Misc/Particle.j3md");
-    sparkMat.setTexture("Texture", assetManager.loadTexture("assets/effects/spark.png"));
-    sparkEmitter.setLocalTranslation(new Vector3f(-300, 47, -400));
-    sparkEmitter.setMaterial(sparkMat);
-    sparkEmitter.setImagesX(1);
-    sparkEmitter.setImagesY(1);
-    sparkEmitter.setStartColor(ColorRGBA.Yellow);
-    sparkEmitter.setEndColor(ColorRGBA.Red);
-    sparkEmitter.setGravity(0, 50, 0);
-    sparkEmitter.setFacingVelocity(true);
-    sparkEmitter.setStartSize(.5f);
-    sparkEmitter.setEndSize(.5f);
-    sparkEmitter.setLowLife(.9f);
-    sparkEmitter.setHighLife(1.1f);
-    sparkEmitter.setRotateSpeed(4);
-    sparkEmitter.getParticleInfluencer().setInitialVelocity(new Vector3f(0, 10, 0));
-    sparkEmitter.setSelectRandomImage(true);
-    sparkEmitter.setRandomAngle(true);
-    sparkEmitter.getParticleInfluencer().setVelocityVariation(1.0f);
-    localRootNode.attachChild(sparkEmitter);
-
-    collidableNode.attachChild(keyG);
-
-    bulletAppState.getPhysicsSpace().add(doorPhy);
-    bulletAppState.getPhysicsSpace().add(keyPhy);
+    for (int i = 0; i < keyLocArray.length; i++)
+    {
+      Key key = new Key("Key_" + i);
+      key.createKey(assetManager, keyLocArray[i]);
+      collidableNode.attachChild(key);
+      bulletAppState.getPhysicsSpace().add(key.getPhy());
+    }
   }
 
   private void initAudio()
