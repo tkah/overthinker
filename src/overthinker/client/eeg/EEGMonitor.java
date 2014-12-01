@@ -9,7 +9,7 @@ import com.sun.jna.ptr.IntByReference;
 public class EEGMonitor extends Thread {
 
     private final boolean DEBUG = true;
-    private final int MIN_GYRO_DELTA = 200;
+    private final int MIN_GYRO_DELTA = 50;
 
     private Pointer eEvent = Edk.INSTANCE.EE_EmoEngineEventCreate();
     private Pointer eState = Edk.INSTANCE.EE_EmoStateCreate();
@@ -23,6 +23,9 @@ public class EEGMonitor extends Thread {
     private boolean readytocollect = false;
     private IntByReference gyroX = new IntByReference(0);
     private IntByReference gyroY = new IntByReference(0);
+
+    public float excitementShort = 0;
+    public float frustrationShort = 0;
 
 
     public EEGMonitor() {
@@ -93,36 +96,41 @@ public class EEGMonitor extends Thread {
                         if (DEBUG) System.out.println(nSamplesTaken.getValue());
 
                         double[] data = new double[nSamplesTaken.getValue()];
-                        for (int sampleIdx = 0; sampleIdx < nSamplesTaken.getValue(); ++sampleIdx) {
-//                            for (int i = 0 ; i < 14 ; i++) {
-//
-//                                Edk.INSTANCE.EE_DataGet(hData, i, data, nSamplesTaken.getValue());
-//                                System.out.print(data[sampleIdx]);
-//                                System.out.print(",");
-//
-//                            }
+                        //for (int sampleIdx = 0; sampleIdx < nSamplesTaken.getValue(); ++sampleIdx) {
                             Edk.INSTANCE.EE_HeadsetGetGyroDelta(userID.getValue(), gyroX, gyroY);
-                            if (DEBUG) System.out.print(" GyroDelta[X]: " + gyroX.getValue() + " GyroDelta[Y]: " + gyroY.getValue());
-                            if (DEBUG) System.out.print(", tilt direction: " + interpretGyro());
+                            if (DEBUG)System.out.print(" GyroDelta[X]: " + gyroX.getValue() + " GyroDelta[Y]: " + gyroY.getValue());
+                            interpretGyro();
                             //Edk.INSTANCE. dot HOW DO I ACCESS FRUSTRATION dot BAD API
-                            Edk.INSTANCE.EE_EmoEngineEventGetEmoState(hData, eState);
-                            if (DEBUG) System.out.print(", Frust: " + EmoState.INSTANCE.ES_AffectivGetFrustrationScore(eState));
+                            excitementShort = EmoState.INSTANCE.ES_AffectivGetExcitementShortTermScore(eState);
+                            frustrationShort = EmoState.INSTANCE.ES_AffectivGetFrustrationScore(eState);
+                            interpretFrustration();
+                            if (DEBUG)System.out.print(", Frust: " + EmoState.INSTANCE.ES_AffectivGetFrustrationScore(eState));
                             if (DEBUG) System.out.println();
-                        }
+                       // }
                     }
                 }
             }
         }
-        this.shutDown();
+        this.shutdown();
     }
 
-    private void shutDown() {
+    /**
+     * Shutdown and deallocate the EEG engine.
+     */
+    private void shutdown() {
         Edk.INSTANCE.EE_EngineDisconnect();
         Edk.INSTANCE.EE_EmoStateFree(eState);
         Edk.INSTANCE.EE_EmoEngineEventFree(eEvent);
         if (DEBUG) System.out.println("Disconnected!");
     }
 
+    /**
+     * Determines the tilt requested, based on the amount of change from gyroscopes.
+     * THIS METHOD GIVES PRECEDENCE TO SIDE-TO-SIDE MOVEMENT, because it is difficult
+     * to move your head horizontally without affecting the vertical movement.
+     *
+     * @return integer reflecting tilt direction (-1 = Left, 1 = Right, -2 = Down, 2 = Up)
+     */
     private int interpretGyro() {
         int xDelta = 0;
         int yDelta = 0;
@@ -131,32 +139,36 @@ public class EEGMonitor extends Thread {
             yDelta = gyroY.getValue();
         }
         if (xDelta == 0 && yDelta == 0) {
-            if (DEBUG) System.out.println("Tilt: 0");
+            if (DEBUG) System.out.print("Tilt: 0 (No tilt)");
             return 0;  //nothing happening.
         }
         if (Math.abs(xDelta) > MIN_GYRO_DELTA) {
             if (xDelta > 0) {
-                if (DEBUG) System.out.println("Tilt: 1");
-                return 1; //UP or Down, not sure yet.
-            }
-            else {
-                if (DEBUG) System.out.println("Tilt: -1");
-                return -1;     //Down or up, not sure yet.
+                if (DEBUG) System.out.print(" Tilt: 1 (Right)");
+                return 1;       //Right
+            } else {
+                if (DEBUG) System.out.print(" Tilt: -1 (Left)");
+                return -1;     //Left
             }
         }
         if (Math.abs(yDelta) > MIN_GYRO_DELTA) {
             if (yDelta > 0) {
-                if (DEBUG) System.out.println("Tilt: 2");
-                return 2; //Left or right, not sure yet.
-            }
-            else {
-                if (DEBUG) System.out.println("Tilt: -2");
-                return -2; //right or left, not sure yet.
+                if (DEBUG) System.out.print(" Tilt: 2 (Up)");
+                return 2; //Up
+            } else {
+                if (DEBUG) System.out.print(" Tilt: -2 (Down)");
+                return -2; //Down
             }
         }
+        if (DEBUG) System.out.println("Tilt: 0 (No tilt)");
         return 0;
     }
 
+    /**
+     * Public getter-method for the needed tilt direction
+     *
+     * @return integer reflecting tilt direction (-1 = Left, 1 = Right, -2 = Down, 2 = Up)
+     */
     public int getTiltDirection() {
         int tilt = 0;
         synchronized (this) {
@@ -165,8 +177,35 @@ public class EEGMonitor extends Thread {
         return tilt;
     }
 
-    public static int interpretFrustration() {
-        return 0;
+
+    /**
+     * Looks at the short-term excitment score
+     *
+     * @return integer 1 if excitement is above 50%, 0 otherwise
+     */
+    private int interpretFrustration() {
+        if (DEBUG) System.out.println("\nShort term excitement: " + excitementShort);
+        if (DEBUG) System.out.println("Frustration: " + frustrationShort);
+
+        if (excitementShort > 1 || excitementShort < 0) {
+            //System.out.println("\n Headset excitement out of bounds! Calm your bosom!");
+            return 0;
+        }
+        if (excitementShort > 0.5) return 1;
+        else return 0;
     }
 
+    /**
+     * Public getter-method for stress (whichever metric we decide
+     * to use will be set in the 'interpretFrustration() method).
+     *
+     * @return 1 if stress is high, 0 otherwise.  **Will change, with gameplay testing.**
+     */
+    public int getStressLevel() {
+        int stress = 0;
+        synchronized (this) {
+            stress = interpretFrustration();
+        }
+        return stress;
+    }
 }
