@@ -97,9 +97,12 @@ public class GamePlayAppState extends AbstractAppState
   private ArrayList<SphereResource> sphereResourcesToShrink = new ArrayList<SphereResource>();
   private Vector3f[] keyLocArray = {new Vector3f(60, 65, -330), new Vector3f(35, 65, 345), new Vector3f(115, 65, -353)};
   private Vector3f[] keyDoorLocArray = {new Vector3f(-293, 98, 143), new Vector3f(330, 98, -68), new Vector3f(-236, 98, 208)};
-  private Vector3f[] platLocArray = {new Vector3f(-330, 40.8f, -400)};
-  private float[] doorSizeXArray = {15f, 15f, 17f};
-  private float[] doorRotationArray = {-55f, 100f, -43f};
+  private Vector3f[] platLocArray = {new Vector3f(55, 81.65f, -295), new Vector3f(245, 81.65f, 120), new Vector3f(195, 102.45f, 75)};
+  private Vector3f[] platDoorLocArray = {new Vector3f(252, 133, -87), new Vector3f(202,133,139), new Vector3f(67,133,-245)};
+  private float[] keyDoorSizeXArray = {15f, 15f, 17f};
+  private float[] keyDoorRotationArray = {-55f, 100f, -43f};
+  private float[] platDoorSizeXArray = {16f, 17f, 21f};
+  private float[] platDoorRotationArray = {-70, 49, -10};
   private ArrayList<Key> keys = new ArrayList<Key>();
   private ArrayList<Door> keyDoors = new ArrayList<Door>();
   private ArrayList<Door> platDoors = new ArrayList<Door>();
@@ -190,6 +193,8 @@ public class GamePlayAppState extends AbstractAppState
   @Override
   public void update(float tpf)
   {
+    System.out.println("Cam at: " + cam.getLocation());
+
     // Raise Water Level, to be controlled by EEG
     if (!playerNode.isSlowWater()) water.setWaterHeight(water.getWaterHeight() + Globals.WATER_HEIGHT_DEFAULT_RATE);
     else water.setWaterHeight(water.getWaterHeight() + Globals.WATER_HEIGHT_PLAYER_RATE);
@@ -258,23 +263,33 @@ public class GamePlayAppState extends AbstractAppState
 
       CollisionResults platResults = new CollisionResults();
       platformsNode.collideWith(playerNode.getGeometry().getWorldBound(), platResults);
-
       for (Platform p : platforms) p.moveUp();
       if (platResults.size() > 0)
       {
-        CollisionResult closest = platResults.getClosestCollision();
-        System.out.println("What was hit? " + closest.getGeometry().getName());
-
-        int id = closest.getGeometry().getUserData("id");
-        for (int i = 0; i < platforms.size(); i++)
+        boolean onePressed = false;
+        boolean twoPressed = false;
+        boolean threePressed = false;
+        for (int i = 0; i < platResults.size(); i++)
         {
-          if (id == i)
-          {
-            Platform p = platforms.get(i);
-            p.pressDown();
-            //Door d = platDoors.get(i);
-            //d.removeFromParent();
-          }
+          int id = platResults.getCollision(i).getGeometry().getUserData("id");
+          Platform p = platforms.get(id);
+          p.pressDown();
+          if (id == 0) onePressed = true;
+          if (id == 1) twoPressed = true;
+          if (id == 2) threePressed = true;
+        }
+
+        if (onePressed && twoPressed)
+        {
+          Door d = platDoors.get(0);
+          d.removeFromParent();
+        }
+        else if (threePressed)
+        {
+          Door d2 = platDoors.get(1);
+          Door d3 = platDoors.get(2);
+          d2.removeFromParent();
+          d3.removeFromParent();
         }
       }
     }
@@ -498,14 +513,11 @@ public class GamePlayAppState extends AbstractAppState
     for (int i = 0; i < keyDoorLocArray.length; i++)
     {
       Door door = new Door("Door_" + i);
-      door.createDoor(assetManager, doorSizeXArray[i], doorRotationArray[i], keyDoorLocArray[i]);
+      door.createDoor(assetManager, keyDoorSizeXArray[i], keyDoorRotationArray[i], keyDoorLocArray[i]);
       collidableNode.attachChild(door);
       bulletAppState.getPhysicsSpace().add(door.getPhy());
       keyDoors.add(door);
-    }
 
-    for (int i = 0; i < keyLocArray.length; i++)
-    {
       Key key = new Key("Key_" + i);
       key.createKey(assetManager, keyLocArray[i]);
       bulletAppState.getPhysicsSpace().add(key.getPhy());
@@ -525,6 +537,12 @@ public class GamePlayAppState extends AbstractAppState
       platformsNode.attachChild(plat);
       bulletAppState.getPhysicsSpace().add(plat.getPhy());
       platforms.add(plat);
+
+      Door door = new Door("Door_" + i);
+      door.createDoor(assetManager, platDoorSizeXArray[i], platDoorRotationArray[i], platDoorLocArray[i]);
+      collidableNode.attachChild(door);
+      bulletAppState.getPhysicsSpace().add(door.getPhy());
+      platDoors.add(door);
     }
     collidableNode.attachChild(platformsNode);
   }
