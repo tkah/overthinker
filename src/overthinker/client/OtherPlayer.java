@@ -42,7 +42,7 @@ public class OtherPlayer
     mat.setColor("Specular", ColorRGBA.White);
     mat.setFloat("Shininess", 64f);
     geom.setMaterial(mat);
-    sphere_phy = new RigidBodyControl(0.05f);
+    sphere_phy = new RigidBodyControl(0f);
     geom.addControl(sphere_phy);
   }
 
@@ -71,6 +71,6 @@ public class OtherPlayer
   public void move(Vector3f move)
   {
     //TODO: Rotation conditional on movement direction and size
-    geom.setLocalTranslation(move);
+    sphere_phy.setPhysicsLocation(move);
   }
 }
