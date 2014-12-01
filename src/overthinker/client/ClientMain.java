@@ -37,6 +37,7 @@ import com.jme3.terrain.heightmap.ImageBasedHeightMap;
 import com.jme3.texture.Texture;
 import com.jme3.util.TangentBinormalGenerator;
 import com.jme3.water.WaterFilter;
+import org.lwjgl.Sys;
 import overthinker.levels.maze1.Maze1;
 import overthinker.server.ServerModel;
 import overthinker.levels.Level;
@@ -538,10 +539,13 @@ public class ClientMain extends SimpleApplication implements ActionListener, Ana
         // Move the other players
         if(activeVersion < model.getVersion())
         {
-            for(int i : level.getOtherPlayers().keySet())
+            //System.out.println("Client Index:" + clientIndex +" Location: "+level.getPlayerControl().getPhysicsLocation());
+            //System.out.println("Model Version: " + model.getVersion() + " Players: " + model.getPlayerLocations());
+            for(int i =0; i < level.getPlayerCount(); i++)
             {
                 if(i != clientIndex)
                 {
+                    System.out.println("Moving Player: " + i + " " + model.getPlayerLocations().get(i));
                     moveOtherPlayer(level.getOtherPlayers().get(i), model.getPlayerLocations().get(i));
                 }
             }
@@ -565,9 +569,9 @@ public class ClientMain extends SimpleApplication implements ActionListener, Ana
         {
             level.getAudioCollect().play();
             CollisionResult closest = results.getClosestCollision();
-            System.out.println("What was hit? " + closest.getGeometry().getName());
+//            System.out.println("What was hit? " + closest.getGeometry().getName());
 
-            System.out.println(closest);
+//            System.out.println(closest);
             boolean isHit = closest.getGeometry().getUserData("isHit");
             if (!isHit)
             {
@@ -590,11 +594,7 @@ public class ClientMain extends SimpleApplication implements ActionListener, Ana
     }
 
     private void moveOtherPlayer(OtherPlayer otherPlayer, Vector3f location) {
-        if(location != null)
-        {
-            System.out.println("Moving other player");
-            otherPlayer.move(location);
-        }
+        if(location != null) otherPlayer.move(location);
     }
 
 
@@ -640,10 +640,9 @@ public class ClientMain extends SimpleApplication implements ActionListener, Ana
     public synchronized void updateModel(ModelUpdate message) {
         model.setPlayerLocations(message.getPlayerLocations());
         model.setVersion(message.version);
-        System.out.println("Update Model Version " + model.getVersion());
     }
 
-    public void handleNewClientResponse(NewClientResponse message) {
+    public synchronized void handleNewClientResponse(NewClientResponse message) {
         switch (message.getLevelType())
         {
             case MAZE1:
@@ -653,5 +652,6 @@ public class ClientMain extends SimpleApplication implements ActionListener, Ana
         activeVersion = message.getVersion();
         clientIndex = message.getClientIndex();
         model.setPlayerLocations(message.getPlayerLocations());
+        model.setVersion(message.getVersion());
     }
 }

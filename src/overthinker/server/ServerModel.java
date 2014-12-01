@@ -15,8 +15,7 @@ public class ServerModel {
     private HashMap<Integer, Vector3f> playerLocations = new HashMap<Integer, Vector3f>();
     private long version;
 
-    public ServerModel() {
-    }
+    public ServerModel() {}
 
     public HashMap<Integer, Vector3f> getPlayerLocations()
     {

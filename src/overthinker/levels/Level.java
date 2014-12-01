@@ -112,10 +112,9 @@ public abstract class Level {
         this.sphere_resource_count = sphere_resource_count;
     }
 
-    public void setPlayer_spawn_points(Vector3f pt1, Vector3f pt2)
+    public void addSpawnLocation(Vector3f spawnLocation)
     {
-        spawnLocations.add(pt1);
-        spawnLocations.add(pt2);
+        spawnLocations.add(spawnLocation);
     }
 
     public float getSphere_resource_radius() {

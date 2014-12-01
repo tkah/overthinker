@@ -21,7 +21,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.util.ConcurrentModificationException;
 import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by Peter on 11/11/2014.
@@ -31,8 +33,7 @@ public class ServerMain extends SimpleApplication {
     private ServerModel model;
     private Level level;
     private int clientCount = 0;
-    private HashMap<HostedConnection, Integer> clientIndex = new HashMap<HostedConnection, Integer>();
-//    private HashMap<HostedConnection, Long> clientModelVersions = new HashMap<HostedConnection, Long>();
+    private ConcurrentHashMap<HostedConnection, Integer> clientIndex = new ConcurrentHashMap<HostedConnection, Integer>();
 
     public static void main(String[] args) {
         ServerMain app = new ServerMain();
@@ -53,6 +54,7 @@ public class ServerMain extends SimpleApplication {
 
     @Override
     public void simpleUpdate(float tpf) {
+
         for(HostedConnection client : clientIndex.keySet())
         {
             if (!client.getServer().hasConnections())
@@ -97,7 +99,6 @@ public class ServerMain extends SimpleApplication {
         {
             model.getPlayerLocations().put(clientCount, spawnLocation);
             clientIndex.put(source, clientCount);
-//            clientModelVersions.put(sources, model.version);
             response.setConnected(true);
             response.setClientIndex(clientCount);
             clientCount++;

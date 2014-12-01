@@ -21,9 +21,7 @@ public class ClientNetListener implements MessageListener<Client> {
 
     public void messageReceived(Client source, Message message) {
         if (message instanceof ModelUpdate) {
-            System.out.println(((ModelUpdate) message).getPlayerLocations());
             clientMain.updateModel((ModelUpdate) message);
-
         } else if (message instanceof NewClientResponse) {
             if(Globals.DEBUG)System.out.println("Received new client response");
             if(((NewClientResponse) message).isConnected()) {
