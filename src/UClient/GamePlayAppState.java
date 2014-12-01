@@ -70,6 +70,7 @@ public class GamePlayAppState extends AbstractAppState
   private AmbientLight ambientLight = null;
   private DirectionalLight mainLight = null;
 
+  private Node keysNode;
   private Node collidableNode;
   private Node resources;
   private PlayerNode playerNode;
@@ -94,6 +95,8 @@ public class GamePlayAppState extends AbstractAppState
   private Vector3f[] doorLocArray = {new Vector3f(-293, 98, 143), new Vector3f(330, 98, -68), new Vector3f(-236, 98, 208)};
   private float[] doorSizeXArray = {15f, 15f, 17f};
   private float[] doorRotationArray = {-55f, 100f, -43f};
+  private ArrayList<Key> keys = new ArrayList<Key>();
+  private ArrayList<Door> doors = new ArrayList<Door>();
 
   /** Create AudioNodes **/
   private AudioNode audio_ocean;
@@ -122,6 +125,7 @@ public class GamePlayAppState extends AbstractAppState
     localRootNode = new Node("LocalRoot");
     localRootNode.attachChild(resources);
     collidableNode = new Node ("CollidableNode");
+    keysNode = new Node ("KeyNode");
 
     flyCam.setMoveSpeed(100);
 
@@ -190,6 +194,7 @@ public class GamePlayAppState extends AbstractAppState
     }
 
     playerNode.update(tpf);
+    for (Key k : keys) k.update(tpf);
 
     if (playerType == 1)
     {
@@ -220,7 +225,29 @@ public class GamePlayAppState extends AbstractAppState
           if (playerNode.getHeight() < Globals.MAX_PLAYER_SIZE) playerNode.scalePlayerUp();
         }
       }
+
+      CollisionResults keyResults = new CollisionResults();
+      keysNode.collideWith(playerNode.getGeometry().getWorldBound(), keyResults);
+
+      if (keyResults.size() > 0)
+      {
+        CollisionResult closest = keyResults.getClosestCollision();
+        System.out.println("What was hit? " + closest.getGeometry().getName());
+
+        int id = closest.getGeometry().getUserData("id");
+        for (int i = 0; i < keys.size(); i++)
+        {
+          if (id == i)
+          {
+            Key k = keys.get(i);
+            k.removeFromParent();
+            Door d = doors.get(i);
+            d.removeFromParent();
+          }
+        }
+      }
     }
+
 
     ArrayList<SphereResource> toRemove = new ArrayList<SphereResource>();
     for (SphereResource s : sphereResourcesToShrink)
@@ -443,15 +470,19 @@ public class GamePlayAppState extends AbstractAppState
       door.createDoor(assetManager, doorSizeXArray[i], doorRotationArray[i], doorLocArray[i]);
       collidableNode.attachChild(door);
       bulletAppState.getPhysicsSpace().add(door.getPhy());
+      doors.add(door);
     }
 
     for (int i = 0; i < keyLocArray.length; i++)
     {
       Key key = new Key("Key_" + i);
       key.createKey(assetManager, keyLocArray[i]);
-      collidableNode.attachChild(key);
       bulletAppState.getPhysicsSpace().add(key.getPhy());
+      keys.add(key);
+      keysNode.attachChild(key);
     }
+
+    collidableNode.attachChild(keysNode);
   }
 
   private void initAudio()
