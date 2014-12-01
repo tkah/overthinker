@@ -20,17 +20,13 @@ import com.jme3.scene.shape.Cylinder;
  */
 public class Platform extends NonPlayableObjectNode
 {
-  private float updateHeight;
-  private Vector3f loc;
-  private boolean moveUp = false;
-
   public Platform(String name)
   {
     super(name);
 
     Cylinder platform = new Cylinder(20,50,2,1,true);
     geo = new Geometry("Platform", platform);
-    CylinderCollisionShape pCol = new CylinderCollisionShape(new Vector3f(2,1,2));
+    CylinderCollisionShape pCol = new CylinderCollisionShape(new Vector3f(2,0,2));
     phy = new RigidBodyControl(pCol, 0f);
 
     int id = Integer.parseInt(name.split("_")[1]);
@@ -41,8 +37,9 @@ public class Platform extends NonPlayableObjectNode
   {
     Material platMat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
     platMat.setColor("Color", ColorRGBA.Orange);
+    this.loc = loc;
     geo.setMaterial(platMat);
-    geo.setLocalTranslation(new Vector3f(-330, 40.8f, -400));
+    geo.setLocalTranslation(loc);
     geo.setShadowMode(RenderQueue.ShadowMode.CastAndReceive);
 
     Quaternion platRotate = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * -90, new Vector3f(1, 0, 0));
@@ -51,10 +48,22 @@ public class Platform extends NonPlayableObjectNode
     phy.setSpatial(geo);
     phy.setApplyPhysicsLocal(true);
     phy.setEnabled(true);
+
+    attachChild(geo);
   }
 
-  public void update(float tpf)
+  public void pressDown()
   {
-    geo.setLocalTranslation(loc.getX(), updateHeight, loc.getZ());
+    Vector3f down = new Vector3f(loc.getX(), loc.getY() - .45f, loc.getZ());
+    Vector3f phyDown = new Vector3f(loc.getX(), loc.getY() - 10f, loc.getZ());
+    geo.setLocalTranslation(down);
+    phy.setPhysicsLocation(phyDown);
+  }
+
+  public void moveUp()
+  {
+    Vector3f up = new Vector3f(loc.getX(), loc.getY(), loc.getZ());
+    geo.setLocalTranslation(up);
+    phy.setPhysicsLocation(up);
   }
 }

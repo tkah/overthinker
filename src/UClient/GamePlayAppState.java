@@ -96,11 +96,13 @@ public class GamePlayAppState extends AbstractAppState
   private ArrayList<SphereResource> sphereResourceArrayList = new ArrayList<SphereResource>();
   private ArrayList<SphereResource> sphereResourcesToShrink = new ArrayList<SphereResource>();
   private Vector3f[] keyLocArray = {new Vector3f(60, 65, -330), new Vector3f(35, 65, 345), new Vector3f(115, 65, -353)};
-  private Vector3f[] doorLocArray = {new Vector3f(-293, 98, 143), new Vector3f(330, 98, -68), new Vector3f(-236, 98, 208)};
+  private Vector3f[] keyDoorLocArray = {new Vector3f(-293, 98, 143), new Vector3f(330, 98, -68), new Vector3f(-236, 98, 208)};
+  private Vector3f[] platLocArray = {new Vector3f(-330, 40.8f, -400)};
   private float[] doorSizeXArray = {15f, 15f, 17f};
   private float[] doorRotationArray = {-55f, 100f, -43f};
   private ArrayList<Key> keys = new ArrayList<Key>();
   private ArrayList<Door> keyDoors = new ArrayList<Door>();
+  private ArrayList<Door> platDoors = new ArrayList<Door>();
   private ArrayList<Platform> platforms = new ArrayList<Platform>();
 
   /** Create AudioNodes **/
@@ -257,20 +259,21 @@ public class GamePlayAppState extends AbstractAppState
       CollisionResults platResults = new CollisionResults();
       platformsNode.collideWith(playerNode.getGeometry().getWorldBound(), platResults);
 
+      for (Platform p : platforms) p.moveUp();
       if (platResults.size() > 0)
       {
         CollisionResult closest = platResults.getClosestCollision();
         System.out.println("What was hit? " + closest.getGeometry().getName());
 
         int id = closest.getGeometry().getUserData("id");
-        for (int i = 0; i < keys.size(); i++)
+        for (int i = 0; i < platforms.size(); i++)
         {
           if (id == i)
           {
-            Key k = keys.get(i);
-            k.removeFromParent();
-            Door d = platDoors.get(i);
-            d.removeFromParent();
+            Platform p = platforms.get(i);
+            p.pressDown();
+            //Door d = platDoors.get(i);
+            //d.removeFromParent();
           }
         }
       }
@@ -492,10 +495,10 @@ public class GamePlayAppState extends AbstractAppState
 
   private void createDoorsAndKeys()
   {
-    for (int i = 0; i < doorLocArray.length; i++)
+    for (int i = 0; i < keyDoorLocArray.length; i++)
     {
       Door door = new Door("Door_" + i);
-      door.createDoor(assetManager, doorSizeXArray[i], doorRotationArray[i], doorLocArray[i]);
+      door.createDoor(assetManager, doorSizeXArray[i], doorRotationArray[i], keyDoorLocArray[i]);
       collidableNode.attachChild(door);
       bulletAppState.getPhysicsSpace().add(door.getPhy());
       keyDoors.add(door);
@@ -515,17 +518,15 @@ public class GamePlayAppState extends AbstractAppState
 
   private void createPlatformsAndDoors()
   {
-    for (int i = 0; i < doorLocArray.length; i++)
+    for (int i = 0; i < platLocArray.length; i++)
     {
       Platform plat = new Platform("Platform_" + i);
-      door.createDoor(assetManager, doorSizeXArray[i], doorRotationArray[i], doorLocArray[i]);
-      collidableNode.attachChild(door);
-      bulletAppState.getPhysicsSpace().add(door.getPhy());
-      keyDoors.add(door);
-      platformsNode.attachChild(geo);
-      collidableNode.attachChild(platformsNode);
-      bulletAppState.getPhysicsSpace().add(phy);
+      plat.createPlatform(assetManager, platLocArray[i]);
+      platformsNode.attachChild(plat);
+      bulletAppState.getPhysicsSpace().add(plat.getPhy());
+      platforms.add(plat);
     }
+    collidableNode.attachChild(platformsNode);
   }
 
   private void initAudio()
