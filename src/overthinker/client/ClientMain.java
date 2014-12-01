@@ -438,10 +438,6 @@ public class ClientMain extends SimpleApplication implements ActionListener, Ana
         {
             if (isPressed) level.getPlayerControl().jump();
         }
-
-        ModelChangeRequest modelChangeRequest = new ModelChangeRequest();
-        modelChangeRequest.setPlayerLocation(level.getPlayerControl().getPhysicsLocation());
-        netClient.send(modelChangeRequest);
     }
 
     /**
@@ -536,21 +532,10 @@ public class ClientMain extends SimpleApplication implements ActionListener, Ana
 
         level.getPlayerControl().setWalkDirection(level.getWalkDirection());
 
+
+        sendPlayerLocation();
         // Move the other players
-        if(activeVersion < model.getVersion())
-        {
-            //System.out.println("Client Index:" + clientIndex +" Location: "+level.getPlayerControl().getPhysicsLocation());
-            //System.out.println("Model Version: " + model.getVersion() + " Players: " + model.getPlayerLocations());
-            for(int i =0; i < level.getPlayerCount(); i++)
-            {
-                if(i != clientIndex)
-                {
-                    System.out.println("Moving Player: " + i + " " + model.getPlayerLocations().get(i));
-                    moveOtherPlayer(level.getOtherPlayers().get(i), model.getPlayerLocations().get(i));
-                }
-            }
-            activeVersion = model.getVersion();
-        }
+        movePlayers();
 
         // Collision Scaling
         if (level.isPlayerNeedsScaling()) scalePlayer();
@@ -591,6 +576,29 @@ public class ClientMain extends SimpleApplication implements ActionListener, Ana
         listener.setLocation(cam.getLocation());
         listener.setRotation(cam.getRotation());
 
+    }
+
+    private void sendPlayerLocation() {
+        ModelChangeRequest modelChangeRequest = new ModelChangeRequest();
+        modelChangeRequest.setPlayerLocation(level.getPlayerControl().getPhysicsLocation());
+        netClient.send(modelChangeRequest);
+    }
+
+    private void movePlayers() {
+        if(activeVersion < model.getVersion())
+        {
+            for(int i =0; i < level.getPlayerCount(); i++)
+            {
+                if(i != clientIndex)
+                {
+                    System.out.println("Moving Player: " + i + " " + model.getPlayerLocations().get(i));
+                    if(model.getPlayerLocations().get(i) != null) {
+                        level.getOtherPlayers().get(i).move(model.getPlayerLocations().get(i));
+                    }
+                }
+            }
+            activeVersion = model.getVersion();
+        }
     }
 
     private void moveOtherPlayer(OtherPlayer otherPlayer, Vector3f location) {
