@@ -23,6 +23,7 @@ public class Door extends NonPlayableObjectNode
 
   public void createDoor(AssetManager assetManager, float sizeX, float rotate, Vector3f loc)
   {
+    this.loc = loc;
     Box door = new Box(sizeX, 40.0f, 1.0f);
     geo = new Geometry(name, door);
 

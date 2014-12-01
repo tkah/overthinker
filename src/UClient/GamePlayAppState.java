@@ -7,10 +7,12 @@ import com.jme3.app.SimpleApplication;
 import com.jme3.app.state.AbstractAppState;
 import com.jme3.app.state.AppStateManager;
 import com.jme3.asset.AssetManager;
+import com.jme3.asset.TextureKey;
 import com.jme3.audio.AudioNode;
 import com.jme3.audio.Listener;
 import com.jme3.bullet.BulletAppState;
 import com.jme3.bullet.collision.shapes.CollisionShape;
+import com.jme3.bullet.collision.shapes.CylinderCollisionShape;
 import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.bullet.util.CollisionShapeFactory;
 import com.jme3.collision.CollisionResult;
@@ -35,6 +37,7 @@ import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.shape.Box;
+import com.jme3.scene.shape.Cylinder;
 import com.jme3.shadow.DirectionalLightShadowRenderer;
 import com.jme3.terrain.geomipmap.TerrainLodControl;
 import com.jme3.terrain.geomipmap.TerrainQuad;
@@ -70,6 +73,7 @@ public class GamePlayAppState extends AbstractAppState
   private AmbientLight ambientLight = null;
   private DirectionalLight mainLight = null;
 
+  private Node platformsNode;
   private Node keysNode;
   private Node collidableNode;
   private Node resources;
@@ -96,7 +100,8 @@ public class GamePlayAppState extends AbstractAppState
   private float[] doorSizeXArray = {15f, 15f, 17f};
   private float[] doorRotationArray = {-55f, 100f, -43f};
   private ArrayList<Key> keys = new ArrayList<Key>();
-  private ArrayList<Door> doors = new ArrayList<Door>();
+  private ArrayList<Door> keyDoors = new ArrayList<Door>();
+  private ArrayList<Platform> platforms = new ArrayList<Platform>();
 
   /** Create AudioNodes **/
   private AudioNode audio_ocean;
@@ -126,11 +131,13 @@ public class GamePlayAppState extends AbstractAppState
     localRootNode.attachChild(resources);
     collidableNode = new Node ("CollidableNode");
     keysNode = new Node ("KeyNode");
+    platformsNode = new Node ("PlatformsNode");
 
     flyCam.setMoveSpeed(100);
 
     createSphereResources();
     createDoorsAndKeys();
+    createPlatformsAndDoors();
     setUpLandscape();
     setUpLight();
     setUpPlayer();
@@ -241,7 +248,28 @@ public class GamePlayAppState extends AbstractAppState
           {
             Key k = keys.get(i);
             k.removeFromParent();
-            Door d = doors.get(i);
+            Door d = keyDoors.get(i);
+            d.removeFromParent();
+          }
+        }
+      }
+
+      CollisionResults platResults = new CollisionResults();
+      platformsNode.collideWith(playerNode.getGeometry().getWorldBound(), platResults);
+
+      if (platResults.size() > 0)
+      {
+        CollisionResult closest = platResults.getClosestCollision();
+        System.out.println("What was hit? " + closest.getGeometry().getName());
+
+        int id = closest.getGeometry().getUserData("id");
+        for (int i = 0; i < keys.size(); i++)
+        {
+          if (id == i)
+          {
+            Key k = keys.get(i);
+            k.removeFromParent();
+            Door d = platDoors.get(i);
             d.removeFromParent();
           }
         }
@@ -470,7 +498,7 @@ public class GamePlayAppState extends AbstractAppState
       door.createDoor(assetManager, doorSizeXArray[i], doorRotationArray[i], doorLocArray[i]);
       collidableNode.attachChild(door);
       bulletAppState.getPhysicsSpace().add(door.getPhy());
-      doors.add(door);
+      keyDoors.add(door);
     }
 
     for (int i = 0; i < keyLocArray.length; i++)
@@ -483,6 +511,21 @@ public class GamePlayAppState extends AbstractAppState
     }
 
     collidableNode.attachChild(keysNode);
+  }
+
+  private void createPlatformsAndDoors()
+  {
+    for (int i = 0; i < doorLocArray.length; i++)
+    {
+      Platform plat = new Platform("Platform_" + i);
+      door.createDoor(assetManager, doorSizeXArray[i], doorRotationArray[i], doorLocArray[i]);
+      collidableNode.attachChild(door);
+      bulletAppState.getPhysicsSpace().add(door.getPhy());
+      keyDoors.add(door);
+      platformsNode.attachChild(geo);
+      collidableNode.attachChild(platformsNode);
+      bulletAppState.getPhysicsSpace().add(phy);
+    }
   }
 
   private void initAudio()
