@@ -6,6 +6,7 @@ import com.jme3.app.SimpleApplication;
 import com.jme3.app.state.AbstractAppState;
 import com.jme3.app.state.AppStateManager;
 import com.jme3.asset.AssetManager;
+import com.jme3.audio.AudioNode;
 import com.jme3.audio.AudioRenderer;
 import com.jme3.bullet.BulletAppState;
 import com.jme3.cursors.plugins.JmeCursor;
@@ -35,6 +36,7 @@ public class MainMenuController extends AbstractAppState implements ScreenContro
     private Nifty nifty;
     private NiftyJmeDisplay nDisplay;
     private BulletAppState bulletAppState;
+    private AudioNode menu_music;
 
 
 
@@ -63,10 +65,16 @@ public class MainMenuController extends AbstractAppState implements ScreenContro
         nifty = nDisplay.getNifty();
         nifty.fromXml("assets/interface/MainMenuLayout.xml", "start", this);
         guiViewPort.addProcessor(nDisplay);
+        menu_music = new AudioNode(assetManager, "assets/sounds/menuMusic.ogg", false);
+        menu_music.setPositional(false);
+        menu_music.setVolume(3);
+        menu_music.attachChild(menu_music);
+        menu_music.play();
     }
 
     public void menuStartUnderthinker()
     {
+        menu_music.stop();
       GamePlayAppState gamePlay = new GamePlayAppState();
       stateManager.detach(this);
       nifty.exit();
@@ -76,6 +84,7 @@ public class MainMenuController extends AbstractAppState implements ScreenContro
 
     public void menuStartOverthinker()
     {
+        menu_music.stop();
       GamePlayAppState gamePlay = new GamePlayAppState();
       stateManager.detach(this);
       nifty.exit();
@@ -85,10 +94,6 @@ public class MainMenuController extends AbstractAppState implements ScreenContro
 
     public void menuQuitGame(){
         app.stop();
-    }
-
-    public void methodToBeCalledWhenEffectStarted() {
-        System.out.println("Hover start or stop?");
     }
 
     public void setStartScreen(){
