@@ -48,8 +48,21 @@ public class PlayerManager extends AbstractAppState {
         player = new Player();
         setUpModel();
         setUpPivot();
+        setUpPlayer();
+        warpPlayer();
         attachPlayerNodes();
     }
+
+    private void setUpPlayer()
+    {
+        player.playerPhys.setJumpForce(Vector3f.UNIT_Y.mult(25f));
+        player.playerPhys.setGravity(Vector3f.UNIT_Y.mult(-50f));
+    }
+
+    private void warpPlayer(){
+        player.playerPhys.warp(Vector3f.UNIT_Y.mult(600));
+    }
+
 
     private void setUpModel() {
         player.model = new Node("Player");
@@ -72,7 +85,6 @@ public class PlayerManager extends AbstractAppState {
     {
         player.pivot = new Node("Pivot");
         player.playerPhys = new BetterCharacterControl(2f, 4f, 1f);
-        player.playerPhys.setGravity(new Vector3f(0, -50, 0));
         player.model.setLocalTranslation(0f, 2f, 0f);
         physics.getPhysicsSpace().add(player.playerPhys);
         player.addControl(player.playerPhys);
