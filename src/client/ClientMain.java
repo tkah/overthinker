@@ -5,6 +5,7 @@ import com.jme3.audio.AudioNode;
 import com.jme3.cursors.plugins.JmeCursor;
 import com.jme3.niftygui.NiftyJmeDisplay;
 import de.lessvoid.nifty.Nifty;
+import de.lessvoid.nifty.controls.Controller;
 import de.lessvoid.nifty.screen.Screen;
 import de.lessvoid.nifty.screen.ScreenController;
 
@@ -66,41 +67,32 @@ public class ClientMain extends SimpleApplication implements ScreenController
     startNifty();
   }
 
+  public void attachServer()
+  {
+    attachClient();
+  }
+
+
   public void attachClient()
   {
-    new Thread(new Runnable()
-    {
-      @Override
-      public void run()
+    new Thread(() -> {
+      try
       {
-        try
-        {
-          enqueue(new Callable<Void>()
-          {
-            @Override
-            public Void call() throws Exception
-            {
-              nifty.gotoScreen("loading_screen");
-              return null;
-            }
-          }).get();
-          getFlyByCamera().setEnabled(false);
-          inputManager.setCursorVisible(true);
-          stateManager.attach((worldManager = new WorldManager()));
-          stateManager.attach((playerManager = new PlayerManager()));
-          stateManager.attach((interactionManager = new InteractionManager()));
-          stateManager.attach((cameraManager = new CameraManager()));
-          guiNode.detachAllChildren();
-          guiViewPort.clearProcessors();
-        }
-        catch (InterruptedException e)
-        {
-          e.printStackTrace();
-        }
-        catch (ExecutionException e)
-        {
-          e.printStackTrace();
-        }
+        enqueue(() -> {
+          nifty.gotoScreen("loading_screen");
+          return null;
+        }).get();
+        getFlyByCamera().setEnabled(false);
+        inputManager.setCursorVisible(true);
+        stateManager.attach((worldManager = new WorldManager()));
+        stateManager.attach((playerManager = new PlayerManager()));
+        stateManager.attach((interactionManager = new InteractionManager()));
+        stateManager.attach((cameraManager = new CameraManager()));
+        nifty.gotoScreen("loaded");
+      }
+      catch (InterruptedException | ExecutionException e)
+      {
+        e.printStackTrace();
       }
     }).start();
   }

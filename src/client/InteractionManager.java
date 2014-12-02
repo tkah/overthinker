@@ -72,45 +72,51 @@ public class InteractionManager extends AbstractAppState implements ActionListen
     }
   }
 
+  private Vector3f rotateDirection = Vector3f.ZERO;
   @Override
   public void update(float tpf)
   {
     camDir.set(this.app.getCamera().getDirection()).multLocal(10f, 0, 10f);
     camLeft.set(this.app.getCamera().getLeft()).multLocal(10.0f);
     walkDirection.set(0, 0, 0);
+    rotateDirection.set(0, 0, 0);
     if (left)
     {
       audioFootstep.play();
       walkDirection.addLocal(camLeft);
-      rotatePlayerModel(0, -1);
+      rotateDirection.set(0, 0, -1);
     }
     if (right)
     {
       audioFootstep.play();
       walkDirection.addLocal(camLeft.negate());
-      rotatePlayerModel(0, 1);
+      rotateDirection.set(0, 0, 1);
     }
     if (up)
     {
       audioFootstep.play();
       walkDirection.addLocal(camDir);
-      rotatePlayerModel(1, 0);
+      rotateDirection.set(1, 0, 0);
     }
     if (down)
     {
       audioFootstep.play();
       walkDirection.addLocal(camDir.negate());
-      rotatePlayerModel(-1, 0);
+      rotateDirection.set(-1, 0, 0);
     }
+
+    rotateDirection.normalizeLocal();
+    rotatePlayerModel(rotateDirection);
+
 
     player.playerPhys.setWalkDirection(walkDirection.multLocal(1));
     player.playerPhys.setViewDirection(camDir);
   }
 
-  public void rotatePlayerModel(float x, float z)
+  public void rotatePlayerModel(Vector3f rotateDirection)
   {
     rotateVal += 2f;
-    rotate = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * rotateVal, new Vector3f(x, 0, z));
+    rotate = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * rotateVal, rotateDirection);
     player.model.setLocalRotation(rotate);
   }
 
