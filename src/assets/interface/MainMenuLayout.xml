@@ -2,61 +2,48 @@
 <nifty>
 
     <!-- load styles -->
-    <useStyles filename="nifty-default-styles.xml"/>
-    <useControls filename="nifty-default-controls.xml"/>
+    <useStyles filename="nifty-default-styles.xml" />
+    <useControls filename="nifty-default-controls.xml" />
 
     <screen id="start" controller="Screens.MainMenuController">
-        <layer childLayout="horizontal" id="layer1">
-            <image filename="assets/interface/background.png" height="100%" width="100%"/>
-        </layer>
         <layer childLayout="horizontal" id="title">
-            <image filename="assets/interface/overthinker-title.png" height="100%" width="100%"/>
+            <image filename="assets/interface/overthinker-title2.png" height="100%" width="100%" />
         </layer>
         <layer id="layer" backgroundColor="#0000" childLayout="center">
-            <panel id="panel" align="left" valign="bottom" childLayout="vertical" visibleToMouse="true">
-                <image id="btnStartUnder" filename="assets/interface/btnStartGame.png" align="left"
-                       childLayout="overlay">
-                    <effect>
-                        <onStartScreen name="hide" targetElement="btnStartGame_hover" />
-                        <onStartHover name="show" targetElement="btnStartGame_hover"
-                                      onStartEffect="methodToBeCalledWhenEffectStarted()"/>
-                        <onEndHover name="hide" targetElement="btnStartGame_hover"
-                                    onStartEffect="methodToBeCalledWhenEffectStarted()"/>
-                    </effect>
-                    <interact onClick="menuStartUnderthinker()"/>
-                    <image id="btnStartGame_hover" name="hide" filename="assets/interface/btnStartGame_hover.png"
-                           align="left">
-                    </image>
-                </image>
-                <image id="btnStartOver" filename="assets/interface/btnStartGame.png" align="left"
-                       childLayout="overlay">
-                    <effect>
-                        <onStartScreen name="hide" targetElement="btnStartGame_hover"/>
-                        <onStartHover name="show" targetElement="btnStartGame_hover"
-                                      onStartEffect="methodToBeCalledWhenEffectStarted()"/>
-                        <onEndHover name="hide" targetElement="btnStartGame_hover"
-                                    onStartEffect="methodToBeCalledWhenEffectStarted()"/>
-                    </effect>
-                    <interact onClick="menuStartOverthinker()"/>
-                    <image id="#btnStartGame_hover" name="hide" filename="assets/interface/btnStartGame_hover.png"
-                           align="left">
-                    </image>
-                </image>
-                <image id="btnQuitGame" filename="assets/interface/btnQuitGame.png" align="left" childLayout="overlay">
-                    <effect>
-                        <onStartScreen name="hide" targetElement="btnQuitGame_hover"/>
-                        <onStartHover name="show" targetElement="btnQuitGame_hover"
-                                      onStartEffect="methodToBeCalledWhenEffectStarted()"/>
-                        <onEndHover name="hide" targetElement="btnQuitGame_hover"
-                                    onStartEffect="methodToBeCalledWhenEffectStarted()"/>
-                    </effect>
-                    <interact onClick="menuQuitGame()"/>
-                    <image id="btnQuitGame_hover" name="hide" filename="assets/interface/btnQuitGame_hover.png"
-                           align="left">
-                    </image>
-                </image>
+        <panel id="panel" align="left" valign="bottom"  childLayout="vertical" visibleToMouse="true">
 
-            </panel>
+        <image id="btnStartUnder" filename="assets/interface/btnUnder.png" align="left" childLayout="overlay">
+            <effect>
+                <onStartScreen name="hide" targetElement="btnUnder"></onStartScreen>
+                <onStartHover name="show" targetElement="btnUnder" onStartEffect="methodToBeCalledWhenEffectStarted()"></onStartHover>
+                <onEndHover name="hide" targetElement="btnUnder" onStartEffect="methodToBeCalledWhenEffectStarted()"></onEndHover>
+            </effect>
+            <interact onClick="menuStartUnderthinker()"/>
+            <image id="btnUnder" name="hide" filename="assets/interface/btnUnder.png" align="left" >
+            </image>
+        </image>
+            <image id="btnStartOver" filename="assets/interface/btnOver.png" align="left" childLayout="overlay">
+                <effect>
+                    <onStartScreen name="hide" targetElement="btnOver"></onStartScreen>
+                    <onStartHover name="show" targetElement="btnOver" onStartEffect="methodToBeCalledWhenEffectStarted()"></onStartHover>
+                    <onEndHover name="hide" targetElement="btnOver" onStartEffect="methodToBeCalledWhenEffectStarted()"></onEndHover>
+                </effect>
+                <interact onClick="menuStartOverthinker()"/>
+                <image id="btnOver" name="hide" filename="assets/interface/btnOver.png" align="left" >
+                </image>
+            </image>
+            <image id="btnQuitGame" filename="assets/interface/btnQuit.png" align="left" childLayout="overlay">
+                <effect>
+                    <onStartScreen name="hide" targetElement="btnQuit"></onStartScreen>
+                    <onStartHover name="show" targetElement="btnQuit" onStartEffect="methodToBeCalledWhenEffectStarted()"></onStartHover>
+                    <onEndHover name="hide" targetElement="btnQuit" onStartEffect="methodToBeCalledWhenEffectStarted()"></onEndHover>
+                </effect>
+                <interact onClick="menuQuitGame()"/>
+                <image id="btnQuit" name="hide" filename="assets/interface/btnQuit.png" align="left" >
+                </image>
+            </image>
+
+        </panel>
         </layer>
     </screen>
 
@@ -68,7 +55,9 @@
         </layer>
     </screen>
 
-    <screen id="loaded"/>
+    <screen id="loaded"></screen>
+
+
 
 
 </nifty>
