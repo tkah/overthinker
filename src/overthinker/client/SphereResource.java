@@ -1,10 +1,12 @@
 package overthinker.client;
 
 import com.jme3.asset.AssetManager;
+import com.jme3.bullet.collision.shapes.SphereCollisionShape;
 import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
+import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.shape.Sphere;
 
@@ -35,16 +37,21 @@ public class SphereResource
 
     sphere = new Sphere(32, 32, radius);
     geom = new Geometry("Sphere_" + id, sphere);
-    geom.setLocalTranslation(new Vector3f(x, 80, z));
+    geom.setLocalTranslation(new Vector3f(x, 250, z));
     geom.setUserData("id", id);
     geom.setUserData("isHit", false);
+    geom.setShadowMode(RenderQueue.ShadowMode.CastAndReceive);
     Material mat = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
     mat.setBoolean("UseMaterialColors", true);
     mat.setColor("Diffuse", ColorRGBA.Red);
     mat.setColor("Specular", ColorRGBA.White);
     mat.setFloat("Shininess", 64f);
     geom.setMaterial(mat);
-    sphereResource_phy = new RigidBodyControl(2f);
+    sphereResource_phy = new RigidBodyControl(1f);
+    //sphereResource_phy.getCollisionShape().setScale(new Vector3f(radius,radius,radius)); //!!!
+    sphereResource_phy.setSpatial(geom);
+    sphereResource_phy.setApplyPhysicsLocal(true);
+    sphereResource_phy.setEnabled(true);
     geom.addControl(sphereResource_phy);
   }
 
@@ -70,6 +77,7 @@ public class SphereResource
 
   public void setShrink(boolean s)
   {
+    if (s == true) startShrinkTime = Globals.getTotSecs();
     shrink = s;
   }
 
@@ -81,8 +89,25 @@ public class SphereResource
     if(geom.getLocalScale().getY() <= .01) shrink = false;
   }
 
-  public void setSphereToReappear()
+  public void setSphereBack()
   {
+    geom.scale(100f);
+    sphere.updateBound();
+    sphereResource_phy.getCollisionShape().setScale(new Vector3f(100,100,100));
+  }
 
+  public int getStartShrinkTime()
+  {
+    return startShrinkTime;
+  }
+
+  public int getX()
+  {
+    return x;
+  }
+
+  public int getZ()
+  {
+    return z;
   }
 }
