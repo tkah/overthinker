@@ -13,104 +13,122 @@ import com.jme3.input.InputManager;
 import com.jme3.niftygui.NiftyJmeDisplay;
 import com.jme3.renderer.Camera;
 import com.jme3.renderer.ViewPort;
+import com.jme3.scene.Node;
 import de.lessvoid.nifty.Nifty;
 import de.lessvoid.nifty.screen.Screen;
 import de.lessvoid.nifty.screen.ScreenController;
-import com.jme3.scene.Node;
 
 /**
  * Created by Derek on 11/24/2014.
  */
-public class MainMenuController extends AbstractAppState implements ScreenController {
+public class MainMenuController extends AbstractAppState implements ScreenController
+{
 
-    private SimpleApplication app;
-    private Camera cam;
-    private Node rootNode;
-    private AssetManager assetManager;
-    private InputManager inputManager;
-    private ViewPort guiViewPort;
-    private AudioRenderer audioRenderer;
-    private AppStateManager stateManager;
-    private Node sceneNode;
-    private Nifty nifty;
-    private NiftyJmeDisplay nDisplay;
-    private BulletAppState bulletAppState;
-
+  private SimpleApplication app;
+  private Camera cam;
+  private Node rootNode;
+  private AssetManager assetManager;
+  private InputManager inputManager;
+  private ViewPort guiViewPort;
+  private AudioRenderer audioRenderer;
+  private AppStateManager stateManager;
+  private Node sceneNode;
+  private Nifty nifty;
+  private NiftyJmeDisplay niftyDisplay;
+  private BulletAppState bulletAppState;
 
 
   @Override
-    public void initialize(AppStateManager stateManager, Application app){
-      super.initialize(stateManager, app);
-      this.stateManager = stateManager;
-      this.app = (SimpleApplication) app;
-      this.cam = this.app.getCamera();
-      this.rootNode = this.app.getRootNode();
-      this.assetManager = this.app.getAssetManager();
-      this.inputManager = this.app.getInputManager();
-      this.guiViewPort = this.app.getGuiViewPort();
-      this.audioRenderer = this.app.getAudioRenderer();
+  public void initialize(AppStateManager stateManager, Application app)
+  {
+    super.initialize(stateManager, app);
+    this.stateManager = stateManager;
+    this.app = (SimpleApplication) app;
+    this.cam = this.app.getCamera();
+    this.rootNode = this.app.getRootNode();
+    this.assetManager = this.app.getAssetManager();
+    this.inputManager = this.app.getInputManager();
+    this.guiViewPort = this.app.getGuiViewPort();
+    this.audioRenderer = this.app.getAudioRenderer();
 
-      JmeCursor jc = (JmeCursor) assetManager.loadAsset("assets/interface/cursorPointing.cur");
-      inputManager.setCursorVisible(true);
-      inputManager.setMouseCursor(jc);
+    JmeCursor jc = (JmeCursor) assetManager.loadAsset("assets/interface/cursorPointing.cur");
+    inputManager.setCursorVisible(true);
+    inputManager.setMouseCursor(jc);
 
-      initNifty();
+    startNifty();
   }
 
-    private void initNifty()
+  private void startNifty()
+  {
+    app.getGuiNode().detachAllChildren();
+    niftyDisplay = new NiftyJmeDisplay(assetManager, inputManager, audioRenderer, guiViewPort);
+    nifty = niftyDisplay.getNifty();
+    try
     {
-        nDisplay = new NiftyJmeDisplay(assetManager,inputManager,audioRenderer,guiViewPort);
-        nifty = nDisplay.getNifty();
-        nifty.fromXml("assets/interface/MainMenuLayout.xml", "start", this);
-        guiViewPort.addProcessor(nDisplay);
+      nifty.fromXml("assets/interface/MainMenuLayout.xml", "start", this);
     }
-
-    public void menuStartUnderthinker()
+    catch (Exception ignored)
     {
-      GamePlayAppState gamePlay = new GamePlayAppState();
-      stateManager.detach(this);
-      nifty.exit();
-      gamePlay.setPlayerType(1);
-      stateManager.attach(gamePlay);
     }
+    guiViewPort.addProcessor(niftyDisplay);
+  }
 
-    public void menuStartOverthinker()
-    {
-      GamePlayAppState gamePlay = new GamePlayAppState();
-      stateManager.detach(this);
-      nifty.exit();
-      gamePlay.setPlayerType(0);
-      stateManager.attach(gamePlay);
-    }
+  public void menuStartUnderthinker()
+  {
+    GamePlayAppState gamePlay = new GamePlayAppState();
+    stateManager.detach(this);
+    nifty.exit();
+    gamePlay.setPlayerType(1);
+    stateManager.attach(gamePlay);
+  }
 
-    public void menuQuitGame(){
-        app.stop();
-    }
+  public void menuStartOverthinker()
+  {
+    GamePlayAppState gamePlay = new GamePlayAppState();
+    stateManager.detach(this);
+    nifty.exit();
+    gamePlay.setPlayerType(0);
+    stateManager.attach(gamePlay);
+  }
 
-    public void methodToBeCalledWhenEffectStarted() {
-        System.out.println("Hover start or stop?");
-    }
+  public void menuQuitGame()
+  {
+    app.stop();
+  }
 
-    public void setStartScreen(){
-        nifty.gotoScreen("start");
-    }
+  public void methodToBeCalledWhenEffectStarted()
+  {
+    System.out.println("Hover start or stop?");
+  }
 
-    public void setLoadingScreen(){
-        nifty.gotoScreen("loading");
-    }
+  public void setStartScreen()
+  {
+    nifty.gotoScreen("start");
+  }
 
-    public void setLoadedScreen() {nifty.gotoScreen("loaded");}
+  public void setLoadingScreen()
+  {
+    nifty.gotoScreen("loading");
+  }
 
-    public void bind(Nifty nifty, Screen screen){
-        System.out.println("bind(" + screen.getScreenId() + ") ");
-    }
+  public void setLoadedScreen()
+  {
+    nifty.gotoScreen("loaded");
+  }
 
-    public void onStartScreen(){
+  public void bind(Nifty nifty, Screen screen)
+  {
+    System.out.println("bind(" + screen.getScreenId() + ") ");
+  }
 
-    }
+  public void onStartScreen()
+  {
 
-    public void onEndScreen(){
+  }
 
-    }
+  public void onEndScreen()
+  {
+
+  }
 }
 

@@ -1,0 +1,18 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package client;
+
+import com.jme3.bullet.control.BetterCharacterControl;
+import com.jme3.scene.Node;
+
+/**
+ *
+ * @author jdrid_000
+ */
+public class Player extends Node {
+    public BetterCharacterControl playerPhys;
+    public Node model;
+    public Node pivot;
+}

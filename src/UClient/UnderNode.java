@@ -209,7 +209,7 @@ public class UnderNode extends PlayerNode
     playerSphere.setTextureMode(Sphere.TextureMode.Projected);
     TangentBinormalGenerator.generate(playerSphere);
     Material mat = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
-    mat.setTexture("DiffuseMap", assetManager.loadTexture("assets/textures/striated_rock_texture.JPG"));
+    mat.setTexture("DiffuseMap", assetManager.loadTexture("Textures/striated_rock_texture.JPG"));
     mat.setTexture("NormalMap", assetManager.loadTexture("Textures/Terrain/Pond/Pond_normal.png"));
     mat.setBoolean("UseMaterialColors", true);
     mat.setColor("Diffuse", ColorRGBA.White.clone());

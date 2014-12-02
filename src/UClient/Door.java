@@ -27,7 +27,7 @@ public class Door extends NonPlayableObjectNode
     geo = new Geometry(name, door);
 
     Material wood = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
-    wood.setTexture("ColorMap", assetManager.loadTexture("assets/textures/wood_texture.jpg"));
+    wood.setTexture("ColorMap", assetManager.loadTexture("Textures/wood_texture.jpg"));
     geo.setMaterial(wood);
     geo.setLocalTranslation(loc);
     geo.setShadowMode(RenderQueue.ShadowMode.CastAndReceive);

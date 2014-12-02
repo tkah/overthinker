@@ -11,7 +11,6 @@ import com.jme3.audio.AudioNode;
 import com.jme3.audio.Listener;
 import com.jme3.bullet.BulletAppState;
 import com.jme3.bullet.collision.shapes.CollisionShape;
-import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.bullet.util.CollisionShapeFactory;
 import com.jme3.collision.CollisionResult;
 import com.jme3.collision.CollisionResults;
@@ -32,9 +31,7 @@ import com.jme3.post.filters.FadeFilter;
 import com.jme3.renderer.Camera;
 import com.jme3.renderer.ViewPort;
 import com.jme3.renderer.queue.RenderQueue;
-import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
-import com.jme3.scene.shape.Box;
 import com.jme3.shadow.DirectionalLightShadowRenderer;
 import com.jme3.terrain.geomipmap.TerrainLodControl;
 import com.jme3.terrain.geomipmap.TerrainQuad;
@@ -375,7 +372,7 @@ public class GamePlayAppState extends AbstractAppState
 
     /** Add Lava Rocks into alpha layer**/
     Texture lava = assetManager.loadTexture(
-      "assets/textures/lava_texture-sm.jpg");
+          "Textures/lava_texture-sm.jpg");
     lava.setWrap(WrapMode.Repeat);
     mat_terrain.setTexture("DiffuseMap_3", lava);
     mat_terrain.setFloat("DiffuseMap_3_scale", 128f);

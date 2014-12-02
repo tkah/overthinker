@@ -1,12 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <nifty>
-
     <!-- load styles -->
     <useStyles filename="nifty-default-styles.xml"/>
     <useControls filename="nifty-default-controls.xml"/>
-
-    <screen id="start" controller="Screens.MainMenuController">
-        <layer childLayout="horizontal" id="layer1">
+    <screen id="start_menu" controller="client.ClientMain">
+        <layer id="background" childLayout="horizontal">
             <image filename="assets/interface/background.png" height="100%" width="100%"/>
         </layer>
         <layer childLayout="horizontal" id="title">
@@ -14,30 +12,28 @@
         </layer>
         <layer id="layer" backgroundColor="#0000" childLayout="center">
             <panel id="panel" align="left" valign="bottom" childLayout="vertical" visibleToMouse="true">
+                <text style="nifty-label" text="client"/>
                 <image id="btnStartUnder" filename="assets/interface/btnStartGame.png" align="left"
                        childLayout="overlay">
                     <effect>
-                        <onStartScreen name="hide" targetElement="btnStartGame_hover" />
-                        <onStartHover name="show" targetElement="btnStartGame_hover"
-                                      onStartEffect="methodToBeCalledWhenEffectStarted()"/>
-                        <onEndHover name="hide" targetElement="btnStartGame_hover"
-                                    onStartEffect="methodToBeCalledWhenEffectStarted()"/>
+                        <onStartScreen name="hide" targetElement="btnStartGame_hover"/>
+                        <onStartHover name="show" targetElement="btnStartGame_hover"/>
+                        <onEndHover name="hide" targetElement="btnStartGame_hover"/>
                     </effect>
-                    <interact onClick="menuStartUnderthinker()"/>
+                    <interact onClick="attachClient()"/>
                     <image id="btnStartGame_hover" name="hide" filename="assets/interface/btnStartGame_hover.png"
                            align="left">
                     </image>
                 </image>
+                <text style="nifty-label" text="server"/>
                 <image id="btnStartOver" filename="assets/interface/btnStartGame.png" align="left"
                        childLayout="overlay">
                     <effect>
-                        <onStartScreen name="hide" targetElement="btnStartGame_hover"/>
-                        <onStartHover name="show" targetElement="btnStartGame_hover"
-                                      onStartEffect="methodToBeCalledWhenEffectStarted()"/>
-                        <onEndHover name="hide" targetElement="btnStartGame_hover"
-                                    onStartEffect="methodToBeCalledWhenEffectStarted()"/>
+                        <onStartScreen name="hide" targetElement="#btnStartGame_hover"/>
+                        <onStartHover name="show" targetElement="#btnStartGame_hover"/>
+                        <onEndHover name="hide" targetElement="#btnStartGame_hover"/>
                     </effect>
-                    <interact onClick="menuStartOverthinker()"/>
+                    <interact onClick="attachServer()"/>
                     <image id="#btnStartGame_hover" name="hide" filename="assets/interface/btnStartGame_hover.png"
                            align="left">
                     </image>
@@ -45,22 +41,19 @@
                 <image id="btnQuitGame" filename="assets/interface/btnQuitGame.png" align="left" childLayout="overlay">
                     <effect>
                         <onStartScreen name="hide" targetElement="btnQuitGame_hover"/>
-                        <onStartHover name="show" targetElement="btnQuitGame_hover"
-                                      onStartEffect="methodToBeCalledWhenEffectStarted()"/>
-                        <onEndHover name="hide" targetElement="btnQuitGame_hover"
-                                    onStartEffect="methodToBeCalledWhenEffectStarted()"/>
+                        <onStartHover name="show" targetElement="btnQuitGame_hover"/>
+                        <onEndHover name="hide" targetElement="btnQuitGame_hover"/>
                     </effect>
                     <interact onClick="menuQuitGame()"/>
                     <image id="btnQuitGame_hover" name="hide" filename="assets/interface/btnQuitGame_hover.png"
                            align="left">
                     </image>
                 </image>
-
             </panel>
         </layer>
     </screen>
 
-    <screen id="loading">
+    <screen id="loading_screen">
         <layer childLayout="center" id="layer1" backgroundColor="#FFFFFF">
             <image filename="assets/interface/loading.png" height="20%" id="backgroundSky" width="20%">
 
