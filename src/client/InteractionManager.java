@@ -27,6 +27,7 @@ public class InteractionManager extends AbstractAppState implements ActionListen
   public static final String RIGHT = "Right";
   public static final String UP = "Up";
   public static final String DOWN = "Down";
+  public static final String JUMP = "Jump";
   private boolean left = false, right = false, up = false, down = false, click = false;
   private Vector3f walkDirection = new Vector3f();
   private Vector3f camDir = new Vector3f();
@@ -38,6 +39,7 @@ public class InteractionManager extends AbstractAppState implements ActionListen
   private Quaternion rotate;
   private float rotateVal;
   private AudioNode audioFootstep;
+  private Vector3f rotateDirection = Vector3f.ZERO;
 
   @Override
   public void initialize(AppStateManager stateManager, Application app)
@@ -70,9 +72,13 @@ public class InteractionManager extends AbstractAppState implements ActionListen
     {
       down = isPressed;
     }
+    else if (name.equals(JUMP) && player.playerPhys.isOnGround())
+    {
+      player.playerPhys.jump();
+    }
+
   }
 
-  private Vector3f rotateDirection = Vector3f.ZERO;
   @Override
   public void update(float tpf)
   {
@@ -136,9 +142,11 @@ public class InteractionManager extends AbstractAppState implements ActionListen
     inputManager.addMapping(RIGHT, new KeyTrigger(KeyInput.KEY_D));
     inputManager.addMapping(UP, new KeyTrigger(KeyInput.KEY_W));
     inputManager.addMapping(DOWN, new KeyTrigger(KeyInput.KEY_S));
+    inputManager.addMapping(JUMP, new KeyTrigger(KeyInput.KEY_SPACE));
     inputManager.addListener(this, LEFT);
     inputManager.addListener(this, RIGHT);
     inputManager.addListener(this, UP);
     inputManager.addListener(this, DOWN);
+    inputManager.addListener(this, JUMP);
   }
 }

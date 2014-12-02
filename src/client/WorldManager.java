@@ -40,6 +40,7 @@ public class WorldManager extends AbstractAppState
     this.physics = new BulletAppState();
 
     stateManager.attach(physics);
+    physics.setDebugEnabled(true);
 
     loadLevel("assets/scenes/myTerrain.j3o");
     attachLevel();
