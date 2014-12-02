@@ -66,7 +66,7 @@ public class ClientMain extends SimpleApplication implements ScreenController
     startNifty();
   }
 
-  public void attachClient()
+  public void startGame()
   {
     new Thread(new Runnable()
     {
@@ -90,8 +90,7 @@ public class ClientMain extends SimpleApplication implements ScreenController
           stateManager.attach((playerManager = new PlayerManager()));
           stateManager.attach((interactionManager = new InteractionManager()));
           stateManager.attach((cameraManager = new CameraManager()));
-          guiNode.detachAllChildren();
-          guiViewPort.clearProcessors();
+          nifty.gotoScreen("loaded_screen");
         }
         catch (InterruptedException e)
         {
@@ -113,7 +112,7 @@ public class ClientMain extends SimpleApplication implements ScreenController
     nifty = niftyDisplay.getNifty();
     try
     {
-      nifty.fromXml("assets/interface/StartMenu.xml", "start_menu", this);
+      nifty.fromXml("assets/interface/StartMenu.xml", "start_screen", this);
     }
     catch (Exception ex)
     {
