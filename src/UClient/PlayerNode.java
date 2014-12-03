@@ -1,5 +1,6 @@
 package UClient;
 
+import com.jme3.bullet.control.GhostControl;
 import com.jme3.effect.ParticleEmitter;
 import com.jme3.input.InputManager;
 import com.jme3.scene.Geometry;
@@ -85,6 +86,11 @@ abstract class PlayerNode extends Node
   public boolean getShrink()
   {
     return false;
+  }
+
+  public Node getCamNode()
+  {
+    return null;
   }
 
 }
