@@ -14,5 +14,4 @@ import com.jme3.scene.Node;
 public class Player extends Node {
     public BetterCharacterControl playerPhys;
     public Node model;
-    public Node pivot;
 }

@@ -23,6 +23,7 @@ import com.jme3.util.TangentBinormalGenerator;
  *
  * @author jdrid_000
  */
+@SuppressWarnings("FieldCanBeLocal")
 public class PlayerManager extends AbstractAppState {
 
     private Node rootNode;
@@ -42,16 +43,9 @@ public class PlayerManager extends AbstractAppState {
         this.physics = this.stateManager.getState(LevelManager.class).getPhysics();
         this.player = new Player();
         setUpModel();
-        setUpPivot();
-        setUpPlayer();
+        setUpPhysics();
         warpPlayer();
         attachPlayerNodes();
-    }
-
-    private void setUpPlayer()
-    {
-        player.playerPhys.setJumpForce(Vector3f.UNIT_Y.mult(25f));
-        player.playerPhys.setGravity(Vector3f.UNIT_Y.mult(-50f));
     }
 
     private void warpPlayer()
@@ -75,14 +69,14 @@ public class PlayerManager extends AbstractAppState {
         mat.setFloat("Shininess", 64f);
         sphere.setMaterial(mat);
         player.model.attachChild(sphere);
+        player.model.setLocalTranslation(0f, 2f, 0f);
     }
     
-    private void setUpPivot()
+    private void setUpPhysics()
     {
-        player.pivot = new Node("Pivot");
         player.playerPhys = new BetterCharacterControl(2f, 4f, 1f);
-        player.model.setLocalTranslation(0f, 2f, 0f);
-        player.pivot.setLocalTranslation(0f, 2f, 0f);
+        player.playerPhys.setJumpForce(Vector3f.UNIT_Y.mult(10f));
+        player.playerPhys.setGravity(Vector3f.UNIT_Y.mult(-50f));
         physics.getPhysicsSpace().add(player.playerPhys);
         player.addControl(player.playerPhys);
     }
@@ -90,7 +84,6 @@ public class PlayerManager extends AbstractAppState {
     private void attachPlayerNodes()
     {
         player.attachChild(player.model);
-        player.attachChild(player.pivot);
         rootNode.attachChild(player);
     }
 }

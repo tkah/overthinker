@@ -43,7 +43,6 @@ public class LevelManager extends AbstractAppState
   private BulletAppState physics;
   private AssetManager assetManager;
   private DirectionalLight mainLight;
-  private AmbientLight ambientLight;
 
   public BulletAppState getPhysics()
   {
@@ -62,8 +61,10 @@ public class LevelManager extends AbstractAppState
 
     stateManager.attach(physics);
     physics.setDebugEnabled(true);
+
     setUpLandscape(1);
     setUpLight();
+    //setUpLights();
   }
 
 
@@ -74,9 +75,6 @@ public class LevelManager extends AbstractAppState
     mainLight.setName("main");
     mainLight.setColor(ColorRGBA.White.clone().multLocal(1.1f));
     mainLight.setDirection(lightDir);
-    ambientLight = new AmbientLight();
-    //ambientLight.setColor(ColorRGBA.White.mult(1.2f));
-    ambientLight.setName("ambient");
 
     DirectionalLightShadowRenderer dlsr = new DirectionalLightShadowRenderer(assetManager, 1024, 3);
     dlsr.setLight(mainLight);
@@ -100,8 +98,7 @@ public class LevelManager extends AbstractAppState
     }
     */
 
-    worldNode.addLight(mainLight);
-    worldNode.addLight(ambientLight);
+    rootNode.addLight(mainLight);
 
     //worldNode.addControl(sc);
     setUpWater();

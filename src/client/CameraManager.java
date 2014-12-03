@@ -27,15 +27,14 @@ public class CameraManager extends AbstractAppState {
     public void initialize(AppStateManager stateManager, Application app) {
         super.initialize(stateManager, app);
         this.app = (SimpleApplication) app;
-        AppStateManager stateManager1 = this.app.getStateManager();
-        this.player = stateManager1.getState(PlayerManager.class).player;
+        this.player = this.app.getStateManager().getState(PlayerManager.class).player;
         initCamera();
     }
 
     //Creates camera
     public void initCamera() {
         //Creates a new chase cam and attached it to the player.model for the game
-        cam = new ChaseCamera(this.app.getCamera(), player.model, this.app.getInputManager());
+        cam = new ChaseCamera(this.app.getCamera(), player, this.app.getInputManager());
         cam.setMinDistance(10f);
         cam.setMaxDistance(15f);
         cam.setSmoothMotion(true);
