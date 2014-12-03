@@ -67,6 +67,11 @@ public class LevelManager extends AbstractAppState
     //setUpLights();
   }
 
+  private void setUpNavMesh()
+  {
+
+  }
+
 
   private void setUpLight()
   {
