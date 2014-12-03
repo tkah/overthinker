@@ -5,6 +5,7 @@
 package client;
 
 import UClient.LandscapeControl;
+import com.jme3.ai.navmesh.NavMesh;
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.app.state.AbstractAppState;
@@ -20,7 +21,10 @@ import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.queue.RenderQueue;
+import com.jme3.scene.Geometry;
+import com.jme3.scene.Mesh;
 import com.jme3.scene.Node;
+import com.jme3.scene.Spatial;
 import com.jme3.shadow.DirectionalLightShadowFilter;
 import com.jme3.shadow.DirectionalLightShadowRenderer;
 import com.jme3.terrain.geomipmap.TerrainLodControl;
@@ -28,6 +32,11 @@ import com.jme3.terrain.geomipmap.TerrainQuad;
 import com.jme3.terrain.heightmap.AbstractHeightMap;
 import com.jme3.terrain.heightmap.ImageBasedHeightMap;
 import com.jme3.texture.Texture;
+import jme3tools.optimize.GeometryBatchFactory;
+
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * @author jdrid_000
@@ -40,6 +49,8 @@ public class WorldManager extends AbstractAppState
   public Node scene;
   public BulletAppState physics;
   private AssetManager assetManager;
+  private NavMesh navMesh;
+  private NavMeshGenerator navMeshGenerator;
 
   @Override
   public void initialize(AppStateManager stateManager, final Application app)
@@ -59,7 +70,21 @@ public class WorldManager extends AbstractAppState
     setUpLights();
   }
 
-
+  private List<Geometry> findGeometries(Node node, List<Geometry> geoms)
+  {
+    for (Iterator<Spatial> it = node.getChildren().iterator(); it.hasNext(); )
+    {
+      Spatial spatial = it.next();
+      if (spatial instanceof Geometry)
+      {
+        geoms.add((Geometry) spatial);
+      }else if (spatial instanceof Node)
+      {
+        findGeometries((Node) spatial, geoms);
+      }
+    }
+    return geoms;
+  }
 
   public void loadLevel(String name)
   {

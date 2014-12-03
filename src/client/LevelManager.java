@@ -1,5 +1,6 @@
 package client;
 
+import com.jme3.ai.navmesh.NavMesh;
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.app.state.AbstractAppState;
@@ -19,7 +20,10 @@ import com.jme3.math.Vector3f;
 import com.jme3.post.FilterPostProcessor;
 import com.jme3.post.filters.BloomFilter;
 import com.jme3.renderer.queue.RenderQueue;
+import com.jme3.scene.Geometry;
+import com.jme3.scene.Mesh;
 import com.jme3.scene.Node;
+import com.jme3.scene.Spatial;
 import com.jme3.shadow.DirectionalLightShadowRenderer;
 import com.jme3.terrain.geomipmap.TerrainLodControl;
 import com.jme3.terrain.geomipmap.TerrainQuad;
@@ -27,10 +31,14 @@ import com.jme3.terrain.heightmap.AbstractHeightMap;
 import com.jme3.terrain.heightmap.ImageBasedHeightMap;
 import com.jme3.texture.Texture;
 import com.jme3.water.WaterFilter;
+import jme3tools.optimize.GeometryBatchFactory;
 import jme3utilities.Misc;
 import jme3utilities.sky.SkyControl;
 
 import java.util.Calendar;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Created by jdrid_000 on 12/2/2014.
@@ -43,6 +51,8 @@ public class LevelManager extends AbstractAppState
   private BulletAppState physics;
   private AssetManager assetManager;
   private DirectionalLight mainLight;
+  private NavMesh navMesh;
+  private NavMeshGenerator navMeshGenerator;
 
   public BulletAppState getPhysics()
   {
@@ -64,14 +74,47 @@ public class LevelManager extends AbstractAppState
 
     setUpLandscape(1);
     setUpLight();
-    //setUpLights();
+    setUpNavMesh();
   }
 
-  private void setUpNavMesh()
+  public void setUpNavMesh()
   {
+    Mesh mesh = new Mesh();
+    navMesh = new NavMesh();
+    navMeshGenerator = new NavMeshGenerator();
+    navMeshGenerator.setCellSize(1f);
+    navMeshGenerator.setCellHeight(2f);
 
+    GeometryBatchFactory.mergeGeometries(findGeometries(worldNode, new LinkedList<>()), mesh);
+    Mesh optiMesh = navMeshGenerator.optimize(mesh);
+
+    navMesh.loadFromMesh(optiMesh);
+
+    Geometry navGeom = new Geometry("NavMesh");
+    navGeom.setMesh(optiMesh);
+    Material green = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
+    green.setColor("Color", ColorRGBA.Green);
+    green.getAdditionalRenderState().setWireframe(true);
+    navGeom.setMaterial(green);
+
+    worldNode.attachChild(navGeom);
   }
 
+  private List<Geometry> findGeometries(Node node, List<Geometry> geoms)
+  {
+    for (Iterator<Spatial> it = node.getChildren().iterator(); it.hasNext(); )
+    {
+      Spatial spatial = it.next();
+      if (spatial instanceof Geometry)
+      {
+        geoms.add((Geometry) spatial);
+      }else if (spatial instanceof Node)
+      {
+        findGeometries((Node) spatial, geoms);
+      }
+    }
+    return geoms;
+  }
 
   private void setUpLight()
   {
