@@ -7,9 +7,6 @@ import com.jme3.app.state.AbstractAppState;
 import com.jme3.app.state.AppStateManager;
 import com.jme3.asset.AssetManager;
 import com.jme3.bullet.BulletAppState;
-import com.jme3.bullet.collision.shapes.CollisionShape;
-import com.jme3.bullet.control.RigidBodyControl;
-import com.jme3.bullet.util.CollisionShapeFactory;
 import com.jme3.light.AmbientLight;
 import com.jme3.light.DirectionalLight;
 import com.jme3.light.Light;
@@ -21,28 +18,19 @@ import com.jme3.post.FilterPostProcessor;
 import com.jme3.post.filters.BloomFilter;
 import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.Geometry;
-import com.jme3.scene.Mesh;
 import com.jme3.scene.Node;
-import com.jme3.scene.Spatial;
 import com.jme3.shadow.DirectionalLightShadowRenderer;
-import com.jme3.terrain.geomipmap.TerrainLodControl;
-import com.jme3.terrain.geomipmap.TerrainQuad;
-import com.jme3.terrain.heightmap.AbstractHeightMap;
-import com.jme3.terrain.heightmap.ImageBasedHeightMap;
 import com.jme3.texture.Texture;
 import com.jme3.water.WaterFilter;
-import jme3tools.optimize.GeometryBatchFactory;
 import jme3utilities.Misc;
 import jme3utilities.sky.SkyControl;
 
 import java.util.Calendar;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
 
 /**
  * Created by jdrid_000 on 12/2/2014.
  */
+@SuppressWarnings("ALL")
 public class LevelManager extends AbstractAppState
 {
   private SimpleApplication app;
@@ -52,7 +40,6 @@ public class LevelManager extends AbstractAppState
   private AssetManager assetManager;
   private DirectionalLight mainLight;
   private NavMesh navMesh;
-  private NavMeshGenerator navMeshGenerator;
 
   public BulletAppState getPhysics()
   {
@@ -70,51 +57,12 @@ public class LevelManager extends AbstractAppState
     this.worldNode = new Node();
 
     stateManager.attach(physics);
-    physics.setDebugEnabled(true);
+    physics.setDebugEnabled(false);
 
     setUpLandscape(1);
     setUpLight();
-    setUpNavMesh();
   }
 
-  public void setUpNavMesh()
-  {
-    Mesh mesh = new Mesh();
-    navMesh = new NavMesh();
-    navMeshGenerator = new NavMeshGenerator();
-    navMeshGenerator.setCellSize(1f);
-    navMeshGenerator.setCellHeight(2f);
-
-    GeometryBatchFactory.mergeGeometries(findGeometries(worldNode, new LinkedList<>()), mesh);
-    Mesh optiMesh = navMeshGenerator.optimize(mesh);
-
-    navMesh.loadFromMesh(optiMesh);
-
-    Geometry navGeom = new Geometry("NavMesh");
-    navGeom.setMesh(optiMesh);
-    Material green = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
-    green.setColor("Color", ColorRGBA.Green);
-    green.getAdditionalRenderState().setWireframe(true);
-    navGeom.setMaterial(green);
-
-    worldNode.attachChild(navGeom);
-  }
-
-  private List<Geometry> findGeometries(Node node, List<Geometry> geoms)
-  {
-    for (Iterator<Spatial> it = node.getChildren().iterator(); it.hasNext(); )
-    {
-      Spatial spatial = it.next();
-      if (spatial instanceof Geometry)
-      {
-        geoms.add((Geometry) spatial);
-      }else if (spatial instanceof Node)
-      {
-        findGeometries((Node) spatial, geoms);
-      }
-    }
-    return geoms;
-  }
 
   private void setUpLight()
   {
@@ -127,7 +75,7 @@ public class LevelManager extends AbstractAppState
     DirectionalLightShadowRenderer dlsr = new DirectionalLightShadowRenderer(assetManager, 1024, 3);
     dlsr.setLight(mainLight);
     app.getViewPort().addProcessor(dlsr);
-/*
+
     SkyControl sc = new SkyControl(assetManager, app.getCamera(), 0.9f, true, true);
     sc.getSunAndStars().setHour(12f);
     sc.getSunAndStars().setObserverLatitude(37.4046f * FastMath.DEG_TO_RAD);
@@ -144,17 +92,16 @@ public class LevelManager extends AbstractAppState
         sc.getUpdater().setMainLight((DirectionalLight) light);
       }
     }
-    */
 
     rootNode.addLight(mainLight);
 
-    //worldNode.addControl(sc);
+    worldNode.addControl(sc);
     setUpWater();
     BloomFilter bloom = new BloomFilter(BloomFilter.GlowMode.Objects);
     bloom.setBlurScale(2.5f);
     bloom.setExposurePower(1f);
     Misc.getFpp(app.getViewPort(), assetManager).addFilter(bloom);
-    //sc.getUpdater().addBloomFilter(bloom);
+    sc.getUpdater().addBloomFilter(bloom);
   }
 
   private void setUpWater()
@@ -201,51 +148,16 @@ public class LevelManager extends AbstractAppState
     mat_terrain.setTexture("DiffuseMap_3", lava);
     mat_terrain.setFloat("DiffuseMap_3_scale", 128f);
 
-    /** Create the height map */
-    Texture heightMapImage;
-
-    if (playerType == 0)
-    {
-      heightMapImage = assetManager.loadTexture("assets/terrains/tieredmaze1_nowalls.png");
-    }
-    else
-    {
-      heightMapImage = assetManager.loadTexture("assets/terrains/tieredmaze1.png");
-    }
-
-    AbstractHeightMap heightMap = null;
-
-    try
-    {
-      heightMap = new ImageBasedHeightMap(heightMapImage.getImage(), 0.8f);
-      heightMap.load();
-    }
-    catch (Exception e)
-    {
-      e.printStackTrace();
-    }
-    int patchSize = 65;
-    assert heightMap != null;
-    TerrainQuad terrain = new TerrainQuad("my terrain", patchSize, 513, heightMap.getHeightMap());
+    Node terrain = (Node) assetManager.loadModel("assets/terrains/tieredmaze.j3o");
+    navMesh = new NavMesh(((Geometry) terrain.getChild("NavMesh")).getMesh());
 
     /** We give the terrain its material, position & scale it, and attach it. */
     mat_terrain.setReceivesShadows(true);
     mat_terrain.setFloat("Ambient", 5.0f);
     terrain.setMaterial(mat_terrain);
-    terrain.setLocalTranslation(0, 0, 0);
-    terrain.setLocalScale(2f, 1f, 2f);
 
     terrain.setShadowMode(RenderQueue.ShadowMode.CastAndReceive);
 
-    /** The LOD (level of detail) depends on were the camera is: */
-    TerrainLodControl control = new TerrainLodControl(terrain, app.getCamera());
-    terrain.addControl(control);
-
-    // We set up collision detection for the scene by creating a
-    // compound collision shape and a static RigidBodyControl with mass zero.
-    CollisionShape sceneShape = CollisionShapeFactory.createMeshShape(terrain);
-    RigidBodyControl rigidBodyControl = new RigidBodyControl(sceneShape, 0);
-    terrain.addControl(rigidBodyControl);
     physics.getPhysicsSpace().add(terrain);
     worldNode.attachChild(terrain);
     rootNode.attachChild(worldNode);

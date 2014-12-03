@@ -1,4 +1,3 @@
-
 package client;
 
 import com.jme3.export.InputCapsule;
@@ -9,7 +8,6 @@ import com.jme3.export.Savable;
 import com.jme3.math.FastMath;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Mesh;
-import com.jme3.scene.Node;
 import com.jme3.scene.VertexBuffer.Type;
 import com.jme3.scene.mesh.IndexBuffer;
 import com.jme3.terrain.Terrain;
@@ -21,8 +19,8 @@ import org.critterai.nmgen.TriangleMesh;
 
 /**
  * Generates the navigation mesh using the org.critterai.nmgen.NavmeshGenerator class.
- *
- */
+ * 
+ */ 
 public class NavMeshGenerator implements Savable {
 
     private org.critterai.nmgen.NavmeshGenerator nmgen;
@@ -73,12 +71,12 @@ public class NavMeshGenerator implements Savable {
 
     public Mesh optimize(Mesh mesh) {
         nmgen = new NavmeshGenerator(cellSize, cellHeight, minTraversableHeight,
-                                     maxTraversableStep, maxTraversableSlope,
-                                     clipLedges, traversableAreaBorderSize,
-                                     smoothingThreshold, useConservativeExpansion,
-                                     minUnconnectedRegionSize, mergeRegionSize,
-                                     maxEdgeLength, edgeMaxDeviation, maxVertsPerPoly,
-                                     contourSampleDistance, contourMaxDeviation);
+                maxTraversableStep, maxTraversableSlope,
+                clipLedges, traversableAreaBorderSize,
+                smoothingThreshold, useConservativeExpansion,
+                minUnconnectedRegionSize, mergeRegionSize,
+                maxEdgeLength, edgeMaxDeviation, maxVertsPerPoly,
+                contourSampleDistance, contourMaxDeviation);
 
         FloatBuffer pb = mesh.getFloatBuffer(Type.Position);
         IndexBuffer ib = mesh.getIndexBuffer();
@@ -116,8 +114,9 @@ public class NavMeshGenerator implements Savable {
         MeshBuildRunnable runnable = new MeshBuildRunnable(positions, indices, intermediateData);
         try {
             execute(runnable, timeout);
-        } catch (TimeoutException ex) {
-            DialogDisplayer.getDefault().notifyLater(new NotifyDescriptor.Message("NavMesh Generation timed out."));
+        } catch (TimeoutException ex)
+        {
+            System.out.println("NavMesh generation timed out");
         }
         return runnable.getTriMesh();
     }
@@ -189,7 +188,7 @@ public class NavMeshGenerator implements Savable {
         return mesh2;
     }
 
-
+   
     /**
      * @return The height resolution used when sampling the source mesh. Value must be > 0.
      */
@@ -245,7 +244,7 @@ public class NavMeshGenerator implements Savable {
      * The maximum distance the surface of the navmesh may deviate from the surface of the original geometry.
      * The accuracy of the algorithm which uses this value is impacted by the value of the contour sample distance argument.
      * The value of this argument has no meaning if the contour sample distance argument is set to zero.
-     * Setting the value to zero is not recommended since it can result in a large increase in the number of triangles in the
+     * Setting the value to zero is not recommended since it can result in a large increase in the number of triangles in the 
      * final navmesh at a high processing cost.
      * Constraints: >= 0
      */
@@ -261,8 +260,8 @@ public class NavMeshGenerator implements Savable {
 
     /**
      * Sets the sampling distance to use when matching the navmesh to the surface of the original geometry.
-     * Impacts how well the final mesh conforms to the original geometry's surface contour. Higher values result in
-     * a navmesh which conforms more closely to the original geometry's surface at the cost of a higher final triangle
+     * Impacts how well the final mesh conforms to the original geometry's surface contour. Higher values result in 
+     * a navmesh which conforms more closely to the original geometry's surface at the cost of a higher final triangle 
      * count and higher processing cost.
      * Setting this argument to zero will disable this functionality.
      * Constraints: >= 0
@@ -279,9 +278,9 @@ public class NavMeshGenerator implements Savable {
 
     /**
      * The maximum distance the edge of the navmesh may deviate from the source geometry.
-     * Setting this lower will result in the navmesh edges following the geometry contour more
+     * Setting this lower will result in the navmesh edges following the geometry contour more 
      * accurately at the expense of an increased triangle count.
-     * Setting the value to zero is not recommended since it can result in a large increase in
+     * Setting the value to zero is not recommended since it can result in a large increase in 
      * the number of triangles in the final navmesh at a high processing cost.
      * Constraints: >= 0
      */
@@ -297,7 +296,7 @@ public class NavMeshGenerator implements Savable {
 
     /**
      * The maximum length of polygon edges that represent the border of the navmesh.
-     * More vertices will be added to navmesh border edges if this value is exceeded for a
+     * More vertices will be added to navmesh border edges if this value is exceeded for a 
      * particular edge. In certain cases this will reduce the number of thin, long triangles in the navmesh.
      * A value of zero will disable this feature.
      * Constraints: >= 0
@@ -345,7 +344,7 @@ public class NavMeshGenerator implements Savable {
 
     /**
      * The maximum number of vertices per polygon for polygons generated during the voxel to polygon conversion stage.
-     * Higher values reduce performance, but can also result in better formed triangles in the navmesh. A value of
+     * Higher values reduce performance, but can also result in better formed triangles in the navmesh. A value of 
      * around 6 is generally adequate with diminishing returns for values higher than 6.
      * Contraints: >= 3
      */
@@ -361,8 +360,8 @@ public class NavMeshGenerator implements Savable {
 
     /**
      * Any regions smaller than this size will, if possible, be merged with larger regions. (Voxels)
-     * Helps reduce the number of unnecessarily small regions that can be formed. This is especially an issue in
-     * diagonal path regions where inherent faults in the region generation algorithm can result in unnecessarily
+     * Helps reduce the number of unnecessarily small regions that can be formed. This is especially an issue in 
+     * diagonal path regions where inherent faults in the region generation algorithm can result in unnecessarily 
      * small regions.
      * If a region cannot be legally merged with a neighbor region, then it will be left alone.
      * Constraints: >= 0
@@ -394,7 +393,7 @@ public class NavMeshGenerator implements Savable {
 
     /**
      * The minimum region size for unconnected (island) regions. (Voxels)
-     * Any generated regions that are not connected to any other region and are smaller than this size will be
+     * Any generated regions that are not connected to any other region and are smaller than this size will be 
      * culled before final navmesh generation. I.e. No longer considered walkable.
      * Constraints: > 0
      */
@@ -418,7 +417,7 @@ public class NavMeshGenerator implements Savable {
 
     /**
      * The amount of smoothing to be performed when generating the distance field.
-     * This value impacts region formation and border detection. A higher value results in generally
+     * This value impacts region formation and border detection. A higher value results in generally 
      * larger regions and larger border sizes. A value of zero will disable smoothing.
      * Constraints: 0 <= value <= 4
      */
@@ -451,7 +450,7 @@ public class NavMeshGenerator implements Savable {
 
     /**
      * Applies extra algorithms to regions to help prevent poorly formed regions from forming.
-     * If the navigation mesh is missing sections that should be present, then enabling this feature will likely
+     * If the navigation mesh is missing sections that should be present, then enabling this feature will likely 
      * fix the problem.
      * Enabling this feature significantly increased processing cost.
      */
@@ -466,7 +465,7 @@ public class NavMeshGenerator implements Savable {
     public void setTimeout(int timeout) {
         this.timeout = timeout;
     }
-
+    
     public void write(JmeExporter ex) throws IOException {
         OutputCapsule oc = ex.getCapsule(this);
         oc.write(cellSize, "cellSize", 1f);

@@ -64,26 +64,10 @@ public class WorldManager extends AbstractAppState
     stateManager.attach(physics);
     physics.setDebugEnabled(true);
 
-    loadLevel("assets/scenes/myTerrain.j3o");
+    loadLevel("assets/terrains/tieredmaze.j3o");
     attachLevel();
     setUpAmbientSound("assets/sounds/waves.ogg", 0.2f);
     setUpLights();
-  }
-
-  private List<Geometry> findGeometries(Node node, List<Geometry> geoms)
-  {
-    for (Iterator<Spatial> it = node.getChildren().iterator(); it.hasNext(); )
-    {
-      Spatial spatial = it.next();
-      if (spatial instanceof Geometry)
-      {
-        geoms.add((Geometry) spatial);
-      }else if (spatial instanceof Node)
-      {
-        findGeometries((Node) spatial, geoms);
-      }
-    }
-    return geoms;
   }
 
   public void loadLevel(String name)
