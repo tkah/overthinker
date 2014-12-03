@@ -42,7 +42,7 @@ public class UnderNode extends PlayerNode
   private PlayerControl playerControl;
   private Sphere playerSphere;
   private Geometry playerG;
-  Material playerMat;
+  private Material playerMat;
   private Node pivot;
   private CameraNode camNode;
   private Camera cam;
@@ -152,7 +152,6 @@ public class UnderNode extends PlayerNode
     else if (playerMat.getParam("Diffuse").getValue() !=  ColorRGBA.White) playerMat.setColor("Diffuse", ColorRGBA.White);
 
     onGround = playerControl.checkGravity(onGround, getLocalTranslation(), collidableNode);
-    //System.out.println("onground: " + onGround);
     dustEmitter.setParticlesPerSec(0);
 
     if (left || right || up || down) rotation += tpf*rotSpeed;

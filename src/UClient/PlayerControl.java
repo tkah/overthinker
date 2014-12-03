@@ -80,8 +80,6 @@ public class PlayerControl extends BetterCharacterControl
 
   public void turn(float dir)
   {
-    System.out.println("dir: " + dir);
-    System.out.println("camDir: " + camDir);
     camDir = dir;
     Quaternion turn = new Quaternion();
     turn.fromAngleAxis(dir, Vector3f.UNIT_Y);

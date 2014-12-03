@@ -140,7 +140,6 @@ public class GamePlayAppState extends AbstractAppState
 
     flyCam.setMoveSpeed(100);
 
-    createSphereResources();
     createDoorsAndKeys();
     createPlatformsAndDoors();
     setUpLandscape();
@@ -232,103 +231,107 @@ public class GamePlayAppState extends AbstractAppState
 
     playerNode.update(tpf);
     for (Key k : keys) k.update(tpf);
+    if (playerType == 1) testCollisions(tpf);
 
-    if (playerType == 1)
+    //move the audio with the camera
+    listener.setLocation(cam.getLocation());
+    listener.setRotation(cam.getRotation());
+  }
+
+  private void testCollisions(float tpf)
+  {
+    if ((playerNode.getGeometry().getWorldTranslation().getY() <= water.getWaterHeight()) || playerNode.getShrink())
     {
-      if ((playerNode.getGeometry().getWorldTranslation().getY() <= water.getWaterHeight()) || playerNode.getShrink())
+      playerNode.scalePlayerDown(tpf);
+    }
+
+    CollisionResults results = new CollisionResults();
+    resources.collideWith(playerNode.getGeometry().getWorldBound(), results);
+
+    if (results.size() > 0)
+    {
+      audio_collect.play();
+      CollisionResult closest = results.getClosestCollision();
+      System.out.println("What was hit? " + closest.getGeometry().getName());
+
+      boolean isHit = closest.getGeometry().getUserData("isHit");
+      if (!isHit)
       {
-        playerNode.scalePlayerDown(tpf);
-      }
-
-      CollisionResults results = new CollisionResults();
-      resources.collideWith(playerNode.getGeometry().getWorldBound(), results);
-
-      if (results.size() > 0)
-      {
-        audio_collect.play();
-        CollisionResult closest = results.getClosestCollision();
-        System.out.println("What was hit? " + closest.getGeometry().getName());
-
-        boolean isHit = closest.getGeometry().getUserData("isHit");
-        if (!isHit)
-        {
-          int sResId = closest.getGeometry().getUserData("id");
-          closest.getGeometry().setUserData("isHit", true);
-          SphereResource s = sphereResourceArrayList.get(sResId);
-          s.setShrink(true);
-          sphereResourcesToShrink.add(s);
-          playerNode.setScaleStartTime(Globals.getTotSecs());
-          playerNode.setPlayerNeedsScaling(true);
-          if (playerNode.getHeight() < Globals.MAX_PLAYER_SIZE) playerNode.scalePlayerUp();
-        }
-      }
-
-      CollisionResults keyResults = new CollisionResults();
-      keysNode.collideWith(playerNode.getGeometry().getWorldBound(), keyResults);
-
-      if (keyResults.size() > 0)
-      {
-        CollisionResult closest = keyResults.getClosestCollision();
-        System.out.println("What was hit? " + closest.getGeometry().getName());
-
-        int id = closest.getGeometry().getUserData("id");
-        for (int i = 0; i < keys.size(); i++)
-        {
-          if (id == i)
-          {
-            Key k = keys.get(i);
-            k.removeFromParent();
-            Door d = keyDoors.get(i);
-            d.removeFromParent();
-          }
-        }
-      }
-
-      CollisionResults platResults = new CollisionResults();
-      platformsNode.collideWith(playerNode.getGeometry().getWorldBound(), platResults);
-      for (Platform p : platforms) p.moveUp();
-      if (platResults.size() > 0)
-      {
-        boolean onePressed = false;
-        boolean twoPressed = false;
-        boolean threePressed = false;
-        for (int i = 0; i < platResults.size(); i++)
-        {
-          int id = platResults.getCollision(i).getGeometry().getUserData("id");
-          Platform p = platforms.get(id);
-          p.pressDown();
-          if (id == 0) onePressed = true;
-          if (id == 1) twoPressed = true;
-          if (id == 2) threePressed = true;
-        }
-
-        if (onePressed && twoPressed)
-        {
-          Door d = platDoors.get(0);
-          d.removeFromParent();
-        }
-        else if (threePressed)
-        {
-          Door d2 = platDoors.get(1);
-          Door d3 = platDoors.get(2);
-          d2.removeFromParent();
-          d3.removeFromParent();
-          exitDoor.removeFromParent();
-          localRootNode.attachChild(exitNode);
-        }
-      }
-
-      CollisionResults exitResults = new CollisionResults();
-      exitNode.collideWith(playerNode.getGeometry().getWorldBound(), exitResults);
-      if (localRootNode.hasChild(exitNode) && exitResults.size() > 0)
-      {
-        fade.fadeOut();
-        bulletAppState.getPhysicsSpace().remove(playerNode);
-        playerNode.removeFromParent();
-
+        int sResId = closest.getGeometry().getUserData("id");
+        closest.getGeometry().setUserData("isHit", true);
+        SphereResource s = sphereResourceArrayList.get(sResId);
+        s.setShrink(true);
+        sphereResourcesToShrink.add(s);
+        playerNode.setScaleStartTime(Globals.getTotSecs());
+        playerNode.setPlayerNeedsScaling(true);
+        if (playerNode.getHeight() < Globals.MAX_PLAYER_SIZE) playerNode.scalePlayerUp();
       }
     }
 
+    CollisionResults keyResults = new CollisionResults();
+    keysNode.collideWith(playerNode.getGeometry().getWorldBound(), keyResults);
+
+    if (keyResults.size() > 0)
+    {
+      CollisionResult closest = keyResults.getClosestCollision();
+      System.out.println("What was hit? " + closest.getGeometry().getName());
+
+      int id = closest.getGeometry().getUserData("id");
+      for (int i = 0; i < keys.size(); i++)
+      {
+        if (id == i)
+        {
+          Key k = keys.get(i);
+          k.removeFromParent();
+          Door d = keyDoors.get(i);
+          d.removeFromParent();
+        }
+      }
+    }
+
+    CollisionResults platResults = new CollisionResults();
+    platformsNode.collideWith(playerNode.getGeometry().getWorldBound(), platResults);
+    for (Platform p : platforms) p.moveUp();
+    if (platResults.size() > 0)
+    {
+      boolean onePressed = false;
+      boolean twoPressed = false;
+      boolean threePressed = false;
+      for (int i = 0; i < platResults.size(); i++)
+      {
+        int id = platResults.getCollision(i).getGeometry().getUserData("id");
+        Platform p = platforms.get(id);
+        p.pressDown();
+        if (id == 0) onePressed = true;
+        if (id == 1) twoPressed = true;
+        if (id == 2) threePressed = true;
+      }
+
+      if (onePressed && twoPressed)
+      {
+        Door d = platDoors.get(0);
+        d.removeFromParent();
+      }
+      else if (threePressed)
+      {
+        Door d2 = platDoors.get(1);
+        Door d3 = platDoors.get(2);
+        d2.removeFromParent();
+        d3.removeFromParent();
+        exitDoor.removeFromParent();
+        localRootNode.attachChild(exitNode);
+      }
+    }
+
+    CollisionResults exitResults = new CollisionResults();
+    exitNode.collideWith(playerNode.getGeometry().getWorldBound(), exitResults);
+    if (localRootNode.hasChild(exitNode) && exitResults.size() > 0)
+    {
+      fade.fadeOut();
+      bulletAppState.getPhysicsSpace().remove(playerNode);
+      playerNode.removeFromParent();
+
+    }
 
     ArrayList<SphereResource> toRemove = new ArrayList<SphereResource>();
     for (SphereResource s : sphereResourcesToShrink)
@@ -349,10 +352,6 @@ public class GamePlayAppState extends AbstractAppState
       }
     }
     for (SphereResource s : toRemove) sphereResourcesToShrink.remove(s);
-
-    //move the audio with the camera
-    listener.setLocation(cam.getLocation());
-    listener.setRotation(cam.getRotation());
   }
 
   /** ---Initialization methods--- **/
@@ -405,6 +404,7 @@ public class GamePlayAppState extends AbstractAppState
     {
       playerNode = new UnderNode("player", cam, terrain, assetManager, bulletAppState, collidableNode);
       flyCam.setEnabled(false);
+      createSphereResources();
     }
     playerNode.setUpPlayer();
     ArrayList<String> actionStrings = playerNode.setUpControls(inputManager);
