@@ -23,7 +23,6 @@ public class Key extends NonPlayableObjectNode
   private float rotSpeed = 300f;
   private float updateHeight;
   private float updateSparkHeight;
-  private Vector3f loc;
   private boolean moveUp = false;
 
   public Key(String name)
