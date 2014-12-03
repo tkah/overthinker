@@ -20,21 +20,26 @@ import com.jme3.scene.shape.Cylinder;
  */
 public class Platform extends NonPlayableObjectNode
 {
+  private Cylinder platform;
+  private CylinderCollisionShape pCol;
+
   public Platform(String name)
   {
     super(name);
-
-    Cylinder platform = new Cylinder(20,50,2,1,true);
+    platform = new Cylinder(20,50,2,1,true);
     geo = new Geometry("Platform", platform);
-    CylinderCollisionShape pCol = new CylinderCollisionShape(new Vector3f(2,0,2));
+    pCol = new CylinderCollisionShape(new Vector3f(14,20,14));
     phy = new RigidBodyControl(pCol, 0f);
 
     int id = Integer.parseInt(name.split("_")[1]);
     geo.setUserData("id", id);
   }
 
-  public void createPlatform(AssetManager assetManager, Vector3f loc)
+  public void createPlatform(AssetManager assetManager, Vector3f loc, float width)
   {
+    platform.updateGeometry(platform.getAxisSamples(), platform.getRadialSamples(), width, width, platform.getHeight(), true, false);
+    //pCol.setScale(new Vector3f(4, 6f, 4));
+
     Material platMat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
     platMat.setColor("Color", ColorRGBA.Orange);
     this.loc = loc;

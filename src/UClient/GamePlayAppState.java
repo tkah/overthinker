@@ -7,13 +7,10 @@ import com.jme3.app.SimpleApplication;
 import com.jme3.app.state.AbstractAppState;
 import com.jme3.app.state.AppStateManager;
 import com.jme3.asset.AssetManager;
-import com.jme3.asset.TextureKey;
 import com.jme3.audio.AudioNode;
 import com.jme3.audio.Listener;
 import com.jme3.bullet.BulletAppState;
 import com.jme3.bullet.collision.shapes.CollisionShape;
-import com.jme3.bullet.collision.shapes.CylinderCollisionShape;
-import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.bullet.util.CollisionShapeFactory;
 import com.jme3.collision.CollisionResult;
 import com.jme3.collision.CollisionResults;
@@ -23,21 +20,19 @@ import com.jme3.input.FlyByCamera;
 import com.jme3.input.InputManager;
 import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.AnalogListener;
-import com.jme3.light.AmbientLight;
-import com.jme3.light.DirectionalLight;
+import com.jme3.light.*;
 import com.jme3.material.Material;
-import com.jme3.light.Light;
 import com.jme3.math.*;
 import com.jme3.post.FilterPostProcessor;
 import com.jme3.post.filters.BloomFilter;
 import com.jme3.post.filters.FadeFilter;
+import com.jme3.post.filters.FogFilter;
 import com.jme3.renderer.Camera;
 import com.jme3.renderer.ViewPort;
 import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
-import com.jme3.scene.shape.Box;
-import com.jme3.scene.shape.Cylinder;
+import com.jme3.scene.shape.Sphere;
 import com.jme3.shadow.DirectionalLightShadowRenderer;
 import com.jme3.terrain.geomipmap.TerrainLodControl;
 import com.jme3.terrain.geomipmap.TerrainQuad;
@@ -77,8 +72,11 @@ public class GamePlayAppState extends AbstractAppState
   private Node keysNode;
   private Node collidableNode;
   private Node resources;
+  private Node exitNode;
+  private Door exitDoor;
   private PlayerNode playerNode;
   private int playerType = 1;
+  private int fadeStart = 0;
 
   private float waterHeight = 20.0f;
   private float waterHeightRate = 0.05f;
@@ -89,12 +87,13 @@ public class GamePlayAppState extends AbstractAppState
   private FadeFilter fade;
   private FilterPostProcessor fpp;
   private WaterFilter water;
+  private FogFilter fogFilter;
   private TerrainQuad terrain;
   private Material mat_terrain;
-  private ParticleEmitter sparkEmitter;
 
   private ArrayList<SphereResource> sphereResourceArrayList = new ArrayList<SphereResource>();
   private ArrayList<SphereResource> sphereResourcesToShrink = new ArrayList<SphereResource>();
+  private Vector3f exitLocation = new Vector3f(7,122,-7);
   private Vector3f[] keyLocArray = {new Vector3f(60, 65, -330), new Vector3f(35, 65, 345), new Vector3f(115, 65, -353)};
   private Vector3f[] keyDoorLocArray = {new Vector3f(-293, 98, 143), new Vector3f(330, 98, -68), new Vector3f(-236, 98, 208)};
   private Vector3f[] platLocArray = {new Vector3f(55, 81.65f, -295), new Vector3f(245, 81.65f, 120), new Vector3f(195, 102.45f, 75)};
@@ -103,6 +102,7 @@ public class GamePlayAppState extends AbstractAppState
   private float[] keyDoorRotationArray = {-55f, 100f, -43f};
   private float[] platDoorSizeXArray = {16f, 17f, 21f};
   private float[] platDoorRotationArray = {-70, 49, -10};
+  private float fogDensity = 0; //0, 1.0, 1.5, 2.0
   private ArrayList<Key> keys = new ArrayList<Key>();
   private ArrayList<Door> keyDoors = new ArrayList<Door>();
   private ArrayList<Door> platDoors = new ArrayList<Door>();
@@ -126,7 +126,6 @@ public class GamePlayAppState extends AbstractAppState
     viewPort = this.app.getViewPort();
     inputManager = this.app.getInputManager();
     flyCam = this.app.getFlyByCamera();
-    sparkEmitter = new ParticleEmitter("spark emitter", ParticleMesh.Type.Triangle, 60);
 
     /** Set up Physics */
     bulletAppState = new BulletAppState();
@@ -137,6 +136,7 @@ public class GamePlayAppState extends AbstractAppState
     collidableNode = new Node ("CollidableNode");
     keysNode = new Node ("KeyNode");
     platformsNode = new Node ("PlatformsNode");
+    exitNode = new Node("ExitNode");
 
     flyCam.setMoveSpeed(100);
 
@@ -149,6 +149,12 @@ public class GamePlayAppState extends AbstractAppState
 
     fade = new FadeFilter(2); // 2 seconds
     fpp.addFilter(fade);
+    fogFilter = new FogFilter();
+    fogFilter.setFogDistance(155);
+    fogFilter.setFogDensity(fogDensity);
+    fpp.addFilter(fogFilter);
+
+    setUpExit();
 
     viewPort.addProcessor(fpp);
     localRootNode.attachChild(collidableNode);
@@ -193,18 +199,35 @@ public class GamePlayAppState extends AbstractAppState
   @Override
   public void update(float tpf)
   {
-    System.out.println("Cam at: " + cam.getLocation());
+    //System.out.println("Cam at: " + cam.getLocation());
 
     // Raise Water Level, to be controlled by EEG
     if (!playerNode.isSlowWater()) water.setWaterHeight(water.getWaterHeight() + Globals.WATER_HEIGHT_DEFAULT_RATE);
     else water.setWaterHeight(water.getWaterHeight() + Globals.WATER_HEIGHT_PLAYER_RATE);
     //water.setWaterHeight(water.getWaterHeight() + waterHeightRate);
 
+    fogFilter.setFogDensity(fogDensity);
+
+    if (playerNode.isDead() && Globals.getTotSecs() - fadeStart > fade.getDuration())
+    {
+      fade.fadeIn();
+      if (fade.getValue() == 0)
+      {
+        cam.setLocation(new Vector3f(exitLocation.getX(), exitLocation.getY() + 150, exitLocation.getZ()));
+        cam.lookAtDirection(new Vector3f(0,-1,0), new Vector3f(0, -1,0));
+        flyCam.setEnabled(true);
+        flyCam.setMoveSpeed(0);
+      }
+    }
+
     // Player died
     if (playerType == 1 && playerNode.getHeight() < .3f && !playerNode.isDead())
     {
       fade.fadeOut();
       playerNode.setDead(true);
+      bulletAppState.getPhysicsSpace().remove(playerNode);
+      playerNode.removeFromParent();
+      fadeStart = Globals.getTotSecs();
     }
 
     playerNode.update(tpf);
@@ -290,7 +313,19 @@ public class GamePlayAppState extends AbstractAppState
           Door d3 = platDoors.get(2);
           d2.removeFromParent();
           d3.removeFromParent();
+          exitDoor.removeFromParent();
+          localRootNode.attachChild(exitNode);
         }
+      }
+
+      CollisionResults exitResults = new CollisionResults();
+      exitNode.collideWith(playerNode.getGeometry().getWorldBound(), exitResults);
+      if (localRootNode.hasChild(exitNode) && exitResults.size() > 0)
+      {
+        fade.fadeOut();
+        bulletAppState.getPhysicsSpace().remove(playerNode);
+        playerNode.removeFromParent();
+
       }
     }
 
@@ -321,7 +356,6 @@ public class GamePlayAppState extends AbstractAppState
   }
 
   /** ---Initialization methods--- **/
-
   private void setUpLight()
   {
     mainLight = new DirectionalLight();
@@ -369,7 +403,7 @@ public class GamePlayAppState extends AbstractAppState
     }
     else
     {
-      playerNode = new UnderNode("player", cam, terrain, assetManager, bulletAppState);
+      playerNode = new UnderNode("player", cam, terrain, assetManager, bulletAppState, collidableNode);
       flyCam.setEnabled(false);
     }
     playerNode.setUpPlayer();
@@ -379,8 +413,53 @@ public class GamePlayAppState extends AbstractAppState
       inputManager.addListener(this, s);
     }
     playerNode.setShadowMode(RenderQueue.ShadowMode.CastAndReceive);
-    collidableNode.attachChild(playerNode);
+    localRootNode.attachChild(playerNode);
     bulletAppState.getPhysicsSpace().addAll(playerNode);
+  }
+
+  private void setUpExit()
+  {
+    exitDoor = new Door("ExitDoor");
+    exitDoor.createDoor(assetManager, 15, 1, 15, 90, exitLocation);
+    collidableNode.attachChild(exitDoor);
+    bulletAppState.getPhysicsSpace().add(exitDoor.getPhy());
+
+    Sphere exitS = new Sphere(32,32,12);
+    Geometry geoS = new Geometry("ExitSphere", exitS);
+
+    Material exitMat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
+    exitMat.setColor("Color", ColorRGBA.Orange);
+    exitMat.setColor("GlowColor", ColorRGBA.Orange);
+    geoS.setMaterial(exitMat);
+    geoS.setLocalTranslation(exitLocation.getX(), exitLocation.getY() - 5, exitLocation.getZ());
+    geoS.setShadowMode(RenderQueue.ShadowMode.Cast);
+
+    Material sparkMat = new Material(assetManager, "Common/MatDefs/Misc/Particle.j3md");
+    sparkMat.setTexture("Texture", assetManager.loadTexture("assets/effects/flash.png"));
+    ParticleEmitter flashEmitter = new ParticleEmitter("flash emitter", ParticleMesh.Type.Triangle, 100);
+    flashEmitter.setLocalTranslation(new Vector3f(exitLocation.getX(), exitLocation.getY(), exitLocation.getZ()));
+    flashEmitter.setMaterial(sparkMat);
+    flashEmitter.setImagesX(2);
+    flashEmitter.setImagesY(2);
+    flashEmitter.setStartColor(ColorRGBA.Yellow);
+    flashEmitter.setEndColor(ColorRGBA.White);
+    flashEmitter.setFacingVelocity(true);
+    flashEmitter.setStartSize(.5f);
+    flashEmitter.setEndSize(.5f);
+    flashEmitter.setLowLife(1.9f);
+    flashEmitter.setHighLife(2.1f);
+    flashEmitter.setRotateSpeed(4);
+    flashEmitter.getParticleInfluencer().setInitialVelocity(new Vector3f(0, 20, 0));
+    flashEmitter.setSelectRandomImage(true);
+    flashEmitter.setRandomAngle(true);
+    flashEmitter.getParticleInfluencer().setVelocityVariation(1.0f);
+    exitNode.attachChild(flashEmitter);
+
+    BloomFilter bloom = new BloomFilter(BloomFilter.GlowMode.Objects);
+    bloom.setBlurScale(2.5f);
+    bloom.setExposurePower(1f);
+    fpp.addFilter(bloom);
+    exitNode.attachChild(geoS);
   }
 
   private void setUpLandscape()
@@ -513,7 +592,7 @@ public class GamePlayAppState extends AbstractAppState
     for (int i = 0; i < keyDoorLocArray.length; i++)
     {
       Door door = new Door("Door_" + i);
-      door.createDoor(assetManager, keyDoorSizeXArray[i], keyDoorRotationArray[i], keyDoorLocArray[i]);
+      door.createDoor(assetManager, keyDoorSizeXArray[i], 40, 1, keyDoorRotationArray[i], keyDoorLocArray[i]);
       collidableNode.attachChild(door);
       bulletAppState.getPhysicsSpace().add(door.getPhy());
       keyDoors.add(door);
@@ -533,13 +612,13 @@ public class GamePlayAppState extends AbstractAppState
     for (int i = 0; i < platLocArray.length; i++)
     {
       Platform plat = new Platform("Platform_" + i);
-      plat.createPlatform(assetManager, platLocArray[i]);
+      plat.createPlatform(assetManager, platLocArray[i], 2);
       platformsNode.attachChild(plat);
       bulletAppState.getPhysicsSpace().add(plat.getPhy());
       platforms.add(plat);
 
       Door door = new Door("Door_" + i);
-      door.createDoor(assetManager, platDoorSizeXArray[i], platDoorRotationArray[i], platDoorLocArray[i]);
+      door.createDoor(assetManager, platDoorSizeXArray[i], 40, 1, platDoorRotationArray[i], platDoorLocArray[i]);
       collidableNode.attachChild(door);
       bulletAppState.getPhysicsSpace().add(door.getPhy());
       platDoors.add(door);

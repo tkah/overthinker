@@ -2,7 +2,10 @@ package UClient;
 
 import com.jme3.asset.AssetManager;
 import com.jme3.bullet.BulletAppState;
+import com.jme3.bullet.collision.shapes.SphereCollisionShape;
 import com.jme3.bullet.control.BetterCharacterControl;
+import com.jme3.bullet.control.GhostControl;
+import com.jme3.collision.CollisionResults;
 import com.jme3.effect.ParticleEmitter;
 import com.jme3.effect.ParticleMesh;
 import com.jme3.input.InputManager;
@@ -25,6 +28,7 @@ import com.jme3.scene.control.CameraControl;
 import com.jme3.scene.shape.Sphere;
 import com.jme3.terrain.geomipmap.TerrainQuad;
 import com.jme3.util.TangentBinormalGenerator;
+import org.lwjgl.Sys;
 
 import java.util.ArrayList;
 
@@ -38,16 +42,20 @@ public class UnderNode extends PlayerNode
   private PlayerControl playerControl;
   private Sphere playerSphere;
   private Geometry playerG;
+  Material playerMat;
   private Node pivot;
   private CameraNode camNode;
   private Camera cam;
+  private GhostControl camGhost;
   private ParticleEmitter dustEmitter;
 
   // Possibly move to abstract class
   private TerrainQuad terrain;
+  private Node collidableNode;
   private AssetManager assetManager;
   private BulletAppState bulletAppState;
   private boolean dead = false;
+  public boolean pushOff = false;
 
   private float verticalAngle = 30 * FastMath.DEG_TO_RAD;
   private float maxVerticalAngle = 85 * FastMath.DEG_TO_RAD;
@@ -56,7 +64,11 @@ public class UnderNode extends PlayerNode
   private float rotSpeed = 300f;
   private float moveSpeed = 20f;
   private int scaleUpStartTime;
+  private int flashStartTime;
+  private int lastFlashDiff = 0;
 
+  private boolean doFlash = false;
+  private boolean lastFlashWasRed = false;
   private boolean playerNeedsScalingUp = false;
   private boolean onGround = false;
   private boolean shrink = false;
@@ -64,13 +76,14 @@ public class UnderNode extends PlayerNode
 
   private Vector3f walkDirection = new Vector3f();
 
-  public UnderNode(String name, Camera cam, TerrainQuad terrain, AssetManager assetManager, BulletAppState bulletAppState)
+  public UnderNode(String name, Camera cam, TerrainQuad terrain, AssetManager assetManager, BulletAppState bulletAppState, Node colNode)
   {
     super(name);
     this.cam = cam;
     this.terrain = terrain;
     this.assetManager = assetManager;
     this.bulletAppState = bulletAppState;
+    collidableNode = colNode;
 
     pivot = new Node("Pivot");
     dustEmitter = new ParticleEmitter("dust emitter", ParticleMesh.Type.Triangle, 100);
@@ -106,7 +119,11 @@ public class UnderNode extends PlayerNode
     else if (binding.equals("MouseUp")) checkVertAngle(-value);
     else if (binding.equals("ZoomIn"))
     {
-      camNode.setLocalTranslation(new Vector3f(0, camNode.getLocalTranslation().getY() - .22f, camNode.getLocalTranslation().getZ() + 1));
+      if (!(camNode.getLocalTranslation().getZ() + 1 > 20))
+      {
+        camNode.setLocalTranslation(new Vector3f(0, camNode.getLocalTranslation().getY() - .22f, camNode.getLocalTranslation().getZ() + 1 ));
+      }
+
     }
     else if (binding.equals("ZoomOut"))
     {
@@ -128,7 +145,14 @@ public class UnderNode extends PlayerNode
 
   public void update(float tpf)
   {
-    onGround = playerControl.checkGravity(onGround, getLocalTranslation(), terrain);
+    if (getHeight() < .6f)
+    {
+      flash(tpf);
+    }
+    else if (playerMat.getParam("Diffuse").getValue() !=  ColorRGBA.White) playerMat.setColor("Diffuse", ColorRGBA.White);
+
+    onGround = playerControl.checkGravity(onGround, getLocalTranslation(), collidableNode);
+    //System.out.println("onground: " + onGround);
     dustEmitter.setParticlesPerSec(0);
 
     if (left || right || up || down) rotation += tpf*rotSpeed;
@@ -152,7 +176,9 @@ public class UnderNode extends PlayerNode
 
     playerControl.addMovementSound((up || down || left || right));
 
-    playerControl.setWalkDirection(walkDirection);
+    if (onGround || pushOff) playerControl.setWalkDirection(walkDirection);
+    pushOff = false;
+    //else playerControl.setWalkDirection(walkDirection.set(0,0,0));
 
     // Collision Scaling
     if (playerNeedsScalingUp && playerControl.getHeight() < Globals.MAX_PLAYER_SIZE) scalePlayerUp();
@@ -199,6 +225,33 @@ public class UnderNode extends PlayerNode
     else if (verticalAngle < minVerticalAngle) verticalAngle = minVerticalAngle;
   }
 
+  public void flash(float tpf)
+  {
+    if (doFlash != true)
+    {
+      doFlash = true;
+      lastFlashWasRed = true;
+      flashStartTime = Globals.getTotSecs();
+      playerMat.setColor("Diffuse", ColorRGBA.Red);
+      lastFlashDiff = Globals.getTotSecs() - flashStartTime;
+    }
+    else if (Globals.getTotSecs() - flashStartTime >  lastFlashDiff)
+    {
+      if (lastFlashWasRed)
+      {
+        playerMat.setColor("Diffuse", ColorRGBA.White);
+        lastFlashWasRed = false;
+      }
+      else
+      {
+        playerMat.setColor("Diffuse", ColorRGBA.Red);
+        lastFlashWasRed = true;
+      }
+      lastFlashDiff = Globals.getTotSecs() - flashStartTime;
+    }
+
+  }
+
   /** ---Init Methods--- **/
   public void setUpPlayer()
   {
@@ -208,20 +261,19 @@ public class UnderNode extends PlayerNode
     playerG = new Geometry("Shiny rock", playerSphere);
     playerSphere.setTextureMode(Sphere.TextureMode.Projected);
     TangentBinormalGenerator.generate(playerSphere);
-    Material mat = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
-    mat.setTexture("DiffuseMap", assetManager.loadTexture("assets/textures/striated_rock_texture.JPG"));
-    mat.setTexture("NormalMap", assetManager.loadTexture("Textures/Terrain/Pond/Pond_normal.png"));
-    mat.setBoolean("UseMaterialColors", true);
-    mat.setColor("Diffuse", ColorRGBA.White.clone());
-    mat.setColor("Ambient", ColorRGBA.White.mult(0.5f));
-    //mat.setFloat("Shininess", 64f);
-    playerG.setMaterial(mat);
+    playerMat = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
+    playerMat.setTexture("DiffuseMap", assetManager.loadTexture("assets/textures/striated_rock_texture.JPG"));
+    playerMat.setTexture("NormalMap", assetManager.loadTexture("Textures/Terrain/Pond/Pond_normal.png"));
+    playerMat.setBoolean("UseMaterialColors", true);
+    playerMat.setColor("Diffuse", ColorRGBA.White.clone());
+    playerMat.setColor("Ambient", ColorRGBA.White.mult(0.5f));
+    playerG.setMaterial(playerMat);
     playerG.setShadowMode(RenderQueue.ShadowMode.CastAndReceive);
     attachChild(playerG);
 
     //BetterCharacteControl moves, but bounces and falls through ground
     playerControl = new PlayerControl(Globals.PLAYER_SPHERE_START_RADIUS, Globals.PLAYER_SPHERE_START_RADIUS, 10f, assetManager);
-    playerControl.setJumpForce(new Vector3f(0,300,0));
+    playerControl.setJumpForce(new Vector3f(0,250,0));
     playerControl.setGravity(new Vector3f(0, -10, 0));
     setLocalTranslation(new Vector3f(-340, 80, -400));
     addControl(playerControl);
@@ -299,12 +351,7 @@ public class UnderNode extends PlayerNode
 
   private void setUpCamera(Camera cam)
   {
-
-    // For third person cam
-    // pivot node allows for mouse tracking of player character
-
-
-    camNode = new CameraNode("Camera Node", cam);
+    camNode = new CameraNode("CameraNode", cam);
     camNode.setControlDir(CameraControl.ControlDirection.SpatialToCamera);
     camNode.setLocalTranslation(new Vector3f(0, 4, -18));
     pivot.attachChild(camNode);
@@ -313,6 +360,16 @@ public class UnderNode extends PlayerNode
     attachChild(pivot);
     camNode.setEnabled(true);
     pivot.getLocalRotation().fromAngleAxis(verticalAngle, Vector3f.UNIT_X);
+
+    // Add ghostCam to detect collisions with LandscapeControl, not enough time to fully flesh out before due date
+    //camGhost = new GhostControl(new SphereCollisionShape(0.7f));
+    //camNode.addControl(camGhost);
+    //bulletAppState.getPhysicsSpace().add(camGhost);
+  }
+
+  public PlayerControl getPlayerControl()
+  {
+    return playerControl;
   }
 
   @Override
@@ -337,6 +394,12 @@ public class UnderNode extends PlayerNode
   public float getHeight()
   {
     return playerControl.getHeight();
+  }
+
+  @Override
+  public Node getCamNode()
+  {
+    return camNode;
   }
 
   @Override
@@ -366,6 +429,11 @@ public class UnderNode extends PlayerNode
   public ArrayList getAudio()
   {
     return playerControl.getAudio();
+  }
+
+  public float getVerticleAngle()
+  {
+    return verticalAngle;
   }
 
   public BetterCharacterControl getBCControl()
