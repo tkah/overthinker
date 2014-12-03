@@ -28,15 +28,16 @@ public class InteractionManager extends AbstractAppState implements ActionListen
   public static final String UP = "Up";
   public static final String DOWN = "Down";
   public static final String JUMP = "Jump";
-  private boolean left = false, right = false, up = false, down = false, click = false;
+  private boolean left = false;
+  private boolean right = false;
+  private boolean up = false;
+  private boolean down = false;
   private Vector3f walkDirection = new Vector3f();
   private Vector3f camDir = new Vector3f();
   private Vector3f camLeft = new Vector3f();
-  private AppStateManager stateManager;
   private InputManager inputManager;
   private SimpleApplication app;
   private Player player;
-  private Quaternion rotate;
   private float rotateVal;
   private AudioNode audioFootstep;
   private Vector3f rotateDirection = Vector3f.ZERO;
@@ -46,9 +47,9 @@ public class InteractionManager extends AbstractAppState implements ActionListen
   {
     super.initialize(stateManager, app);
     this.app = (SimpleApplication) app;
-    this.stateManager = this.app.getStateManager();
+    AppStateManager stateManager1 = this.app.getStateManager();
     this.inputManager = this.app.getInputManager();
-    this.player = this.stateManager.getState(PlayerManager.class).player;
+    this.player = stateManager1.getState(PlayerManager.class).player;
     this.rotateVal = 0f;
     setUpKeys();
     setUpAudio();
@@ -82,8 +83,8 @@ public class InteractionManager extends AbstractAppState implements ActionListen
   @Override
   public void update(float tpf)
   {
-    camDir.set(this.app.getCamera().getDirection()).multLocal(10f, 0, 10f);
-    camLeft.set(this.app.getCamera().getLeft()).multLocal(10.0f);
+    camDir.set(this.app.getCamera().getDirection()).multLocal(20f, 0, 20f);
+    camLeft.set(this.app.getCamera().getLeft()).multLocal(20.0f);
     walkDirection.set(0, 0, 0);
     rotateDirection.set(0, 0, 0);
     if (left)
@@ -114,14 +115,14 @@ public class InteractionManager extends AbstractAppState implements ActionListen
     rotateDirection.normalizeLocal();
     rotatePlayerModel(rotateDirection);
 
-    player.playerPhys.setWalkDirection(walkDirection.multLocal(1));
+    player.playerPhys.setWalkDirection(walkDirection);
     player.playerPhys.setViewDirection(camDir);
   }
 
   public void rotatePlayerModel(Vector3f rotateDirection)
   {
     rotateVal += 2f;
-    rotate = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * rotateVal, rotateDirection);
+    Quaternion rotate = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * rotateVal, rotateDirection);
     player.model.setLocalRotation(rotate);
   }
 

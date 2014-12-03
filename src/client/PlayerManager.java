@@ -39,13 +39,8 @@ public class PlayerManager extends AbstractAppState {
         this.rootNode = this.app.getRootNode();
         this.assetManager = this.app.getAssetManager();
         this.stateManager = this.app.getStateManager();
-        this.physics = this.stateManager.getState(WorldManager.class).physics;
-        initPlayer();
-    }
-
-    //Creates the player
-    private void initPlayer() {
-        player = new Player();
+        this.physics = this.stateManager.getState(LevelManager.class).getPhysics();
+        this.player = new Player();
         setUpModel();
         setUpPivot();
         setUpPlayer();
@@ -59,8 +54,9 @@ public class PlayerManager extends AbstractAppState {
         player.playerPhys.setGravity(Vector3f.UNIT_Y.mult(-50f));
     }
 
-    private void warpPlayer(){
-        player.playerPhys.warp(Vector3f.UNIT_Y.mult(600));
+    private void warpPlayer()
+    {
+        player.playerPhys.warp(new Vector3f(-340, 80, -400));
     }
 
 
@@ -86,6 +82,7 @@ public class PlayerManager extends AbstractAppState {
         player.pivot = new Node("Pivot");
         player.playerPhys = new BetterCharacterControl(2f, 4f, 1f);
         player.model.setLocalTranslation(0f, 2f, 0f);
+        player.pivot.setLocalTranslation(0f, 2f, 0f);
         physics.getPhysicsSpace().add(player.playerPhys);
         player.addControl(player.playerPhys);
     }

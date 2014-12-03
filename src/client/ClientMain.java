@@ -13,7 +13,7 @@ public class ClientMain extends SimpleApplication implements ScreenController
 {
   private Nifty nifty;
   private static ClientMain app;
-  private WorldManager worldManager;
+  private LevelManager levelManager;
   private PlayerManager playerManager;
   private InteractionManager interactionManager;
   private CameraManager cameraManager;
@@ -40,10 +40,10 @@ public class ClientMain extends SimpleApplication implements ScreenController
   @Override
   public void destroy()
   {
-    stateManager.detach(worldManager);
-    stateManager.detach(playerManager);
-    stateManager.detach(interactionManager);
-    stateManager.detach(cameraManager);
+    if(stateManager.hasState(levelManager)) stateManager.detach(levelManager);
+    if(stateManager.hasState(playerManager)) stateManager.detach(playerManager);
+    if(stateManager.hasState(interactionManager)) stateManager.detach(interactionManager);
+    if(stateManager.hasState(cameraManager)) stateManager.detach(cameraManager);
     super.destroy();
   }
 
@@ -71,7 +71,7 @@ public class ClientMain extends SimpleApplication implements ScreenController
         }).get();
         getFlyByCamera().setEnabled(false);
         inputManager.setCursorVisible(true);
-        stateManager.attach((worldManager = new WorldManager()));
+        stateManager.attach((levelManager = new LevelManager()));
         stateManager.attach((playerManager = new PlayerManager()));
         stateManager.attach((interactionManager = new InteractionManager()));
         stateManager.attach((cameraManager = new CameraManager()));
