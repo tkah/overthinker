@@ -2,7 +2,7 @@ package overthinker.server;
 
 import com.jme3.network.*;
 import overthinker.client.Globals;
-import overthinker.net.ModelChangeRequest;
+import overthinker.net.PlayerLocationChangeRequest;
 import overthinker.net.NewClientRequest;
 
 /**
@@ -19,8 +19,8 @@ public class ServerNetListener implements MessageListener<HostedConnection> {
         if (message instanceof NewClientRequest) {
             if(Globals.DEBUG)System.out.println("New client request from: " + source.getAddress());
             server.initClient(source);
-        } else if (message instanceof ModelChangeRequest) {
-            server.updateModel(source, ((ModelChangeRequest) message).getPlayerLocation());
+        } else if (message instanceof PlayerLocationChangeRequest) {
+            server.updateModel(source, ((PlayerLocationChangeRequest) message).getPlayerLocation());
         }
     }
 }

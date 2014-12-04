@@ -46,7 +46,7 @@ import com.jme3.texture.Texture.WrapMode;
 import com.jme3.water.WaterFilter;
 import jme3utilities.Misc;
 import jme3utilities.sky.SkyControl;
-import overthinker.net.ModelChangeRequest;
+import overthinker.net.PlayerLocationChangeRequest;
 import overthinker.net.ModelUpdate;
 import overthinker.net.NewClientRequest;
 import overthinker.net.NewClientResponse;
@@ -213,7 +213,7 @@ public class GamePlayAppState extends AbstractAppState
 
     ClientNetListener listener = new ClientNetListener(this);
 
-    Serializer.registerClass(ModelChangeRequest.class);
+    Serializer.registerClass(PlayerLocationChangeRequest.class);
     Serializer.registerClass(ModelUpdate.class);
     Serializer.registerClass(NewClientRequest.class);
     Serializer.registerClass(NewClientResponse.class);
@@ -455,7 +455,6 @@ public class GamePlayAppState extends AbstractAppState
       {
         if(i != clientIndex)
         {
-          System.out.println("Moving Player: " + i + " " + model.getPlayerLocations().get(i));
           if(model.getPlayerLocations().get(i) != null) {
             otherPlayers.get(i).move(model.getPlayerLocations().get(i));
           }
@@ -466,9 +465,9 @@ public class GamePlayAppState extends AbstractAppState
   }
 
   private void sendPlayerLocation() {
-    ModelChangeRequest modelChangeRequest = new ModelChangeRequest();
-    modelChangeRequest.setPlayerLocation(playerNode.getLocalTranslation());
-    netClient.send(modelChangeRequest);
+    PlayerLocationChangeRequest playerLocationChangeRequest = new PlayerLocationChangeRequest();
+    playerLocationChangeRequest.setPlayerLocation(playerNode.getLocalTranslation());
+    netClient.send(playerLocationChangeRequest);
   }
 
   /** ---Initialization methods--- **/

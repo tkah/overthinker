@@ -8,10 +8,10 @@ import com.jme3.network.serializing.Serializable;
  * Created by Peter on 11/13/2014.
  */
 @Serializable
-public class ModelChangeRequest extends AbstractMessage{
+public class PlayerLocationChangeRequest extends AbstractMessage{
     private Vector3f playerLocation;
 
-    public ModelChangeRequest () {}
+    public PlayerLocationChangeRequest() {}
 
     public Vector3f getPlayerLocation() {
         return playerLocation;
