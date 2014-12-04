@@ -12,6 +12,7 @@ abstract class NonPlayableObjectNode extends Node
 {
   protected Geometry geo;
   protected RigidBodyControl phy;
+  protected Vector3f loc;
 
   public NonPlayableObjectNode(String name)
   {

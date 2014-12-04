@@ -23,6 +23,8 @@ public class EEGMonitor extends Thread {
     private boolean readytocollect = false;
     private IntByReference gyroX = new IntByReference(0);
     private IntByReference gyroY = new IntByReference(0);
+    private int currentTilt = 0;
+    private boolean gravityNormal = true;
 
     public float excitementShort = 0;
     public float frustrationShort = 0;
@@ -144,18 +146,41 @@ public class EEGMonitor extends Thread {
         }
         if (Math.abs(xDelta) > MIN_GYRO_DELTA) {
             if (xDelta > 0) {
+                if (!gravityNormal && currentTilt == -1 )
+                {
+                    if (DEBUG) System.out.println("Tilt: 0 (RETURN TO UPRIGHT)");
+                    gravityNormal = true;
+                    return 10;
+                }
                 if (DEBUG) System.out.print(" Tilt: 1 (Right)");
                 return 1;       //Right
             } else {
-                if (DEBUG) System.out.print(" Tilt: -1 (Left)");
+                if (!gravityNormal && currentTilt == 1 )
+                {
+                    if (DEBUG) System.out.println("Tilt: 0 (RETURN TO UPRIGHT)");
+                    gravityNormal = true;
+                    return 10;
+                }                if (DEBUG) System.out.print(" Tilt: -1 (Left)");
                 return -1;     //Left
             }
         }
         if (Math.abs(yDelta) > MIN_GYRO_DELTA) {
             if (yDelta > 0) {
+                if (!gravityNormal && currentTilt == -2 )
+                {
+                    if (DEBUG) System.out.println("Tilt: 0 (RETURN TO UPRIGHT)");
+                    gravityNormal = true;
+                    return 10;
+                }
                 if (DEBUG) System.out.print(" Tilt: 2 (Up)");
                 return 2; //Up
             } else {
+                if (!gravityNormal && currentTilt == 2 )
+                {
+                    if (DEBUG) System.out.println("Tilt: 0 (RETURN TO UPRIGHT)");
+                    gravityNormal = true;
+                    return 10;
+                }
                 if (DEBUG) System.out.print(" Tilt: -2 (Down)");
                 return -2; //Down
             }
@@ -173,6 +198,10 @@ public class EEGMonitor extends Thread {
         int tilt = 0;
         synchronized (this) {
             tilt = interpretGyro();
+        }
+        currentTilt = tilt;
+        if (currentTilt == 10) {
+            currentTilt = 0;
         }
         return tilt;
     }
