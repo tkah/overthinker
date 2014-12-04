@@ -108,7 +108,7 @@ public class ServerMain extends SimpleApplication {
         else response.setConnected(false);
 
         // Send response
-        response.setLevelType(level.getLevelType());
+//        response.setLevelType(level.getLevelType());
         response.setSpawnLocation(spawnLocation);
         response.setVersion(model.getVersion());
         response.setPlayerLocations(model.getPlayerLocations());

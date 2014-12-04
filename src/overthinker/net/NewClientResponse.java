@@ -14,7 +14,6 @@ import java.util.HashMap;
 @Serializable
 public class NewClientResponse extends AbstractMessage {
     private Vector3f spawnLocation = null;
-    private LevelType levelType = null;
     private HashMap<Integer, Vector3f> playerLocations;
     private long version;
     private boolean connected;
@@ -29,14 +28,6 @@ public class NewClientResponse extends AbstractMessage {
 
     public void setSpawnLocation(Vector3f spawnLocation){
         this.spawnLocation = spawnLocation;
-    }
-
-    public LevelType getLevelType() {
-        return levelType;
-    }
-
-    public void setLevelType(LevelType levelType) {
-        this.levelType = levelType;
     }
 
     public boolean isConnected() {

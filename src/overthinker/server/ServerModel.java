@@ -7,6 +7,8 @@ import overthinker.levels.LevelType;
 import overthinker.levels.maze1.Maze1;
 
 import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Created by Peter on 11/25/2014.
@@ -17,12 +19,17 @@ public class ServerModel {
 
     public ServerModel() {}
 
+    public ServerModel(HashMap<Integer, Vector3f> playerLocations, long version)
+    {
+        this.playerLocations = playerLocations;
+        this.version = version;
+    }
     public HashMap<Integer, Vector3f> getPlayerLocations()
     {
         return playerLocations;
     }
 
-    public void setPlayerLocations(HashMap<Integer, Vector3f> playerLocations)
+    public synchronized void setPlayerLocations(HashMap<Integer, Vector3f> playerLocations)
     {
         this.playerLocations = playerLocations;
     }
@@ -31,7 +38,7 @@ public class ServerModel {
         return version;
     }
 
-    public void setVersion(long version) {
+    public synchronized void setVersion(long version) {
         this.version = version;
     }
 }

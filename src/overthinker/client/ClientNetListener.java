@@ -12,9 +12,9 @@ import javax.print.attribute.standard.MediaSize;
 import java.util.HashMap;
 
 public class ClientNetListener implements MessageListener<Client> {
-    private ClientMain clientMain;
+    private GamePlayAppState clientMain;
 
-    public ClientNetListener(ClientMain client)
+    public ClientNetListener(GamePlayAppState client)
     {
         this.clientMain = client;
     }

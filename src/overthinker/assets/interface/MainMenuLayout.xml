@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<nifty>
+
+    <!-- load styles -->
+    <useStyles filename="nifty-default-styles.xml" />
+    <useControls filename="nifty-default-controls.xml" />
+
+    <screen id="start" controller="overthinker.client.MainMenuController">
+        <layer childLayout="horizontal" id="title">
+            <image filename="overthinker/assets/interface/overthinker-title2.png" height="100%" width="100%" />
+        </layer>
+        <layer id="layer" backgroundColor="#0000" childLayout="center">
+        <panel id="panel" align="left" valign="bottom"  childLayout="vertical" visibleToMouse="true">
+
+        <image id="btnStartUnder" filename="overthinker/assets/interface/btnUnder.png" align="left" childLayout="overlay">
+            <effect>
+                <onStartScreen name="hide" targetElement="btnUnder"></onStartScreen>
+                <onStartHover name="show" targetElement="btnUnder" onStartEffect="methodToBeCalledWhenEffectStarted()"></onStartHover>
+                <onEndHover name="hide" targetElement="btnUnder" onStartEffect="methodToBeCalledWhenEffectStarted()"></onEndHover>
+            </effect>
+            <interact onClick="menuStartUnderthinker()"/>
+            <image id="btnUnder" name="hide" filename="overthinker/assets/interface/btnUnder.png" align="left" >
+            </image>
+        </image>
+            <image id="btnStartOver" filename="overthinker/assets/interface/btnOver.png" align="left" childLayout="overlay">
+                <effect>
+                    <onStartScreen name="hide" targetElement="btnOver"></onStartScreen>
+                    <onStartHover name="show" targetElement="btnOver" onStartEffect="methodToBeCalledWhenEffectStarted()"></onStartHover>
+                    <onEndHover name="hide" targetElement="btnOver" onStartEffect="methodToBeCalledWhenEffectStarted()"></onEndHover>
+                </effect>
+                <interact onClick="menuStartOverthinker()"/>
+                <image id="btnOver" name="hide" filename="overthinker/assets/interface/btnOver.png" align="left" >
+                </image>
+            </image>
+            <image id="btnQuitGame" filename="overthinker/assets/interface/btnQuit.png" align="left" childLayout="overlay">
+                <effect>
+                    <onStartScreen name="hide" targetElement="btnQuit"></onStartScreen>
+                    <onStartHover name="show" targetElement="btnQuit" onStartEffect="methodToBeCalledWhenEffectStarted()"></onStartHover>
+                    <onEndHover name="hide" targetElement="btnQuit" onStartEffect="methodToBeCalledWhenEffectStarted()"></onEndHover>
+                </effect>
+                <interact onClick="menuQuitGame()"/>
+                <image id="btnQuit" name="hide" filename="overthinker/assets/interface/btnQuit.png" align="left" >
+                </image>
+            </image>
+
+        </panel>
+        </layer>
+    </screen>
+
+    <screen id="loading">
+        <layer childLayout="center" id="layer1" backgroundColor="#FFFFFF">
+            <image filename="overthinker/assets/interface/loading.png" height="20%" id="backgroundSky" width="20%">
+
+            </image>
+        </layer>
+    </screen>
+
+    <screen id="loaded"></screen>
+
+
+
+
+</nifty>

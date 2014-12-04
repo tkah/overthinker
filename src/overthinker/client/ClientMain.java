@@ -337,34 +337,34 @@ public class ClientMain extends SimpleApplication implements ActionListener, Ana
 
     private void initNetClient() {
 
-        try {
-            netClient = Network.connectToServer("localhost", 6143);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        ClientNetListener listener = new ClientNetListener(this);
-
-        Serializer.registerClass(ModelChangeRequest.class);
-        Serializer.registerClass(ModelUpdate.class);
-        Serializer.registerClass(NewClientRequest.class);
-        Serializer.registerClass(NewClientResponse.class);
-
-        netClient.addMessageListener(listener, ModelUpdate.class);
-        netClient.addMessageListener(listener, NewClientResponse.class);
-
-        netClient.start();
-
-        while(level == null)
-        {
-            netClient.send(new NewClientRequest());
-            System.out.println("Waiting For Model Data...");
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
+//        try {
+//            netClient = Network.connectToServer("localhost", 6143);
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//
+//        ClientNetListener listener = new ClientNetListener(this);
+//
+//        Serializer.registerClass(ModelChangeRequest.class);
+//        Serializer.registerClass(ModelUpdate.class);
+//        Serializer.registerClass(NewClientRequest.class);
+//        Serializer.registerClass(NewClientResponse.class);
+//
+//        netClient.addMessageListener(listener, ModelUpdate.class);
+//        netClient.addMessageListener(listener, NewClientResponse.class);
+//
+//        netClient.start();
+//
+//        while(level == null)
+//        {
+//            netClient.send(new NewClientRequest());
+//            System.out.println("Waiting For Model Data...");
+//            try {
+//                Thread.sleep(1000);
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
+//        }
     }
 
     private void setUpLight() {
@@ -651,15 +651,15 @@ public class ClientMain extends SimpleApplication implements ActionListener, Ana
     }
 
     public synchronized void handleNewClientResponse(NewClientResponse message) {
-        switch (message.getLevelType())
-        {
-            case MAZE1:
-                level = new Maze1();
-        }
-        spawnLocation = message.getSpawnLocation();
-        activeVersion = message.getVersion();
-        clientIndex = message.getClientIndex();
-        model.setPlayerLocations(message.getPlayerLocations());
-        model.setVersion(message.getVersion());
+//        switch (message.getLevelType())
+//        {
+//            case MAZE1:
+//                level = new Maze1();
+//        }
+//        spawnLocation = message.getSpawnLocation();
+//        activeVersion = message.getVersion();
+//        clientIndex = message.getClientIndex();
+//        model.setPlayerLocations(message.getPlayerLocations());
+//        model.setVersion(message.getVersion());
     }
 }
