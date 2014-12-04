@@ -93,4 +93,6 @@ abstract class PlayerNode extends Node
     return null;
   }
 
+  public float getWaterRate() { return 0; }
+
 }

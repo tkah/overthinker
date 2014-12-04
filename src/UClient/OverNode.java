@@ -13,6 +13,7 @@ public class OverNode extends PlayerNode
 {
   private ArrayList<AudioNode> audioList = new ArrayList<AudioNode>();
   private EEGMonitor monitor = new EEGMonitor();
+  private float waterRate = 0;
   private int tiltDirection = 0;
   private boolean gravityLeft = false, gravityRight = false, gravityForward = false, gravityBack = false;
   //Left = -1, right = 1, forward = 2, back = -2, clear all flags = 10
@@ -21,7 +22,7 @@ public class OverNode extends PlayerNode
   public OverNode(String name)
   {
     super(name);
-    monitor.start();
+    //monitor.start();
   }
 
   public void update (float tpf)
@@ -31,6 +32,7 @@ public class OverNode extends PlayerNode
       clearTilt();
     }
     else setTilt(tiltDirection);
+    waterRate = monitor.getStressLevel();
   }
 
   public void setUpPlayer()
@@ -55,7 +57,7 @@ public class OverNode extends PlayerNode
     gravityBack = false;
   }
 
-
+  //TODO PlayerControl.checkGravity() likely the key, but I have no idea how to set up the args.
   private void setTilt(int direction) {
     if (direction == 0) return;
     if (direction == 1) {
@@ -66,6 +68,7 @@ public class OverNode extends PlayerNode
     if (direction == -1) {
       clearTilt();
       gravityLeft = true;
+
       return;
     }
     if (direction == 2) {
@@ -78,6 +81,11 @@ public class OverNode extends PlayerNode
       gravityBack = true;
       return;
     }
+  }
+
+  @Override
+  public float getWaterRate() {
+    return waterRate;
   }
 
 
