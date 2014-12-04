@@ -112,7 +112,7 @@ public class GamePlayAppState extends AbstractAppState
   private float[] keyDoorRotationArray = {-55f, 100f, -43f};
   private float[] platDoorSizeXArray = {16f, 17f, 21f};
   private float[] platDoorRotationArray = {-70, 49, -10};
-  private float fogDensity = 2.0f; //0, 1.0, 1.5, 2.0
+  private float fogDensity = 0.0f; //0, 1.0, 1.5, 2.0
   private ArrayList<Key> keys = new ArrayList<Key>();
   private ArrayList<Door> keyDoors = new ArrayList<Door>();
   private ArrayList<Door> platDoors = new ArrayList<Door>();
@@ -149,6 +149,7 @@ public class GamePlayAppState extends AbstractAppState
 
     /** Set up Physics */
     bulletAppState = new BulletAppState();
+    //bulletAppState.setDebugEnabled(true);
     stateManager.attach(bulletAppState);
     resources = new Node("Resources");
     localRootNode = new Node("LocalRoot");
@@ -313,7 +314,7 @@ public class GamePlayAppState extends AbstractAppState
       }
     }
 
-    // Player died
+    //TODO: Player died
     if (playerType == 1 && playerNode.getHeight() < .3f && !playerNode.isDead())
     {
       fade.fadeOut();

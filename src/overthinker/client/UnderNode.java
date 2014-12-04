@@ -185,6 +185,7 @@ public class UnderNode extends PlayerNode
 
   private void moveBall(float x, float z)
   {
+    //TODO: move quaternion to server so that other players can use for rotation
     Quaternion ballRotate = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * rotation, new Vector3f(x, 0, z));
     playerG.setLocalRotation(ballRotate);
     dustEmitter.setParticlesPerSec(DUST_PER_SEC);
