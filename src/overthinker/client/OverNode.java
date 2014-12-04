@@ -28,14 +28,13 @@ public class OverNode extends PlayerNode
     //monitor.start();
   }
 
-  public void update (float tpf)
-  {
+  public void update (float tpf) {
     //tiltDirection = monitor.getTiltDirection();
     if (tiltDirection == 10) {
       clearTilt();
-    }
-    else setTilt(tiltDirection);
+    } else setTilt(tiltDirection);
     //waterRate = monitor.getStressLevel()/1000; //a rate of 1 fills instantly, eeg hovers around ~.5, so divide by 1000
+    //TODO create netClient to send waterRate and tiltDirection
   }
 
   public void setUpPlayer()
