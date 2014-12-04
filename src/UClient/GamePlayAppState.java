@@ -102,7 +102,7 @@ public class GamePlayAppState extends AbstractAppState
   private float[] keyDoorRotationArray = {-55f, 100f, -43f};
   private float[] platDoorSizeXArray = {16f, 17f, 21f};
   private float[] platDoorRotationArray = {-70, 49, -10};
-  private float fogDensity = 0; //0, 1.0, 1.5, 2.0
+  private float fogDensity = 2.0f; //0, 1.0, 1.5, 2.0
   private ArrayList<Key> keys = new ArrayList<Key>();
   private ArrayList<Door> keyDoors = new ArrayList<Door>();
   private ArrayList<Door> platDoors = new ArrayList<Door>();
@@ -200,9 +200,35 @@ public class GamePlayAppState extends AbstractAppState
   {
     //System.out.println("Cam at: " + cam.getLocation());
 
+    //TODO Uncomment this code to restore automatic sea level rise
     // Raise Water Level, to be controlled by EEG
-    if (!playerNode.isSlowWater()) water.setWaterHeight(water.getWaterHeight() + Globals.WATER_HEIGHT_DEFAULT_RATE);
-    else water.setWaterHeight(water.getWaterHeight() + Globals.WATER_HEIGHT_PLAYER_RATE);
+    //if (!playerNode.isSlowWater()) water.setWaterHeight(water.getWaterHeight() + Globals.WATER_HEIGHT_DEFAULT_RATE);
+    //else water.setWaterHeight(water.getWaterHeight() + Globals.WATER_HEIGHT_PLAYER_RATE);
+
+    /* Testing */
+    //Water level from stress
+    if (playerType == 0) {
+      water.setWaterHeight(water.getWaterHeight() + playerNode.getWaterRate());
+    }
+
+    for (int i = 0; i < sphereResourceArrayList.size(); i++) {
+      SphereResource s = sphereResourceArrayList.get(i);
+      if (playerNode.getForwardGrav()) {
+        s.getSphereResourcePhy().setGravity(new Vector3f(0,0,-Globals.GRAVITY));
+      }
+      else if (playerNode.getBackwardGrav()) {
+        s.getSphereResourcePhy().setGravity(new Vector3f(0,0,Globals.GRAVITY));
+      }
+      else if (playerNode.getRightGrav()) {
+        s.getSphereResourcePhy().setGravity(new Vector3f(-Globals.GRAVITY,0,0));
+      }
+      else if (playerNode.getLeftGrav()) {
+        s.getSphereResourcePhy().setGravity(new Vector3f(Globals.GRAVITY,0,0));
+      }
+      else s.getSphereResourcePhy().setGravity(new Vector3f(0,-Globals.GRAVITY,0));
+    }
+    /**/
+
     //water.setWaterHeight(water.getWaterHeight() + waterHeightRate);
 
     fogFilter.setFogDensity(fogDensity);

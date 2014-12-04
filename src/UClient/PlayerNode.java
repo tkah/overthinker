@@ -95,4 +95,20 @@ abstract class PlayerNode extends Node
 
   public float getWaterRate() { return 0; }
 
+  public boolean getForwardGrav() {
+    return false;
+  }
+  public boolean getBackwardGrav() {
+    return false;
+  }
+  public boolean getLeftGrav() {
+    return false;
+  }
+  public boolean getRightGrav() {
+    return false;
+  }
+  public boolean getNormalGrav() {
+    return false;
+  }
+
 }
