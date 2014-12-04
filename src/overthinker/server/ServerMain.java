@@ -4,10 +4,9 @@ package overthinker.server;
 import com.jme3.math.Vector3f;
 import com.jme3.network.Filters;
 import com.jme3.network.HostedConnection;
-import overthinker.client.Globals;
 import overthinker.levels.Level;
 import overthinker.levels.maze1.Maze1;
-import overthinker.net.ModelChangeRequest;
+import overthinker.net.PlayerLocationChangeRequest;
 import overthinker.net.ModelUpdate;
 import com.jme3.app.SimpleApplication;
 import com.jme3.network.Network;
@@ -17,12 +16,7 @@ import com.jme3.system.JmeContext;
 import overthinker.net.NewClientRequest;
 import overthinker.net.NewClientResponse;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.ObjectOutputStream;
-import java.util.ArrayList;
-import java.util.ConcurrentModificationException;
-import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -80,13 +74,13 @@ public class ServerMain extends SimpleApplication {
     private void initNetServer() {
         ServerNetListener listener = new ServerNetListener(this);
 
-        Serializer.registerClass(ModelChangeRequest.class);
+        Serializer.registerClass(PlayerLocationChangeRequest.class);
         Serializer.registerClass(ModelUpdate.class);
         Serializer.registerClass(NewClientRequest.class);
         Serializer.registerClass(NewClientResponse.class);
 
         netServer.addMessageListener(listener, NewClientRequest.class);
-        netServer.addMessageListener(listener, ModelChangeRequest.class);
+        netServer.addMessageListener(listener, PlayerLocationChangeRequest.class);
     }
 
     public void initClient(HostedConnection source)
