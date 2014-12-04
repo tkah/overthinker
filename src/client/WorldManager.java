@@ -4,7 +4,6 @@
  */
 package client;
 
-import UClient.LandscapeControl;
 import com.jme3.ai.navmesh.NavMesh;
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;

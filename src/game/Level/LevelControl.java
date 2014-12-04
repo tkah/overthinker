@@ -1,6 +1,5 @@
 package game.Level;
 
-import UClient.SphereResource;
 import com.jme3.app.Application;
 import com.jme3.app.state.AbstractAppState;
 import com.jme3.app.state.AppStateManager;
@@ -9,6 +8,10 @@ import com.jme3.audio.AudioNode;
 import com.jme3.bullet.BulletAppState;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Node;
+import overthinker.client.Door;
+import overthinker.client.Key;
+import overthinker.client.Platform;
+import overthinker.client.SphereResource;
 
 import java.util.ArrayList;
 

@@ -36,20 +36,11 @@ public class LevelManager extends AbstractAppState
   private SimpleApplication app;
   private Node rootNode;
   private Node worldNode;
-  private BulletAppState physics;
   private AssetManager assetManager;
+  private BulletAppState physics;
+  private SkyControl sc;
   private DirectionalLight mainLight;
   private NavMesh navMesh;
-
-  public Node getWorldNode()
-  {
-    return worldNode;
-  }
-
-  public BulletAppState getPhysics()
-  {
-    return physics;
-  }
 
   @Override
   public void initialize(AppStateManager stateManager, Application application)
@@ -69,6 +60,15 @@ public class LevelManager extends AbstractAppState
     setUpLight();
   }
 
+  public BulletAppState getPhysics()
+  {
+    return physics;
+  }
+
+  public Node getWorldNode()
+  {
+    return worldNode;
+  }
 
   private void setUpLight()
   {
@@ -87,19 +87,21 @@ public class LevelManager extends AbstractAppState
     sc.getSunAndStars().setObserverLatitude(37.4046f * FastMath.DEG_TO_RAD);
     sc.getSunAndStars().setSolarLongitude(Calendar.FEBRUARY, 10);
     sc.setCloudiness(0.3f);
+
+    rootNode.addLight(mainLight);
+    rootNode.addLight(new AmbientLight());
+
     for (Light light : rootNode.getLocalLightList())
     {
-      if (light.getName().equals("ambient"))
+      if (light instanceof AmbientLight)
       {
         sc.getUpdater().setAmbientLight((AmbientLight) light);
       }
-      else if (light.getName().equals("main"))
+      else if (light instanceof DirectionalLight)
       {
         sc.getUpdater().setMainLight((DirectionalLight) light);
       }
     }
-
-    rootNode.addLight(mainLight);
 
     worldNode.addControl(sc);
     setUpWater();
@@ -155,7 +157,7 @@ public class LevelManager extends AbstractAppState
     mat_terrain.setFloat("DiffuseMap_3_scale", 128f);
 
     Node terrain = (Node) assetManager.loadModel("assets/terrains/tieredmaze.j3o");
-    terrain.setLocalTranslation(0,0,0);
+    terrain.setLocalTranslation(0, 0, 0);
     navMesh = new NavMesh(((Geometry) terrain.getChild("NavMesh")).getMesh());
 
     /** We give the terrain its material, position & scale it, and attach it. */
