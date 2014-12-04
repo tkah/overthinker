@@ -7,7 +7,9 @@ import overthinker.client.eeg.EEGMonitor;
 import java.util.ArrayList;
 
 /**
- * Created by Torran on 11/26/14.
+ * This class defines the base methods and update process for the Overthinker client,
+ * including the eeg data.
+ * Created by Torran on 11/26/14.  EEG methods and misc added by Sid 10/3/14
  */
 public class OverNode extends PlayerNode
 {
@@ -50,6 +52,9 @@ public class OverNode extends PlayerNode
 
   }
 
+  /**
+   * Called to return the gravity flags to normal
+   */
   private void clearTilt() {
     gravityLeft = false;
     gravityRight = false;
@@ -57,7 +62,11 @@ public class OverNode extends PlayerNode
     gravityBack = false;
   }
 
-  //TODO PlayerControl.checkGravity() likely the key, but I have no idea how to set up the args.
+  /**
+   * Takes an integer direction from monitor and sets the appropriate
+   * gravity flag
+   * @param direction integer representing tilt direction
+   */
   private void setTilt(int direction) {
     if (direction == 0) return;
     if (direction == 1) {
