@@ -57,7 +57,7 @@ public class LevelManager extends AbstractAppState
     this.worldNode = new Node();
 
     stateManager.attach(physics);
-    physics.setDebugEnabled(false);
+    physics.setDebugEnabled(true);
 
     setUpLandscape(1);
     setUpLight();
