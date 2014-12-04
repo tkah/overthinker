@@ -1,4 +1,4 @@
-package UClient;
+package overthinker.client;
 
 import com.jme3.asset.AssetManager;
 import com.jme3.bullet.BulletAppState;
@@ -197,7 +197,7 @@ public class UnderNode extends PlayerNode
     moveSpeed += .01f;
     scale(.99f);
     playerControl.setScale(.99f);
-    walkDirection.addLocal(new Vector3f(0,0,.5f));
+    walkDirection.addLocal(new Vector3f(0, 0, .5f));
     playerControl.setWalkDirection(walkDirection);
     dustEmitter.setParticlesPerSec(DUST_PER_SEC);
   }
@@ -261,7 +261,7 @@ public class UnderNode extends PlayerNode
     playerSphere.setTextureMode(Sphere.TextureMode.Projected);
     TangentBinormalGenerator.generate(playerSphere);
     playerMat = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
-    playerMat.setTexture("DiffuseMap", assetManager.loadTexture("assets/textures/striated_rock_texture.JPG"));
+    playerMat.setTexture("DiffuseMap", assetManager.loadTexture("overthinker/assets/textures/striated_rock_texture.JPG"));
     playerMat.setTexture("NormalMap", assetManager.loadTexture("Textures/Terrain/Pond/Pond_normal.png"));
     playerMat.setBoolean("UseMaterialColors", true);
     playerMat.setColor("Diffuse", ColorRGBA.White.clone());
@@ -279,8 +279,8 @@ public class UnderNode extends PlayerNode
     bulletAppState.getPhysicsSpace().add(playerControl);
 
     Material dustMat = new Material(assetManager, "Common/MatDefs/Misc/Particle.j3md");
-    dustMat.setTexture("Texture", assetManager.loadTexture("assets/effects/smoke.png"));
-    dustEmitter.setLocalTranslation(new Vector3f(0, -getHeight()/2, 0));
+    dustMat.setTexture("Texture", assetManager.loadTexture("overthinker/assets/effects/smoke.png"));
+    dustEmitter.setLocalTranslation(new Vector3f(0, -getHeight() / 2, 0));
     dustEmitter.setMaterial(dustMat);
     dustEmitter.setImagesX(2);
     dustEmitter.setImagesY(2);

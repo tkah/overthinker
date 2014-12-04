@@ -1,4 +1,4 @@
-package UClient; /**
+package overthinker.client; /**
  * Created by Torran on 11/9/14.
  */
 
@@ -23,6 +23,9 @@ import com.jme3.input.controls.AnalogListener;
 import com.jme3.light.*;
 import com.jme3.material.Material;
 import com.jme3.math.*;
+import com.jme3.network.Client;
+import com.jme3.network.Network;
+import com.jme3.network.serializing.Serializer;
 import com.jme3.post.FilterPostProcessor;
 import com.jme3.post.filters.BloomFilter;
 import com.jme3.post.filters.FadeFilter;
@@ -43,9 +46,16 @@ import com.jme3.texture.Texture.WrapMode;
 import com.jme3.water.WaterFilter;
 import jme3utilities.Misc;
 import jme3utilities.sky.SkyControl;
+import overthinker.net.ModelChangeRequest;
+import overthinker.net.ModelUpdate;
+import overthinker.net.NewClientRequest;
+import overthinker.net.NewClientResponse;
+import overthinker.server.ServerModel;
 
+import java.io.IOException;
 import java.util.Calendar;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class GamePlayAppState extends AbstractAppState
   implements ActionListener, AnalogListener
@@ -112,11 +122,21 @@ public class GamePlayAppState extends AbstractAppState
   private AudioNode audio_ocean;
   private AudioNode audio_collect;
 
+  /** Networking **/
+  private Client netClient;
+  private ServerModel model;
+  private Vector3f spawnLocation;
+  private long activeVersion;
+  private int clientIndex;
+  private int playerCount = 4;
+  private HashMap<Integer, OtherPlayer> otherPlayers = new HashMap<Integer, OtherPlayer>();
+
   /**
    * Class initialization
    */
   public void initialize(AppStateManager stateManager, Application app)
   {
+    initNetClient();
     super.initialize(stateManager, app);
     this.app = (SimpleApplication) app;
     this.cam = this.app.getCamera();
@@ -140,6 +160,8 @@ public class GamePlayAppState extends AbstractAppState
 
     flyCam.setMoveSpeed(100);
 
+    createSphereResources();
+    createOtherPlayers();
     createDoorsAndKeys();
     createPlatformsAndDoors();
     setUpLandscape();
@@ -166,6 +188,51 @@ public class GamePlayAppState extends AbstractAppState
     initAudio();
 
     inputManager.setCursorVisible(false);
+  }
+
+  private void createOtherPlayers() {
+    for(int i = 0; i < playerCount; i++)
+    {
+      System.out.println("Creating new Player Objects");
+      OtherPlayer otherPlayer = new OtherPlayer(Globals.PLAYER_SPHERE_START_RADIUS, i,
+              spawnLocation, assetManager);
+      bulletAppState.getPhysicsSpace().add(otherPlayer.getSphereResourcePhy());
+      otherPlayers.put(i, otherPlayer);
+      resources.attachChild(otherPlayer.getGeometry());
+      localRootNode.attachChild(otherPlayer.getGeometry());
+    }
+  }
+
+  private void initNetClient() {
+    try {
+
+      netClient = Network.connectToServer("localhost", 6143);
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+
+    ClientNetListener listener = new ClientNetListener(this);
+
+    Serializer.registerClass(ModelChangeRequest.class);
+    Serializer.registerClass(ModelUpdate.class);
+    Serializer.registerClass(NewClientRequest.class);
+    Serializer.registerClass(NewClientResponse.class);
+
+    netClient.addMessageListener(listener, ModelUpdate.class);
+    netClient.addMessageListener(listener, NewClientResponse.class);
+
+    netClient.start();
+
+    while(model == null)
+    {
+      netClient.send(new NewClientRequest());
+      System.out.println("Waiting For Model Data...");
+      try {
+        Thread.sleep(1000);
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+    }
   }
 
   /**
@@ -198,9 +265,10 @@ public class GamePlayAppState extends AbstractAppState
   @Override
   public void update(float tpf)
   {
-    //System.out.println("Cam at: " + cam.getLocation());
+    //Network update
+    sendPlayerLocation();
+    movePlayers();
 
-    //TODO Uncomment this code to restore automatic sea level rise
     // Raise Water Level, to be controlled by EEG
     //if (!playerNode.isSlowWater()) water.setWaterHeight(water.getWaterHeight() + Globals.WATER_HEIGHT_DEFAULT_RATE);
     //else water.setWaterHeight(water.getWaterHeight() + Globals.WATER_HEIGHT_PLAYER_RATE);
@@ -380,6 +448,29 @@ public class GamePlayAppState extends AbstractAppState
     for (SphereResource s : toRemove) sphereResourcesToShrink.remove(s);
   }
 
+  private void movePlayers() {
+    if(activeVersion < model.getVersion())
+    {
+      for(int i =0; i < playerCount; i++)
+      {
+        if(i != clientIndex)
+        {
+          System.out.println("Moving Player: " + i + " " + model.getPlayerLocations().get(i));
+          if(model.getPlayerLocations().get(i) != null) {
+            otherPlayers.get(i).move(model.getPlayerLocations().get(i));
+          }
+        }
+      }
+      activeVersion = model.getVersion();
+    }
+  }
+
+  private void sendPlayerLocation() {
+    ModelChangeRequest modelChangeRequest = new ModelChangeRequest();
+    modelChangeRequest.setPlayerLocation(playerNode.getLocalTranslation());
+    netClient.send(modelChangeRequest);
+  }
+
   /** ---Initialization methods--- **/
   private void setUpLight()
   {
@@ -461,7 +552,7 @@ public class GamePlayAppState extends AbstractAppState
     geoS.setShadowMode(RenderQueue.ShadowMode.Cast);
 
     Material sparkMat = new Material(assetManager, "Common/MatDefs/Misc/Particle.j3md");
-    sparkMat.setTexture("Texture", assetManager.loadTexture("assets/effects/flash.png"));
+    sparkMat.setTexture("Texture", assetManager.loadTexture("overthinker/assets/effects/flash.png"));
     ParticleEmitter flashEmitter = new ParticleEmitter("flash emitter", ParticleMesh.Type.Triangle, 100);
     flashEmitter.setLocalTranslation(new Vector3f(exitLocation.getX(), exitLocation.getY(), exitLocation.getZ()));
     flashEmitter.setMaterial(sparkMat);
@@ -499,9 +590,9 @@ public class GamePlayAppState extends AbstractAppState
 
     /** Add ALPHA map (for red-blue-green coded splat textures) */
     mat_terrain.setTexture("AlphaMap", assetManager.loadTexture(
-      "assets/terrains/tieredmaze1color.png"));
+            "overthinker/assets/terrains/tieredmaze1color.png"));
     //mat_terrain.setTexture("AlphaMap_1", assetManager.loadTexture(
-    //  "assets/terrains/tieredmaze1color2.png"));
+    //  "overthinker.assets.assets/terrains/tieredmaze1color2.png"));
 
     /** Add GRASS texture into the red layer*/
     Texture grass = assetManager.loadTexture(
@@ -526,7 +617,7 @@ public class GamePlayAppState extends AbstractAppState
 
     /** Add Lava Rocks into alpha layer**/
     Texture lava = assetManager.loadTexture(
-      "assets/textures/lava_texture-sm.jpg");
+            "overthinker/assets/textures/lava_texture-sm.jpg");
     lava.setWrap(WrapMode.Repeat);
     mat_terrain.setTexture("DiffuseMap_3", lava);
     mat_terrain.setFloat("DiffuseMap_3_scale", 128f);
@@ -534,8 +625,8 @@ public class GamePlayAppState extends AbstractAppState
     /** Create the height map */
     Texture heightMapImage;
 
-    if (playerType == 0) heightMapImage = assetManager.loadTexture("assets/terrains/tieredmaze1_nowalls.png");
-    else heightMapImage = assetManager.loadTexture("assets/terrains/tieredmaze1.png");
+    if (playerType == 0) heightMapImage = assetManager.loadTexture("overthinker/assets/terrains/tieredmaze1_nowalls.png");
+    else heightMapImage = assetManager.loadTexture("overthinker/assets/terrains/tieredmaze1.png");
 
     AbstractHeightMap heightMap = null;
 
@@ -656,7 +747,7 @@ public class GamePlayAppState extends AbstractAppState
   {
 
     //collect object
-    audio_collect = new AudioNode(assetManager, "assets/sounds/collect.ogg",false);
+    audio_collect = new AudioNode(assetManager, "overthinker/assets/sounds/collect.ogg",false);
     audio_collect.setPositional(false);
     audio_collect.setVolume(2);
     localRootNode.attachChild(audio_collect);
@@ -670,7 +761,7 @@ public class GamePlayAppState extends AbstractAppState
     }
 
     //ambient map sounds
-    audio_ocean = new AudioNode(assetManager,"assets/sounds/wavesLoop.ogg",true);
+    audio_ocean = new AudioNode(assetManager, "overthinker/assets/sounds/wavesLoop.ogg",true);
     audio_ocean.setLooping(true);
     audio_ocean.setPositional(true);
     audio_ocean.setVolume(1);
@@ -683,5 +774,21 @@ public class GamePlayAppState extends AbstractAppState
   {
     super.cleanup();
     rootNode.detachChild(localRootNode);
+  }
+
+  public void handleNewClientResponse(NewClientResponse message) {
+    System.out.println("Connected to server");
+    model = new ServerModel();
+    model.setPlayerLocations(message.getPlayerLocations());
+    model.setVersion(message.getVersion());
+    spawnLocation = message.getSpawnLocation();
+    clientIndex = message.getClientIndex();
+  }
+
+  public void updateModel(ModelUpdate message) {
+    if (model != null) {
+      model.setPlayerLocations(message.getPlayerLocations());
+      model.setVersion(message.version);
+    }
   }
 }

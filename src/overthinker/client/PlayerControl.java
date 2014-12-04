@@ -1,17 +1,14 @@
-package UClient;
+package overthinker.client;
 
 import com.jme3.asset.AssetManager;
 import com.jme3.audio.AudioNode;
 import com.jme3.bullet.control.BetterCharacterControl;
 import com.jme3.collision.CollisionResults;
-import com.jme3.input.controls.ActionListener;
-import com.jme3.math.FastMath;
 import com.jme3.math.Quaternion;
 import com.jme3.math.Ray;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Node;
 import com.jme3.terrain.geomipmap.TerrainQuad;
-import org.lwjgl.Sys;
 
 import java.util.ArrayList;
 
@@ -267,14 +264,14 @@ public class PlayerControl extends BetterCharacterControl
   public void initAudio(AssetManager assetManager)
   {
     //walking sounds
-    audio_footsteps = new AudioNode(assetManager, "assets/sounds/footsteps.ogg",true);
+    audio_footsteps = new AudioNode(assetManager, "overthinker/assets/sounds/footsteps.ogg",true);
     audio_footsteps.setPositional(false);
     audio_footsteps.setLooping(true);
     audio_footsteps.setVolume(2);
     audioList.add(audio_footsteps);
 
     //jumping sound
-    audio_jump = new AudioNode(assetManager, "assets/sounds/pop.ogg",false);
+    audio_jump = new AudioNode(assetManager, "overthinker/assets/sounds/pop.ogg",false);
     audio_jump.setPositional(false);
     audio_jump.setLooping(false);
     audio_jump.setVolume(2);

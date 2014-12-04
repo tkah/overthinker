@@ -1,5 +1,6 @@
-package UClient;
+package overthinker.client;
 
+import com.jme3.bullet.control.BetterCharacterControl;
 import com.jme3.bullet.control.GhostControl;
 import com.jme3.effect.ParticleEmitter;
 import com.jme3.input.InputManager;

@@ -1,4 +1,4 @@
-package UClient;
+package overthinker.client;
 
 import com.jme3.asset.AssetManager;
 import com.jme3.bullet.control.RigidBodyControl;
@@ -28,7 +28,7 @@ public class Door extends NonPlayableObjectNode
     geo = new Geometry(name, door);
 
     Material wood = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
-    wood.setTexture("ColorMap", assetManager.loadTexture("assets/textures/wood_texture.jpg"));
+    wood.setTexture("ColorMap", assetManager.loadTexture("overthinker/assets/textures/wood_texture.jpg"));
     geo.setMaterial(wood);
     geo.setLocalTranslation(loc);
     geo.setShadowMode(RenderQueue.ShadowMode.CastAndReceive);

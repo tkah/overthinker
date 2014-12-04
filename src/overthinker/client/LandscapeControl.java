@@ -1,4 +1,4 @@
-package UClient;
+package overthinker.client;
 
 import com.jme3.bullet.PhysicsSpace;
 import com.jme3.bullet.collision.PhysicsCollisionEvent;

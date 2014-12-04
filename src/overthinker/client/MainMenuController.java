@@ -1,6 +1,5 @@
-package Screens;
+package overthinker.client;
 
-import UClient.GamePlayAppState;
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.app.state.AbstractAppState;
@@ -52,7 +51,7 @@ public class MainMenuController extends AbstractAppState implements ScreenContro
       this.guiViewPort = this.app.getGuiViewPort();
       this.audioRenderer = this.app.getAudioRenderer();
 
-      JmeCursor jc = (JmeCursor) assetManager.loadAsset("assets/interface/cursorPointing.cur");
+      JmeCursor jc = (JmeCursor) assetManager.loadAsset("overthinker/assets/interface/cursorPointing.cur");
       inputManager.setCursorVisible(true);
       inputManager.setMouseCursor(jc);
 
@@ -63,9 +62,9 @@ public class MainMenuController extends AbstractAppState implements ScreenContro
     {
         nDisplay = new NiftyJmeDisplay(assetManager,inputManager,audioRenderer,guiViewPort);
         nifty = nDisplay.getNifty();
-        nifty.fromXml("assets/interface/MainMenuLayout.xml", "start", this);
+        nifty.fromXml("overthinker/assets/interface/MainMenuLayout.xml", "start", this);
         guiViewPort.addProcessor(nDisplay);
-        menu_music = new AudioNode(assetManager, "assets/sounds/menuMusic.ogg", false);
+        menu_music = new AudioNode(assetManager, "overthinker/assets/sounds/menuMusic.ogg", false);
         menu_music.setPositional(false);
         menu_music.setVolume(3);
         menu_music.attachChild(menu_music);

@@ -1,4 +1,4 @@
-package UClient;
+package overthinker.client;
 
 import com.jme3.asset.AssetManager;
 import com.jme3.bullet.control.RigidBodyControl;
@@ -56,7 +56,7 @@ public class Key extends NonPlayableObjectNode
     updateSparkHeight = loc.getY() + 0.5f;
 
     Material sparkMat = new Material(assetManager, "Common/MatDefs/Misc/Particle.j3md");
-    sparkMat.setTexture("Texture", assetManager.loadTexture("assets/effects/spark.png"));
+    sparkMat.setTexture("Texture", assetManager.loadTexture("overthinker/assets/effects/spark.png"));
     sparkEmitter.setLocalTranslation(new Vector3f(loc.getX(), updateSparkHeight, loc.getZ()));
     sparkEmitter.setMaterial(sparkMat);
     sparkEmitter.setImagesX(1);

@@ -1,4 +1,4 @@
-package Screens;
+package overthinker.client;
 
 /**
  * Created by Derek on 11/24/2014.
@@ -56,7 +56,7 @@ public class Main extends SimpleApplication {
         MainMenuController mmc = new MainMenuController();
         stateManager.attach(mmc);
 
-        JmeCursor jc = (JmeCursor) assetManager.loadAsset("assets/interface/cursorPointing.cur");
+        JmeCursor jc = (JmeCursor) assetManager.loadAsset("overthinker/assets/interface/cursorPointing.cur");
         inputManager.setCursorVisible(true);
         inputManager.setMouseCursor(jc);
     }

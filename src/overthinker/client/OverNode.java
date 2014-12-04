@@ -1,6 +1,7 @@
-package UClient;
+package overthinker.client;
 
 import com.jme3.audio.AudioNode;
+import com.jme3.bullet.control.BetterCharacterControl;
 import com.jme3.input.InputManager;
 import overthinker.client.eeg.EEGMonitor;
 
