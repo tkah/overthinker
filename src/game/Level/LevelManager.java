@@ -1,4 +1,4 @@
-package client;
+package game.Level;
 
 import com.jme3.ai.navmesh.NavMesh;
 import com.jme3.app.Application;
@@ -41,6 +41,11 @@ public class LevelManager extends AbstractAppState
   private DirectionalLight mainLight;
   private NavMesh navMesh;
 
+  public Node getWorldNode()
+  {
+    return worldNode;
+  }
+
   public BulletAppState getPhysics()
   {
     return physics;
@@ -57,6 +62,7 @@ public class LevelManager extends AbstractAppState
     this.worldNode = new Node();
 
     stateManager.attach(physics);
+    stateManager.attach(new LevelControl());
     physics.setDebugEnabled(true);
 
     setUpLandscape(1);
@@ -149,6 +155,7 @@ public class LevelManager extends AbstractAppState
     mat_terrain.setFloat("DiffuseMap_3_scale", 128f);
 
     Node terrain = (Node) assetManager.loadModel("assets/terrains/tieredmaze.j3o");
+    terrain.setLocalTranslation(0,0,0);
     navMesh = new NavMesh(((Geometry) terrain.getChild("NavMesh")).getMesh());
 
     /** We give the terrain its material, position & scale it, and attach it. */

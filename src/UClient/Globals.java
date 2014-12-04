@@ -16,8 +16,8 @@ public class Globals
   public static final int SCALE_ANIM_TIME = 1;
   public static final float SCALE_BY = 1.005f;
   public static final float PLAYER_SPHERE_START_RADIUS = 2.0f;
-  public static final float GRAVITY = 50;
-  public static final float GROUND_RAY_ALLOWANCE = 0.5f;
+  public static final float GRAVITY = 30;
+  public static final float GROUND_RAY_ALLOWANCE = 0.8f;
   public static final float WATER_HEIGHT_DEFAULT_RATE = 0.005f;
   public static final float WATER_HEIGHT_PLAYER_RATE = 0.001f; // Should be somewhat lower than the DEFAULT_RATE,
                                                                 // but water height should continue increase no matter what

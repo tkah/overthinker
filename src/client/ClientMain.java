@@ -6,6 +6,8 @@ import com.jme3.niftygui.NiftyJmeDisplay;
 import de.lessvoid.nifty.Nifty;
 import de.lessvoid.nifty.screen.Screen;
 import de.lessvoid.nifty.screen.ScreenController;
+import game.Level.LevelControl;
+import game.Level.LevelManager;
 
 import java.util.concurrent.ExecutionException;
 

@@ -1,5 +1,6 @@
 package UClient;
 
+import com.jme3.bullet.control.GhostControl;
 import com.jme3.effect.ParticleEmitter;
 import com.jme3.input.InputManager;
 import com.jme3.scene.Geometry;
@@ -84,6 +85,29 @@ abstract class PlayerNode extends Node
 
   public boolean getShrink()
   {
+    return false;
+  }
+
+  public Node getCamNode()
+  {
+    return null;
+  }
+
+  public float getWaterRate() { return 0; }
+
+  public boolean getForwardGrav() {
+    return false;
+  }
+  public boolean getBackwardGrav() {
+    return false;
+  }
+  public boolean getLeftGrav() {
+    return false;
+  }
+  public boolean getRightGrav() {
+    return false;
+  }
+  public boolean getNormalGrav() {
     return false;
   }
 

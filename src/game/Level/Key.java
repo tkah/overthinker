@@ -1,4 +1,4 @@
-package UClient;
+package game.Level;
 
 import com.jme3.asset.AssetManager;
 import com.jme3.bullet.control.RigidBodyControl;
@@ -23,7 +23,6 @@ public class Key extends NonPlayableObjectNode
   private float rotSpeed = 300f;
   private float updateHeight;
   private float updateSparkHeight;
-  private Vector3f loc;
   private boolean moveUp = false;
 
   public Key(String name)

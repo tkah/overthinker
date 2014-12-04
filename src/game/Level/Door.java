@@ -1,4 +1,4 @@
-package UClient;
+package game.Level;
 
 import com.jme3.asset.AssetManager;
 import com.jme3.bullet.control.RigidBodyControl;
@@ -21,9 +21,10 @@ public class Door extends NonPlayableObjectNode
     phy = new RigidBodyControl(0f);
   }
 
-  public void createDoor(AssetManager assetManager, float sizeX, float rotate, Vector3f loc)
+  public void createDoor(AssetManager assetManager, float sizeX, float sizeY, float sizeZ, float rotate, Vector3f loc)
   {
-    Box door = new Box(sizeX, 40.0f, 1.0f);
+    this.loc = loc;
+    Box door = new Box(sizeX, sizeY, sizeZ);
     geo = new Geometry(name, door);
 
     Material wood = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
@@ -36,6 +37,7 @@ public class Door extends NonPlayableObjectNode
     phy.setSpatial(geo);
     phy.setApplyPhysicsLocal(true);
     phy.setEnabled(true);
+    geo.addControl(phy);
     attachChild(geo);
   }
 }
