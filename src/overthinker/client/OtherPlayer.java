@@ -73,4 +73,6 @@ public class OtherPlayer
     //TODO: Rotation conditional on movement direction and size
     sphere_phy.setPhysicsLocation(move);
   }
+
+
 }

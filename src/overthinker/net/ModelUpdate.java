@@ -15,13 +15,21 @@ import java.util.HashMap;
 public class ModelUpdate extends AbstractMessage {
     public long version;
     private HashMap<Integer, Vector3f> playerLocations;
+    private HashMap<Integer, Boolean> playerAlive;
 
     public HashMap<Integer, Vector3f> getPlayerLocations() {
-
         return playerLocations;
     }
 
     public void setPlayerLocations(HashMap<Integer, Vector3f> playerLocations) {
         this.playerLocations = playerLocations;
+    }
+
+    public HashMap<Integer, Boolean> getPlayerAlive() {
+        return playerAlive;
+    }
+
+    public void setPlayerAlive(HashMap<Integer, Boolean> playerAlive) {
+        this.playerAlive = playerAlive;
     }
 }

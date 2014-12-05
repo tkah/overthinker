@@ -15,6 +15,8 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class ServerModel {
     private HashMap<Integer, Vector3f> playerLocations = new HashMap<Integer, Vector3f>();
+    private HashMap<Integer, Boolean> playerAlive = new HashMap<Integer, Boolean>();
+
     private long version;
 
     public ServerModel() {}
@@ -32,6 +34,16 @@ public class ServerModel {
     public synchronized void setPlayerLocations(HashMap<Integer, Vector3f> playerLocations)
     {
         this.playerLocations = playerLocations;
+    }
+
+    public HashMap<Integer, Boolean> getPlayerAlive()
+    {
+        return playerAlive;
+    }
+
+    public synchronized void setPlayerAlive(HashMap<Integer, Boolean> playerAlive)
+    {
+        this.playerAlive = playerAlive;
     }
 
     public long getVersion() {

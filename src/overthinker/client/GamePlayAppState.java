@@ -46,10 +46,7 @@ import com.jme3.texture.Texture.WrapMode;
 import com.jme3.water.WaterFilter;
 import jme3utilities.Misc;
 import jme3utilities.sky.SkyControl;
-import overthinker.net.PlayerLocationChangeRequest;
-import overthinker.net.ModelUpdate;
-import overthinker.net.NewClientRequest;
-import overthinker.net.NewClientResponse;
+import overthinker.net.*;
 import overthinker.server.ServerModel;
 
 import java.io.IOException;
@@ -214,7 +211,10 @@ public class GamePlayAppState extends AbstractAppState
 
     ClientNetListener listener = new ClientNetListener(this);
 
-    Serializer.registerClass(PlayerLocationChangeRequest.class);
+    Serializer.registerClass(ChangePlayerLocationRequest.class);
+    Serializer.registerClass(ChangeMapTiltRequest.class);
+    Serializer.registerClass(ChangeWaterLevelRequest.class);
+    Serializer.registerClass(PlayerDeathRequest.class);
     Serializer.registerClass(ModelUpdate.class);
     Serializer.registerClass(NewClientRequest.class);
     Serializer.registerClass(NewClientResponse.class);
@@ -268,7 +268,7 @@ public class GamePlayAppState extends AbstractAppState
   {
     //Network update
     sendPlayerLocation();
-    movePlayers();
+    updatePlayers();
 
     // Raise Water Level, to be controlled by EEG
     //if (!playerNode.isSlowWater()) water.setWaterHeight(water.getWaterHeight() + Globals.WATER_HEIGHT_DEFAULT_RATE);
@@ -317,6 +317,7 @@ public class GamePlayAppState extends AbstractAppState
     //TODO: Player died
     if (playerType == 1 && playerNode.getHeight() < .3f && !playerNode.isDead())
     {
+      netClient.send(new PlayerDeathRequest());
       fade.fadeOut();
       playerNode.setDead(true);
       bulletAppState.getPhysicsSpace().remove(playerNode);
@@ -449,7 +450,7 @@ public class GamePlayAppState extends AbstractAppState
     for (SphereResource s : toRemove) sphereResourcesToShrink.remove(s);
   }
 
-  private void movePlayers() {
+  private void updatePlayers() {
     if(activeVersion < model.getVersion())
     {
       for(int i =0; i < playerCount; i++)
@@ -459,6 +460,9 @@ public class GamePlayAppState extends AbstractAppState
           if(model.getPlayerLocations().get(i) != null) {
             otherPlayers.get(i).move(model.getPlayerLocations().get(i));
           }
+          if(model.getPlayerAlive().get(i) != null && model.getPlayerAlive().get(i) == false) {
+            otherPlayers.get(i).getGeometry().removeFromParent();
+          }
         }
       }
       activeVersion = model.getVersion();
@@ -466,7 +470,7 @@ public class GamePlayAppState extends AbstractAppState
   }
 
   private void sendPlayerLocation() {
-    PlayerLocationChangeRequest playerLocationChangeRequest = new PlayerLocationChangeRequest();
+    ChangePlayerLocationRequest playerLocationChangeRequest = new ChangePlayerLocationRequest();
     playerLocationChangeRequest.setPlayerLocation(playerNode.getLocalTranslation());
     netClient.send(playerLocationChangeRequest);
   }
@@ -776,6 +780,10 @@ public class GamePlayAppState extends AbstractAppState
     rootNode.detachChild(localRootNode);
   }
 
+  public Client getNetClient(){
+    return netClient;
+  }
+
   public void handleNewClientResponse(NewClientResponse message) {
     System.out.println("Connected to server");
     model = new ServerModel();
@@ -788,6 +796,8 @@ public class GamePlayAppState extends AbstractAppState
   public void updateModel(ModelUpdate message) {
     if (model != null) {
       model.setPlayerLocations(message.getPlayerLocations());
+      model.setPlayerAlive(message.getPlayerAlive());
+      model.setPlayerAlive(message.getPlayerAlive());
       model.setVersion(message.version);
     }
   }

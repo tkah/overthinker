@@ -6,15 +6,12 @@ import com.jme3.network.Filters;
 import com.jme3.network.HostedConnection;
 import overthinker.levels.Level;
 import overthinker.levels.maze1.Maze1;
-import overthinker.net.PlayerLocationChangeRequest;
-import overthinker.net.ModelUpdate;
+import overthinker.net.*;
 import com.jme3.app.SimpleApplication;
 import com.jme3.network.Network;
 import com.jme3.network.Server;
 import com.jme3.network.serializing.Serializer;
 import com.jme3.system.JmeContext;
-import overthinker.net.NewClientRequest;
-import overthinker.net.NewClientResponse;
 
 import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
@@ -25,8 +22,9 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ServerMain extends SimpleApplication {
     private Server netServer;
     private ServerModel model;
-    private Level level;
     private int clientCount = 0;
+    private static final int PLAYER_CAP = 4;
+    private static final Vector3f SPAWN_LOCATION = new Vector3f(340, 80, -400);
     private ConcurrentHashMap<HostedConnection, Integer> clientIndex = new ConcurrentHashMap<HostedConnection, Integer>();
 
     public static void main(String[] args) {
@@ -62,36 +60,42 @@ public class ServerMain extends SimpleApplication {
     {
         ModelUpdate modelUpdate = new ModelUpdate();
         modelUpdate.setPlayerLocations(model.getPlayerLocations());
+        modelUpdate.setPlayerAlive(model.getPlayerAlive());
         modelUpdate.version = model.getVersion();
         netServer.broadcast(modelUpdate);
     }
 
     private void initModel() {
         model = new ServerModel();
-        level = new Maze1();
     }
 
     private void initNetServer() {
         ServerNetListener listener = new ServerNetListener(this);
 
-        Serializer.registerClass(PlayerLocationChangeRequest.class);
+        Serializer.registerClass(ChangePlayerLocationRequest.class);
+        Serializer.registerClass(ChangeMapTiltRequest.class);
+        Serializer.registerClass(ChangeWaterLevelRequest.class);
+        Serializer.registerClass(PlayerDeathRequest.class);
         Serializer.registerClass(ModelUpdate.class);
         Serializer.registerClass(NewClientRequest.class);
         Serializer.registerClass(NewClientResponse.class);
 
         netServer.addMessageListener(listener, NewClientRequest.class);
-        netServer.addMessageListener(listener, PlayerLocationChangeRequest.class);
+        netServer.addMessageListener(listener, ChangePlayerLocationRequest.class);
+        netServer.addMessageListener(listener, ChangeMapTiltRequest.class);
+        netServer.addMessageListener(listener, ChangeWaterLevelRequest.class);
+        netServer.addMessageListener(listener, PlayerDeathRequest.class);
     }
 
     public void initClient(HostedConnection source)
     {
-        Vector3f spawnLocation = level.getRandomSpawnLocation();
         NewClientResponse response = new NewClientResponse();
 
         // Check if there is room on the current level
-        if(clientIndex.values().size() < level.getPlayerCount())
+        if(clientIndex.values().size() < PLAYER_CAP)
         {
-            model.getPlayerLocations().put(clientCount, spawnLocation);
+            model.getPlayerLocations().put(clientCount, SPAWN_LOCATION);
+            model.getPlayerAlive().put(clientCount, true);
             clientIndex.put(source, clientCount);
             response.setConnected(true);
             response.setClientIndex(clientCount);
@@ -102,8 +106,7 @@ public class ServerMain extends SimpleApplication {
         else response.setConnected(false);
 
         // Send response
-//        response.setLevelType(level.getLevelType());
-        response.setSpawnLocation(spawnLocation);
+        response.setSpawnLocation(SPAWN_LOCATION);
         response.setVersion(model.getVersion());
         response.setPlayerLocations(model.getPlayerLocations());
         netServer.broadcast(Filters.in(source), response);
@@ -114,8 +117,15 @@ public class ServerMain extends SimpleApplication {
         return model;
     }
 
-    public synchronized void updateModel(HostedConnection source, Vector3f playerLocation) {
+    public void updatePlayerLocation(HostedConnection source, Vector3f playerLocation) {
         model.getPlayerLocations().replace(clientIndex.get(source), playerLocation);
+        model.setVersion(model.getVersion() + 1);
+        broadcastModelUpdate();
+    }
+
+    public void handlePlayerDeath(HostedConnection source)
+    {
+        model.getPlayerAlive().replace(clientIndex.get(source), false);
         model.setVersion(model.getVersion() + 1);
         broadcastModelUpdate();
     }
