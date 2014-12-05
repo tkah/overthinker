@@ -22,21 +22,12 @@ public class LandscapeControl extends RigidBodyControl implements PhysicsCollisi
 
   public void collision(PhysicsCollisionEvent event)
   {
-    if (event.getNodeA().getName().equals("player"))
+    if (event.getNodeA().getName().equals("player") || event.getNodeB().getName().equals("player"))
     {
       final UnderNode node = (UnderNode) event.getNodeA();
-      if (!node.isOnGround() && node.getPlayerControl().getVelocity().getZ() < 1f)
+      if (!node.isOnGround() && node.getPlayerControl().getVelocity().getZ() < 1f && node.getPlayerControl().getVelocity().getZ() > 0)
       {
         node.getPlayerControl().setWalkDirection(new Vector3f(0, -5, -5));
-        node.pushOff = true;
-      }
-    }
-    else if (event.getNodeB().getName().equals("player"))
-    {
-      final UnderNode node = (UnderNode) event.getNodeB();
-      if (!node.isOnGround() && node.getPlayerControl().getVelocity().getZ() < 1f)
-      {
-        node.getPlayerControl().setWalkDirection(new Vector3f(0,-5,-5));
         node.pushOff = true;
       }
     }

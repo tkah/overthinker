@@ -24,6 +24,7 @@ public class PlayerControl extends BetterCharacterControl
   private ArrayList<AudioNode> audioList = new ArrayList<AudioNode>();
 
   private boolean gravityLeft = false, gravityRight = false, gravityForward = false, gravityBack = false;
+  private boolean changeInGravity = false;
 
   /**
    * Class constructor
@@ -73,6 +74,7 @@ public class PlayerControl extends BetterCharacterControl
       gravityBack = isPressed;
       setWalkDirection(new Vector3f(0,0,0));
     }
+    changeInGravity = true;
   }
 
   public void turn(float dir)
@@ -83,7 +85,7 @@ public class PlayerControl extends BetterCharacterControl
     setViewDirection(turn.mult(getViewDirection()));
   }
 
-  public boolean checkGravity(boolean nodeOnGround, Vector3f playerTranslation, Node colNode)
+  public boolean checkGravity(boolean nodeOnGround, Vector3f playerTranslation, Node colNode, Node pivot, Node camNode)
   {
     boolean onGround = nodeOnGround;
     Vector3f dir;
@@ -100,7 +102,7 @@ public class PlayerControl extends BetterCharacterControl
         onGround = false;
       }
       else onGround = true;
-      setGravity(new Vector3f(Globals.GRAVITY, 0, -Globals.GRAVITY));
+      setGravity(new Vector3f(Globals.GRAVITY, 1, -Globals.GRAVITY));
     }
     else if (gravityForward && gravityRight)
     {
@@ -113,7 +115,7 @@ public class PlayerControl extends BetterCharacterControl
         onGround = false;
       }
       else onGround = true;
-      setGravity(new Vector3f(-Globals.GRAVITY, 0, -Globals.GRAVITY));
+      setGravity(new Vector3f(-Globals.GRAVITY, 1, -Globals.GRAVITY));
     }
     else if (gravityBack && gravityRight)
     {
@@ -126,7 +128,7 @@ public class PlayerControl extends BetterCharacterControl
         onGround = false;
       }
       else onGround = true;
-      setGravity(new Vector3f(-Globals.GRAVITY, 0, Globals.GRAVITY));
+      setGravity(new Vector3f(-Globals.GRAVITY, 1, Globals.GRAVITY));
     }
     else if (gravityBack && gravityLeft)
     {
@@ -139,7 +141,7 @@ public class PlayerControl extends BetterCharacterControl
         onGround = false;
       }
       else onGround = true;
-      setGravity(new Vector3f(Globals.GRAVITY, 0, Globals.GRAVITY));
+      setGravity(new Vector3f(Globals.GRAVITY, 1, Globals.GRAVITY));
     }
     else if (gravityLeft)
     {
@@ -152,7 +154,7 @@ public class PlayerControl extends BetterCharacterControl
         onGround = false;
       }
       else onGround = true;
-      setGravity(new Vector3f(Globals.GRAVITY, 0, 0));
+      setGravity(new Vector3f(Globals.GRAVITY, 1, 0));
     }
     else if (gravityRight)
     {
@@ -165,7 +167,7 @@ public class PlayerControl extends BetterCharacterControl
         onGround = false;
       }
       else onGround = true;
-      setGravity(new Vector3f(-Globals.GRAVITY, 0, 0));
+      setGravity(new Vector3f(-Globals.GRAVITY, 1, 0));
     }
     else if (gravityForward)
     {
@@ -179,7 +181,7 @@ public class PlayerControl extends BetterCharacterControl
         onGround = false;
       }
       else onGround = true;
-      setGravity(new Vector3f(0, 0, -Globals.GRAVITY));
+      setGravity(new Vector3f(0, 1, -Globals.GRAVITY));
     }
     else if (gravityBack)
     {
@@ -193,7 +195,7 @@ public class PlayerControl extends BetterCharacterControl
       }
 
       else onGround = true;
-      setGravity(new Vector3f(0, 0, Globals.GRAVITY));
+      setGravity(new Vector3f(0, 1, Globals.GRAVITY));
     }
     else
     {
@@ -208,6 +210,12 @@ public class PlayerControl extends BetterCharacterControl
       }
       else onGround = true;
       setGravity(new Vector3f(0, -Globals.GRAVITY, 0));
+    }
+
+    if (changeInGravity)
+    {
+      setViewDirection(new Vector3f(0, 4, -18));
+      changeInGravity = false;
     }
 
     return onGround;
@@ -300,5 +308,10 @@ public class PlayerControl extends BetterCharacterControl
   public void playJump()
   {
     audio_jump.playInstance();
+  }
+
+  public void setChangeInGravity(boolean val)
+  {
+    changeInGravity = val;
   }
 }

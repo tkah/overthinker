@@ -57,7 +57,7 @@ import java.util.HashMap;
 public class GamePlayAppState extends AbstractAppState
   implements ActionListener, AnalogListener
 {
-  private static final int SPHERE_RESOURCE_COUNT = 250;
+  private static final int SPHERE_RESOURCE_COUNT = 100;
   private static final float SPHERE_RESOURCE_RADIUS = 1.0f;
 
   private SimpleApplication app;
@@ -71,10 +71,6 @@ public class GamePlayAppState extends AbstractAppState
   private Listener listener;
   private SkyControl sc;
 
-  private Vector3f lightDir = new Vector3f(4.1f, -3.2f, 0.1f);
-  private AmbientLight ambientLight = null;
-  private DirectionalLight mainLight = null;
-
   private Node platformsNode;
   private Node keysNode;
   private Node collidableNode;
@@ -84,6 +80,18 @@ public class GamePlayAppState extends AbstractAppState
   private PlayerNode playerNode;
   private int playerType = 1;
   private int fadeStart = 0;
+
+  private String levelName = "pentamaze";
+  private String lvlNoWallsName = "_height-nowalls.png";
+  private String lvlHeightName = "_height.png";
+  private String lvlColorName = "_color-noalpha.png";
+  private float lvlTime;
+  private Vector3f lightDir;
+  private ColorRGBA lightIntensity;
+  private boolean needsExitDoor = true;
+
+  private AmbientLight ambientLight = null;
+  private DirectionalLight mainLight = null;
 
   private float waterHeight = 20.0f;
   private float waterHeightRate = 0.05f;
@@ -100,15 +108,15 @@ public class GamePlayAppState extends AbstractAppState
 
   private ArrayList<SphereResource> sphereResourceArrayList = new ArrayList<SphereResource>();
   private ArrayList<SphereResource> sphereResourcesToShrink = new ArrayList<SphereResource>();
-  private Vector3f exitLocation = new Vector3f(7,122,-7);
-  private Vector3f[] keyLocArray = {new Vector3f(60, 65, -330), new Vector3f(35, 65, 345), new Vector3f(115, 65, -353)};
-  private Vector3f[] keyDoorLocArray = {new Vector3f(-293, 98, 143), new Vector3f(330, 98, -68), new Vector3f(-236, 98, 208)};
-  private Vector3f[] platLocArray = {new Vector3f(55, 81.65f, -295), new Vector3f(245, 81.65f, 120), new Vector3f(195, 102.45f, 75)};
-  private Vector3f[] platDoorLocArray = {new Vector3f(252, 133, -87), new Vector3f(202,133,139), new Vector3f(67,133,-245)};
-  private float[] keyDoorSizeXArray = {15f, 15f, 17f};
-  private float[] keyDoorRotationArray = {-55f, 100f, -43f};
-  private float[] platDoorSizeXArray = {16f, 17f, 21f};
-  private float[] platDoorRotationArray = {-70, 49, -10};
+  private Vector3f exitLocation;
+  private Vector3f[] keyLocArray = null;
+  private Vector3f[] keyDoorLocArray = null;
+  private Vector3f[] platLocArray = null;
+  private Vector3f[] platDoorLocArray = null;
+  private float[] keyDoorSizeXArray;
+  private float[] keyDoorRotationArray;
+  private float[] platDoorSizeXArray;
+  private float[] platDoorRotationArray;
   private float fogDensity = 0.0f; //0, 1.0, 1.5, 2.0
   private ArrayList<Key> keys = new ArrayList<Key>();
   private ArrayList<Door> keyDoors = new ArrayList<Door>();
@@ -158,6 +166,7 @@ public class GamePlayAppState extends AbstractAppState
 
     flyCam.setMoveSpeed(100);
 
+    setUpLevel();
     createSphereResources();
     createOtherPlayers();
     createDoorsAndKeys();
@@ -266,6 +275,8 @@ public class GamePlayAppState extends AbstractAppState
   @Override
   public void update(float tpf)
   {
+    System.out.println(cam.getLocation());
+
     //Network update
     sendPlayerLocation();
     updatePlayers();
@@ -480,7 +491,7 @@ public class GamePlayAppState extends AbstractAppState
   {
     mainLight = new DirectionalLight();
     mainLight.setName("main");
-    mainLight.setColor(ColorRGBA.White.clone().multLocal(1.1f));
+    mainLight.setColor(lightIntensity);
     mainLight.setDirection(lightDir);
     ambientLight = new AmbientLight();
     //ambientLight.setColor(ColorRGBA.White.mult(1.2f));
@@ -491,7 +502,7 @@ public class GamePlayAppState extends AbstractAppState
     viewPort.addProcessor(dlsr);
 
     sc = new SkyControl(assetManager, cam, 0.9f, true, true);
-    sc.getSunAndStars().setHour(12f);
+    sc.getSunAndStars().setHour(lvlTime);
     sc.getSunAndStars().setObserverLatitude(37.4046f * FastMath.DEG_TO_RAD);
     sc.getSunAndStars().setSolarLongitude(Calendar.FEBRUARY, 10);
     sc.setCloudiness(0.3f);
@@ -540,11 +551,6 @@ public class GamePlayAppState extends AbstractAppState
 
   private void setUpExit()
   {
-    exitDoor = new Door("ExitDoor");
-    exitDoor.createDoor(assetManager, 15, 1, 15, 90, exitLocation);
-    collidableNode.attachChild(exitDoor);
-    bulletAppState.getPhysicsSpace().add(exitDoor.getPhy());
-
     Sphere exitS = new Sphere(32,32,12);
     Geometry geoS = new Geometry("ExitSphere", exitS);
 
@@ -562,8 +568,8 @@ public class GamePlayAppState extends AbstractAppState
     flashEmitter.setMaterial(sparkMat);
     flashEmitter.setImagesX(2);
     flashEmitter.setImagesY(2);
-    flashEmitter.setStartColor(ColorRGBA.Yellow);
-    flashEmitter.setEndColor(ColorRGBA.White);
+    flashEmitter.setStartColor(ColorRGBA.Orange);
+    flashEmitter.setEndColor(ColorRGBA.Yellow);
     flashEmitter.setFacingVelocity(true);
     flashEmitter.setStartSize(.5f);
     flashEmitter.setEndSize(.5f);
@@ -581,6 +587,15 @@ public class GamePlayAppState extends AbstractAppState
     bloom.setExposurePower(1f);
     fpp.addFilter(bloom);
     exitNode.attachChild(geoS);
+
+    if (needsExitDoor)
+    {
+      exitDoor = new Door("ExitDoor");
+      exitDoor.createDoor(assetManager, 15, 1, 15, 90, exitLocation);
+      collidableNode.attachChild(exitDoor);
+      bulletAppState.getPhysicsSpace().add(exitDoor.getPhy());
+    }
+    else localRootNode.attachChild(exitNode);
   }
 
   private void setUpLandscape()
@@ -594,9 +609,7 @@ public class GamePlayAppState extends AbstractAppState
 
     /** Add ALPHA map (for red-blue-green coded splat textures) */
     mat_terrain.setTexture("AlphaMap", assetManager.loadTexture(
-            "overthinker/assets/terrains/tieredmaze1color.png"));
-    //mat_terrain.setTexture("AlphaMap_1", assetManager.loadTexture(
-    //  "overthinker.assets.assets/terrains/tieredmaze1color2.png"));
+            lvlColorName));
 
     /** Add GRASS texture into the red layer*/
     Texture grass = assetManager.loadTexture(
@@ -629,8 +642,9 @@ public class GamePlayAppState extends AbstractAppState
     /** Create the height map */
     Texture heightMapImage;
 
-    if (playerType == 0) heightMapImage = assetManager.loadTexture("overthinker/assets/terrains/tieredmaze1_nowalls.png");
-    else heightMapImage = assetManager.loadTexture("overthinker/assets/terrains/tieredmaze1.png");
+    if (playerType == 0) heightMapImage = assetManager.loadTexture(lvlNoWallsName);
+    else heightMapImage = assetManager.loadTexture(lvlHeightName);
+
 
     AbstractHeightMap heightMap = null;
 
@@ -695,6 +709,56 @@ public class GamePlayAppState extends AbstractAppState
     playerType = type;
   }
 
+  public void setUpLevel()
+  {
+    lvlColorName = "overthinker/assets/terrains/" + levelName + lvlColorName;
+    lvlHeightName = "overthinker/assets/terrains/" + levelName + lvlHeightName;
+    lvlNoWallsName = "overthinker/assets/terrains/" + levelName + lvlNoWallsName;
+
+    if (levelName.equals("circlemaze"))
+    {
+      exitLocation = new Vector3f(7,122,-7);
+      keyLocArray = new Vector3f[]{new Vector3f(60, 65, -330), new Vector3f(35, 65, 345), new Vector3f(115, 65, -353)};
+      keyDoorLocArray = new Vector3f[]{new Vector3f(-293, 98, 143), new Vector3f(330, 98, -68), new Vector3f(-236, 98, 208)};
+      platLocArray = new Vector3f[]{new Vector3f(55, 81.65f, -295), new Vector3f(245, 81.65f, 120), new Vector3f(195, 102.45f, 75)};
+      platDoorLocArray = new Vector3f[]{new Vector3f(252, 133, -87), new Vector3f(202,133,139), new Vector3f(67,133,-245)};
+      keyDoorSizeXArray = new float[]{15f, 15f, 17f};
+      keyDoorRotationArray = new float[]{-55f, 100f, -43f};
+      platDoorSizeXArray = new float[]{16f, 17f, 21f};
+      platDoorRotationArray = new float[]{-70, 49, -10};
+      lvlTime = 12;
+      lightDir = new Vector3f(4.1f, -3.2f, 0.1f);
+      lightIntensity = ColorRGBA.White.clone().multLocal(1.1f);
+    }
+    else if (levelName.equals("pentamaze"))
+    {
+      exitLocation = new Vector3f(-5.5f,102,-6);
+      keyLocArray = new Vector3f[]{new Vector3f(-298.9f, 45, 360), new Vector3f(408.7f, 45, 15), new Vector3f(80, 45, -421)};
+      keyDoorLocArray = new Vector3f[]{new Vector3f(-238f, 100, -224.9f), new Vector3f(369, 100, 56.2f), new Vector3f(98, 100, -333.57f)};
+      platLocArray = new Vector3f[]{new Vector3f(-84, 81.65f, 273), new Vector3f(201, 81.65f, 122), new Vector3f(203, 102.45f, -18)};
+      platDoorLocArray = new Vector3f[]{new Vector3f(-156, 134, 188), new Vector3f(-50,134,247), new Vector3f(201,134,26)};
+      keyDoorSizeXArray = new float[]{18f, 15f, 17f};
+      keyDoorRotationArray = new float[]{32, 68, -34};
+      platDoorSizeXArray = new float[]{16f, 16f, 17};
+      platDoorRotationArray = new float[]{-78, 0, 70};
+      lvlTime = 0;
+      lightDir = new Vector3f(.5f, -1, 0);
+      lightIntensity = ColorRGBA.White.clone().multLocal(.5f);
+    }
+    else if (levelName.equals("radiomaze"))
+    {
+      exitLocation = new Vector3f(.36f,80.3f,-30);
+      platDoorLocArray = new Vector3f[]{new Vector3f(-123, 124.8f, -216), new Vector3f(-89,124.8f,167), new Vector3f(125,124.8f,-214)};
+      platDoorSizeXArray = new float[]{16f, 18f, 16};
+      platDoorRotationArray = new float[]{36, -18, -30};
+      lvlTime = 15;
+      lightDir = new Vector3f(6.3f, -2.0f, 6.9f);
+      lightIntensity = ColorRGBA.White.clone().multLocal(1.3f);
+      waterHeightRate = .003f;
+      needsExitDoor = false;
+    }
+  }
+
   private void createSphereResources()
   {
     for (int i = 0; i < SPHERE_RESOURCE_COUNT; i++)
@@ -710,41 +774,52 @@ public class GamePlayAppState extends AbstractAppState
 
   private void createDoorsAndKeys()
   {
-    for (int i = 0; i < keyDoorLocArray.length; i++)
+    if (keyDoorLocArray != null)
     {
-      Door door = new Door("Door_" + i);
-      door.createDoor(assetManager, keyDoorSizeXArray[i], 40, 1, keyDoorRotationArray[i], keyDoorLocArray[i]);
-      collidableNode.attachChild(door);
-      bulletAppState.getPhysicsSpace().add(door.getPhy());
-      keyDoors.add(door);
+      for (int i = 0; i < keyDoorLocArray.length; i++)
+      {
+        Door door = new Door("Door_" + i);
+        door.createDoor(assetManager, keyDoorSizeXArray[i], 40, 1, keyDoorRotationArray[i], keyDoorLocArray[i]);
+        collidableNode.attachChild(door);
+        bulletAppState.getPhysicsSpace().add(door.getPhy());
+        keyDoors.add(door);
 
-      Key key = new Key("Key_" + i);
-      key.createKey(assetManager, keyLocArray[i]);
-      bulletAppState.getPhysicsSpace().add(key.getPhy());
-      keys.add(key);
-      keysNode.attachChild(key);
+        Key key = new Key("Key_" + i);
+        key.createKey(assetManager, keyLocArray[i]);
+        bulletAppState.getPhysicsSpace().add(key.getPhy());
+        keys.add(key);
+        keysNode.attachChild(key);
+      }
+      collidableNode.attachChild(keysNode);
     }
-
-    collidableNode.attachChild(keysNode);
   }
 
   private void createPlatformsAndDoors()
   {
-    for (int i = 0; i < platLocArray.length; i++)
+    if (platLocArray != null)
     {
-      Platform plat = new Platform("Platform_" + i);
-      plat.createPlatform(assetManager, platLocArray[i], 2);
-      platformsNode.attachChild(plat);
-      bulletAppState.getPhysicsSpace().add(plat.getPhy());
-      platforms.add(plat);
-
-      Door door = new Door("Door_" + i);
-      door.createDoor(assetManager, platDoorSizeXArray[i], 40, 1, platDoorRotationArray[i], platDoorLocArray[i]);
-      collidableNode.attachChild(door);
-      bulletAppState.getPhysicsSpace().add(door.getPhy());
-      platDoors.add(door);
+      for (int i = 0; i < platLocArray.length; i++)
+      {
+        Platform plat = new Platform("Platform_" + i);
+        plat.createPlatform(assetManager, platLocArray[i], 2);
+        platformsNode.attachChild(plat);
+        bulletAppState.getPhysicsSpace().add(plat.getPhy());
+        platforms.add(plat);
+      }
+      collidableNode.attachChild(platformsNode);
     }
-    collidableNode.attachChild(platformsNode);
+
+    if (platDoorLocArray != null)
+    {
+      for (int i = 0; i < platDoorLocArray.length; i++)
+      {
+        Door door = new Door("Door_" + i);
+        door.createDoor(assetManager, platDoorSizeXArray[i], 40, 1, platDoorRotationArray[i], platDoorLocArray[i]);
+        collidableNode.attachChild(door);
+        bulletAppState.getPhysicsSpace().add(door.getPhy());
+        platDoors.add(door);
+      }
+    }
   }
 
   private void initAudio()

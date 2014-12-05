@@ -151,7 +151,7 @@ public class UnderNode extends PlayerNode
     }
     else if (playerMat.getParam("Diffuse").getValue() !=  ColorRGBA.White) playerMat.setColor("Diffuse", ColorRGBA.White);
 
-    onGround = playerControl.checkGravity(onGround, getLocalTranslation(), collidableNode);
+    onGround = playerControl.checkGravity(onGround, getLocalTranslation(), collidableNode, pivot, camNode);
     dustEmitter.setParticlesPerSec(0);
 
     if (left || right || up || down) rotation += tpf*rotSpeed;
@@ -275,7 +275,17 @@ public class UnderNode extends PlayerNode
     playerControl = new PlayerControl(Globals.PLAYER_SPHERE_START_RADIUS, Globals.PLAYER_SPHERE_START_RADIUS, 10f, assetManager);
     playerControl.setJumpForce(new Vector3f(0,250,0));
     playerControl.setGravity(new Vector3f(0, -10, 0));
-    setLocalTranslation(new Vector3f(-340, 80, -400));
+    setLocalTranslation(new Vector3f(-183, 80, -431));
+    // Player Locs: 1,2,3 - Going counterclockwise from top-left
+    //Circle Start 1: -344, 80, -380
+    //Circle Start 2: 289, 80, 414.7f
+    //Circle Start 3: 381,80, -387.5f
+    //Radio Start 1: -260, 110, -390
+    //Radio Start 2: -170, 110, 350
+    //Radio Start 3: 260, 110, -390
+    //Penta Start 1: -183, 80, -431
+    //Penta Start 2: 360, 59, 450
+    //Penta Start 3: 345,80,-284
     addControl(playerControl);
     bulletAppState.getPhysicsSpace().add(playerControl);
 
@@ -355,8 +365,6 @@ public class UnderNode extends PlayerNode
     camNode.setControlDir(CameraControl.ControlDirection.SpatialToCamera);
     camNode.setLocalTranslation(new Vector3f(0, 4, -18));
     pivot.attachChild(camNode);
-    Quaternion quat = new Quaternion();
-    quat.lookAt(Vector3f.UNIT_Z, Vector3f.UNIT_Y);
     attachChild(pivot);
     camNode.setEnabled(true);
     pivot.getLocalRotation().fromAngleAxis(verticalAngle, Vector3f.UNIT_X);

@@ -3,12 +3,9 @@ package overthinker.levels.maze1;
 import com.jme3.bullet.BulletAppState;
 import com.jme3.math.FastMath;
 import com.jme3.math.Vector3f;
-import com.jme3.scene.CameraNode;
 import com.jme3.scene.Node;
 import overthinker.levels.Level;
 import overthinker.levels.LevelType;
-
-import java.util.ArrayList;
 
 /**
  * Created by Peter on 11/15/2014.
@@ -42,9 +39,9 @@ public class Maze1 extends Level {
 
         setBulletAppState(new BulletAppState());
 
-        setHeightMapLocation("overthinker/assets/terrains/tieredmaze1.png");
+        setHeightMapLocation("overthinker/assets/terrains/circlemaze_height.png");
         setMatTerrainLocation("Common/MatDefs/Terrain/Terrain.j3md");
-        setMatTerrainAlphaTextureLocation("overthinker/assets/terrains/tieredmaze1color.png");
+        setMatTerrainAlphaTextureLocation("overthinker/assets/terrains/circlemaze_color-noalpha.png");
 
         setAudioOceanLocation("overthinker/assets/sounds/wavesLoop.ogg");
         setAudioCollectLocation("overthinker/assets/sounds/collect.ogg");
