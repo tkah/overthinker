@@ -41,6 +41,7 @@ public class LevelManager extends AbstractAppState
   private SkyControl sc;
   private DirectionalLight mainLight;
   private NavMesh navMesh;
+  private FilterPostProcessor fpp;
 
   @Override
   public void initialize(AppStateManager stateManager, Application application)
@@ -58,6 +59,7 @@ public class LevelManager extends AbstractAppState
 
     setUpLandscape(1);
     setUpLight();
+    setUpWater();
   }
 
   public BulletAppState getPhysics()
@@ -104,7 +106,6 @@ public class LevelManager extends AbstractAppState
     }
 
     worldNode.addControl(sc);
-    setUpWater();
     BloomFilter bloom = new BloomFilter(BloomFilter.GlowMode.Objects);
     bloom.setBlurScale(2.5f);
     bloom.setExposurePower(1f);
@@ -112,9 +113,14 @@ public class LevelManager extends AbstractAppState
     sc.getUpdater().addBloomFilter(bloom);
   }
 
+  public FilterPostProcessor getFpp()
+  {
+    return fpp;
+  }
+
   private void setUpWater()
   {
-    FilterPostProcessor fpp = new FilterPostProcessor(assetManager);
+    fpp = new FilterPostProcessor(assetManager);
     WaterFilter water = new WaterFilter(rootNode, mainLight.getDirection());
     water.setWaterHeight(20f);
     water.setDeepWaterColor(new ColorRGBA(0.0f, 0.5f, 0.5f, 1.0f));
@@ -151,7 +157,7 @@ public class LevelManager extends AbstractAppState
     mat_terrain.setFloat("DiffuseMap_2_scale", 128f);
 
     /** Add Lava Rocks into alpha layer**/
-    Texture lava = assetManager.loadTexture("Textures/lava_texture-sm.jpg");
+    Texture lava = assetManager.loadTexture("assets/textures/lava_texture-sm.jpg");
     lava.setWrap(Texture.WrapMode.Repeat);
     mat_terrain.setTexture("DiffuseMap_3", lava);
     mat_terrain.setFloat("DiffuseMap_3_scale", 128f);

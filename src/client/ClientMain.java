@@ -1,6 +1,7 @@
 package client;
 
 import com.jme3.app.SimpleApplication;
+import com.jme3.audio.AudioNode;
 import com.jme3.cursors.plugins.JmeCursor;
 import com.jme3.niftygui.NiftyJmeDisplay;
 import de.lessvoid.nifty.Nifty;
@@ -20,6 +21,7 @@ public class ClientMain extends SimpleApplication implements ScreenController
   private InteractionManager interactionManager;
   private CameraManager cameraManager;
   private NiftyJmeDisplay niftyDisplay;
+  private AudioNode menuMusic;
 
   @Override
   public void bind(Nifty nifty, Screen screen)
@@ -46,6 +48,7 @@ public class ClientMain extends SimpleApplication implements ScreenController
     if(stateManager.hasState(playerManager)) stateManager.detach(playerManager);
     if(stateManager.hasState(interactionManager)) stateManager.detach(interactionManager);
     if(stateManager.hasState(cameraManager)) stateManager.detach(cameraManager);
+    nifty.exit();
     super.destroy();
   }
 
@@ -69,6 +72,7 @@ public class ClientMain extends SimpleApplication implements ScreenController
       {
         enqueue(() -> {
           nifty.gotoScreen("loading_screen");
+          menuMusic.stop();
           return null;
         }).get();
         getFlyByCamera().setEnabled(false);
@@ -88,6 +92,10 @@ public class ClientMain extends SimpleApplication implements ScreenController
 
   private void startNifty()
   {
+    menuMusic = new AudioNode(assetManager, "overthinker/assets/sounds/menuMusic.ogg", false);
+    menuMusic.setPositional(false);
+    menuMusic.attachChild(menuMusic);
+    menuMusic.play();
     flyCam.setDragToRotate(true);
     guiNode.detachAllChildren();
     niftyDisplay = new NiftyJmeDisplay(assetManager, inputManager, audioRenderer, guiViewPort);

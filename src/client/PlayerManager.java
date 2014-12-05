@@ -51,7 +51,7 @@ public class PlayerManager extends AbstractAppState {
 
     private void warpPlayer()
     {
-        player.playerPhys.warp(new Vector3f(60,65,-330));
+        player.playerPhys.warp(new Vector3f(60,175,-330));
     }
 
 
