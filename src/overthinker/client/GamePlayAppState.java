@@ -57,8 +57,8 @@ import java.util.HashMap;
 public class GamePlayAppState extends AbstractAppState
   implements ActionListener, AnalogListener
 {
-  private static final int SPHERE_RESOURCE_COUNT = 100;
-  private static final float SPHERE_RESOURCE_RADIUS = 1.0f;
+  private static final int SPHERE_RESOURCE_COUNT = 1;
+  private static final float SPHERE_RESOURCE_RADIUS = 5.0f;
 
   private SimpleApplication app;
   private Camera cam;
@@ -531,6 +531,8 @@ public class GamePlayAppState extends AbstractAppState
       playerNode = new OverNode("OverThinker");
       cam.setLocation(new Vector3f(0,250,0));
       cam.lookAtDirection(new Vector3f(0,-1,0), Vector3f.UNIT_Y);
+      //TODO remove createSphereResources() after EEG testing is complete:
+      createSphereResources();
     }
     else
     {

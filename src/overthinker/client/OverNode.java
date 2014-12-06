@@ -15,7 +15,7 @@ import java.util.ArrayList;
 public class OverNode extends PlayerNode
 {
   private ArrayList<AudioNode> audioList = new ArrayList<AudioNode>();
-  //private EEGMonitor monitor = new EEGMonitor();
+  private EEGMonitor monitor = new EEGMonitor();
   private float waterRate = 0;
   private int tiltDirection = 0;
   private boolean gravityLeft = false, gravityRight = false, gravityForward = false, gravityBack = false;
@@ -25,16 +25,19 @@ public class OverNode extends PlayerNode
   public OverNode(String name)
   {
     super(name);
-    //monitor.start();
+    monitor.start();
   }
 
   public void update (float tpf) {
-    //tiltDirection = monitor.getTiltDirection();
-    if (tiltDirection == 10) {
-      clearTilt();
-    } else setTilt(tiltDirection);
-    //waterRate = monitor.getStressLevel()/1000; //a rate of 1 fills instantly, eeg hovers around ~.5, so divide by 1000
-    //TODO create netClient to send waterRate and tiltDirection
+    if (monitor.updated) {
+      tiltDirection = monitor.getTiltDirection();
+      if (tiltDirection == 10) {
+        clearTilt();
+      } else setTilt(tiltDirection);
+      waterRate = monitor.getStressLevel() / 1000; //a rate of 1 fills instantly, eeg hovers around ~.5, so divide by 1000
+      //TODO create netClient to send waterRate and tiltDirection
+      monitor.updated = false;
+    }
   }
 
   public void setUpPlayer()
@@ -96,7 +99,6 @@ public class OverNode extends PlayerNode
   public float getWaterRate() {
     return waterRate;
   }
-
   @Override
   public boolean getForwardGrav() {
     return gravityForward;
