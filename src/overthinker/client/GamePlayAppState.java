@@ -222,7 +222,7 @@ public class GamePlayAppState extends AbstractAppState
 
     Serializer.registerClass(ChangePlayerLocationRequest.class);
     Serializer.registerClass(ChangeMapTiltRequest.class);
-    Serializer.registerClass(ChangeWaterLevelRequest.class);
+    Serializer.registerClass(ChangeWaterRateRequest.class);
     Serializer.registerClass(PlayerDeathRequest.class);
     Serializer.registerClass(ModelUpdate.class);
     Serializer.registerClass(NewClientRequest.class);
@@ -288,21 +288,21 @@ public class GamePlayAppState extends AbstractAppState
     /* Testing */
     //Water level from stress
     if (playerType == 0) {
-      water.setWaterHeight(water.getWaterHeight() + playerNode.getWaterRate());
+      water.setWaterHeight(water.getWaterHeight() + model.getWaterRate());
     }
 
     for (int i = 0; i < sphereResourceArrayList.size(); i++) {
       SphereResource s = sphereResourceArrayList.get(i);
-      if (playerNode.getForwardGrav()) {
+      if (model.isGravityForward()) {
         s.getSphereResourcePhy().setGravity(new Vector3f(0,0,-Globals.GRAVITY));
       }
-      else if (playerNode.getBackwardGrav()) {
+      else if (model.isGravityBack()) {
         s.getSphereResourcePhy().setGravity(new Vector3f(0,0,Globals.GRAVITY));
       }
-      else if (playerNode.getRightGrav()) {
+      else if (model.isGravityRight()) {
         s.getSphereResourcePhy().setGravity(new Vector3f(-Globals.GRAVITY,0,0));
       }
-      else if (playerNode.getLeftGrav()) {
+      else if (model.isGravityLeft()) {
         s.getSphereResourcePhy().setGravity(new Vector3f(Globals.GRAVITY,0,0));
       }
       else s.getSphereResourcePhy().setGravity(new Vector3f(0,-Globals.GRAVITY,0));
@@ -528,7 +528,7 @@ public class GamePlayAppState extends AbstractAppState
   {
     if (playerType == 0)
     {
-      playerNode = new OverNode("OverThinker");
+      playerNode = new OverNode("OverThinker", netClient);
       cam.setLocation(new Vector3f(0,250,0));
       cam.lookAtDirection(new Vector3f(0,-1,0), Vector3f.UNIT_Y);
       //TODO remove createSphereResources() after EEG testing is complete:
@@ -874,7 +874,11 @@ public class GamePlayAppState extends AbstractAppState
     if (model != null) {
       model.setPlayerLocations(message.getPlayerLocations());
       model.setPlayerAlive(message.getPlayerAlive());
-      model.setPlayerAlive(message.getPlayerAlive());
+      model.setGravityRight(message.isGravityRight());
+      model.setGravityLeft(message.isGravityLeft());
+      model.setGravityForward(message.isGravityForward());
+      model.setGravityBack(message.isGravityBack());
+      model.setWaterRate(message.getWaterRate());
       model.setVersion(message.version);
     }
   }

@@ -2,14 +2,9 @@ package overthinker.server;
 
 
 import com.jme3.math.Vector3f;
-import com.jme3.network.Filters;
-import com.jme3.network.HostedConnection;
-import overthinker.levels.Level;
-import overthinker.levels.maze1.Maze1;
+import com.jme3.network.*;
 import overthinker.net.*;
 import com.jme3.app.SimpleApplication;
-import com.jme3.network.Network;
-import com.jme3.network.Server;
 import com.jme3.network.serializing.Serializer;
 import com.jme3.system.JmeContext;
 
@@ -62,6 +57,11 @@ public class ServerMain extends SimpleApplication {
         modelUpdate.setPlayerLocations(model.getPlayerLocations());
         modelUpdate.setPlayerAlive(model.getPlayerAlive());
         modelUpdate.version = model.getVersion();
+        modelUpdate.setGravityRight(model.isGravityRight());
+        modelUpdate.setGravityLeft(model.isGravityLeft());
+        modelUpdate.setGravityForward(model.isGravityForward());
+        modelUpdate.setGravityBack(model.isGravityBack());
+        modelUpdate.setWaterRate(model.getWaterRate());
         netServer.broadcast(modelUpdate);
     }
 
@@ -74,7 +74,7 @@ public class ServerMain extends SimpleApplication {
 
         Serializer.registerClass(ChangePlayerLocationRequest.class);
         Serializer.registerClass(ChangeMapTiltRequest.class);
-        Serializer.registerClass(ChangeWaterLevelRequest.class);
+        Serializer.registerClass(ChangeWaterRateRequest.class);
         Serializer.registerClass(PlayerDeathRequest.class);
         Serializer.registerClass(ModelUpdate.class);
         Serializer.registerClass(NewClientRequest.class);
@@ -83,7 +83,7 @@ public class ServerMain extends SimpleApplication {
         netServer.addMessageListener(listener, NewClientRequest.class);
         netServer.addMessageListener(listener, ChangePlayerLocationRequest.class);
         netServer.addMessageListener(listener, ChangeMapTiltRequest.class);
-        netServer.addMessageListener(listener, ChangeWaterLevelRequest.class);
+        netServer.addMessageListener(listener, ChangeWaterRateRequest.class);
         netServer.addMessageListener(listener, PlayerDeathRequest.class);
     }
 
@@ -126,6 +126,22 @@ public class ServerMain extends SimpleApplication {
     public void handlePlayerDeath(HostedConnection source)
     {
         model.getPlayerAlive().replace(clientIndex.get(source), false);
+        model.setVersion(model.getVersion() + 1);
+        broadcastModelUpdate();
+    }
+
+    public void updateMapTilt(ChangeMapTiltRequest message) {
+        model.setGravityRight(message.isRight());
+        model.setGravityLeft(message.isLeft());
+        model.setGravityForward(message.isForward());
+        model.setGravityBack(message.isBack());
+        model.setVersion(model.getVersion() + 1);
+        broadcastModelUpdate();
+    }
+
+
+    public void updateWaterRate(ChangeWaterRateRequest message) {
+        model.setWaterRate(message.getWaterRate());
         model.setVersion(model.getVersion() + 1);
         broadcastModelUpdate();
     }

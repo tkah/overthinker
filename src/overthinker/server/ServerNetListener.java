@@ -1,10 +1,9 @@
 package overthinker.server;
 
 import com.jme3.network.*;
+import javafx.collections.ListChangeListener;
 import overthinker.client.Globals;
-import overthinker.net.ChangePlayerLocationRequest;
-import overthinker.net.NewClientRequest;
-import overthinker.net.PlayerDeathRequest;
+import overthinker.net.*;
 
 /**
  * Created by Peter on 11/11/2014.
@@ -24,6 +23,10 @@ public class ServerNetListener implements MessageListener<HostedConnection> {
             server.updatePlayerLocation(source, ((ChangePlayerLocationRequest) message).getPlayerLocation());
         } else if (message instanceof PlayerDeathRequest) {
             server.handlePlayerDeath(source);
+        } else if (message instanceof ChangeMapTiltRequest) {
+            server.updateMapTilt((ChangeMapTiltRequest) message);
+        } else if (message instanceof ChangeWaterRateRequest) {
+            server.updateWaterRate((ChangeWaterRateRequest) message);
         }
     }
 }

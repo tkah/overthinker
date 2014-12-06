@@ -1,9 +1,11 @@
 package overthinker.client;
 
 import com.jme3.audio.AudioNode;
-import com.jme3.bullet.control.BetterCharacterControl;
 import com.jme3.input.InputManager;
+import com.jme3.network.Client;
 import overthinker.client.eeg.EEGMonitor;
+import overthinker.net.ChangeMapTiltRequest;
+import overthinker.net.ChangeWaterRateRequest;
 
 import java.util.ArrayList;
 
@@ -20,12 +22,14 @@ public class OverNode extends PlayerNode
   private int tiltDirection = 0;
   private boolean gravityLeft = false, gravityRight = false, gravityForward = false, gravityBack = false;
   //Left = -1, right = 1, forward = 2, back = -2, clear all flags = 10
+  private Client netClient;
+  private ChangeWaterRateRequest waterRateRequest = new ChangeWaterRateRequest();
 
-
-  public OverNode(String name)
+  public OverNode(String name, Client netClient)
   {
     super(name);
     monitor.start();
+    this.netClient = netClient;
   }
 
   public void update (float tpf) {
@@ -35,6 +39,8 @@ public class OverNode extends PlayerNode
         clearTilt();
       } else setTilt(tiltDirection);
       waterRate = monitor.getStressLevel() / 1000; //a rate of 1 fills instantly, eeg hovers around ~.5, so divide by 1000
+      waterRateRequest.setWaterRate(waterRate);
+      netClient.send(waterRateRequest);
       //TODO create netClient to send waterRate and tiltDirection
       monitor.updated = false;
     }
@@ -71,28 +77,29 @@ public class OverNode extends PlayerNode
    * @param direction integer representing tilt direction
    */
   private void setTilt(int direction) {
-    if (direction == 0) return;
+    ChangeMapTiltRequest changeMapTiltRequest = new ChangeMapTiltRequest();
     if (direction == 1) {
       clearTilt();
       gravityRight = true;
-      return;
+      changeMapTiltRequest.setRight(true);
     }
-    if (direction == -1) {
+    else if (direction == -1) {
       clearTilt();
       gravityLeft = true;
-
-      return;
+      changeMapTiltRequest.setLeft(true);
     }
-    if (direction == 2) {
+    else if (direction == 2) {
       clearTilt();
       gravityForward = true;
+      changeMapTiltRequest.setForward(true);
       return;
     }
-    if (direction == -2) {
+    else if (direction == -2) {
       clearTilt();
       gravityBack = true;
-      return;
+      changeMapTiltRequest.setBack(true);
     }
+    netClient.send(changeMapTiltRequest);
   }
 
   @Override
