@@ -55,6 +55,22 @@
         </layer>
     </screen>
 
+    <screen id="waitingScreen">
+        <layer childLayout="center" id="layer1" backgroundColor="#FFFFFF">
+            <image filename="overthinker/assets/interface/waitingScreen.png" height="20%" id="backgroundSky" width="20%">
+
+            </image>
+        </layer>
+    </screen>
+
+    <screen id="deadScreen">
+        <layer childLayout="center" id="layer1" backgroundColor="#FFFFFF">
+            <image filename="overthinker/assets/interface/deadScreen.png" height="20%" id="backgroundSky" width="20%">
+
+            </image>
+        </layer>
+    </screen>
+
     <screen id="loaded"></screen>
 
 

@@ -66,7 +66,7 @@ public class MainMenuController extends AbstractAppState implements ScreenContro
         guiViewPort.addProcessor(nDisplay);
         menu_music = new AudioNode(assetManager, "overthinker/assets/sounds/menuMusic.ogg", false);
         menu_music.setPositional(false);
-        menu_music.setVolume(3);
+        menu_music.setVolume(.3f);
         menu_music.attachChild(menu_music);
         menu_music.play();
     }

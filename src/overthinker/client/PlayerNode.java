@@ -79,10 +79,11 @@ abstract class PlayerNode extends Node
 
   }
 
-  public ParticleEmitter getDustEmitter()
+  public ParticleEmitter getDustEmitterRight()
   {
     return null;
   }
+  public ParticleEmitter getDustEmitterLeft(){return null;}
 
   public boolean getShrink()
   {

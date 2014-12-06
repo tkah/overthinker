@@ -4,6 +4,9 @@ import com.jme3.asset.AssetManager;
 import com.jme3.audio.AudioNode;
 import com.jme3.bullet.control.BetterCharacterControl;
 import com.jme3.collision.CollisionResults;
+import com.jme3.effect.ParticleEmitter;
+import com.jme3.effect.ParticleMesh;
+import com.jme3.material.Material;
 import com.jme3.math.Quaternion;
 import com.jme3.math.Ray;
 import com.jme3.math.Vector3f;
@@ -37,6 +40,7 @@ public class PlayerControl extends BetterCharacterControl
     super(radius, height, mass);
     setApplyPhysicsLocal(true);
     initAudio(a);
+
   }
 
   /**
@@ -272,19 +276,21 @@ public class PlayerControl extends BetterCharacterControl
   public void initAudio(AssetManager assetManager)
   {
     //walking sounds
-    audio_footsteps = new AudioNode(assetManager, "overthinker/assets/sounds/footsteps.ogg",true);
+    audio_footsteps = new AudioNode(assetManager, "overthinker/assets/sounds/footsteps.ogg",false);
     audio_footsteps.setPositional(false);
     audio_footsteps.setLooping(true);
     audio_footsteps.setVolume(2);
     audioList.add(audio_footsteps);
 
     //jumping sound
-    audio_jump = new AudioNode(assetManager, "overthinker/assets/sounds/pop.ogg",false);
+    audio_jump = new AudioNode(assetManager, "overthinker/assets/sounds/jump.ogg",false);
     audio_jump.setPositional(false);
     audio_jump.setLooping(false);
-    audio_jump.setVolume(2);
+    audio_jump.setVolume(4);
     audioList.add(audio_jump);
   }
+
+
 
   public float getCamDir()
   {

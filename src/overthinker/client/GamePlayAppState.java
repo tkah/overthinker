@@ -141,7 +141,7 @@ public class GamePlayAppState extends AbstractAppState
    */
   public void initialize(AppStateManager stateManager, Application app)
   {
-    initNetClient();
+   // initNetClient();
     super.initialize(stateManager, app);
     this.app = (SimpleApplication) app;
     this.cam = this.app.getCamera();
@@ -842,7 +842,7 @@ public class GamePlayAppState extends AbstractAppState
     }
 
     //ambient map sounds
-    audio_ocean = new AudioNode(assetManager, "overthinker/assets/sounds/wavesLoop.ogg",true);
+    audio_ocean = new AudioNode(assetManager, "overthinker/assets/sounds/wavesLoop.ogg",false);
     audio_ocean.setLooping(true);
     audio_ocean.setPositional(true);
     audio_ocean.setVolume(1);
