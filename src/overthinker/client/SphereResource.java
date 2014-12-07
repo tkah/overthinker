@@ -1,7 +1,6 @@
 package overthinker.client;
 
 import com.jme3.asset.AssetManager;
-import com.jme3.bullet.collision.shapes.SphereCollisionShape;
 import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
@@ -77,7 +76,7 @@ public class SphereResource
 
   public void setShrink(boolean s)
   {
-    if (s == true) startShrinkTime = Globals.getTotSecs();
+    if (s) startShrinkTime = Globals.getTotSecs();
     shrink = s;
   }
 

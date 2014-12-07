@@ -4,11 +4,12 @@ import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 
 /**
- * Created by sidholman on 11/25/14.
+ * Creates an Emotiv EEG engine to recieve and interpret
+ * data from the headset.
  */
 public class EEGMonitor extends Thread {
 
-    private final boolean DEBUG = true;
+    private final boolean DEBUG = false;
     private final int MIN_GYRO_DELTA = 50;
 
     private Pointer eEvent = Edk.INSTANCE.EE_EmoEngineEventCreate();
@@ -23,9 +24,11 @@ public class EEGMonitor extends Thread {
     private boolean readytocollect = false;
     private IntByReference gyroX = new IntByReference(0);
     private IntByReference gyroY = new IntByReference(0);
-    private int currentTilt = 0;
+    private int currentGravity = 0;
+    private int requestedGravity = 0;
     private boolean gravityNormal = true;
 
+    public volatile boolean updated = false;
     public float excitementShort = 0;
     public float frustrationShort = 0;
 
@@ -101,17 +104,19 @@ public class EEGMonitor extends Thread {
                         //for (int sampleIdx = 0; sampleIdx < nSamplesTaken.getValue(); ++sampleIdx) {
                             Edk.INSTANCE.EE_HeadsetGetGyroDelta(userID.getValue(), gyroX, gyroY);
                             if (DEBUG)System.out.print(" GyroDelta[X]: " + gyroX.getValue() + " GyroDelta[Y]: " + gyroY.getValue());
-                            interpretGyro();
-                            //Edk.INSTANCE. dot HOW DO I ACCESS FRUSTRATION dot BAD API
+
+                            int temp = interpretGyro();
+                            if (temp != 0) requestedGravity = temp;
+
                             excitementShort = EmoState.INSTANCE.ES_AffectivGetExcitementShortTermScore(eState);
-                            frustrationShort = EmoState.INSTANCE.ES_AffectivGetFrustrationScore(eState);
-                            interpretFrustration();
+                            interpretExcitement();
                             if (DEBUG)System.out.print(", Frust: " + EmoState.INSTANCE.ES_AffectivGetFrustrationScore(eState));
                             if (DEBUG) System.out.println();
                        // }
                     }
                 }
             }
+            updated = true;
         }
         this.shutdown();
     }
@@ -146,7 +151,7 @@ public class EEGMonitor extends Thread {
         }
         if (Math.abs(xDelta) > MIN_GYRO_DELTA) {
             if (xDelta > 0) {
-                if (!gravityNormal && currentTilt == -1 )
+                if (!gravityNormal && currentGravity == -1 )
                 {
                     if (DEBUG) System.out.println("Tilt: 0 (RETURN TO UPRIGHT)");
                     gravityNormal = true;
@@ -155,18 +160,19 @@ public class EEGMonitor extends Thread {
                 if (DEBUG) System.out.print(" Tilt: 1 (Right)");
                 return 1;       //Right
             } else {
-                if (!gravityNormal && currentTilt == 1 )
+                if (!gravityNormal && currentGravity == 1 )
                 {
                     if (DEBUG) System.out.println("Tilt: 0 (RETURN TO UPRIGHT)");
                     gravityNormal = true;
                     return 10;
-                }                if (DEBUG) System.out.print(" Tilt: -1 (Left)");
+                }
+                if (DEBUG) System.out.print(" Tilt: -1 (Left)");
                 return -1;     //Left
             }
         }
         if (Math.abs(yDelta) > MIN_GYRO_DELTA) {
             if (yDelta > 0) {
-                if (!gravityNormal && currentTilt == -2 )
+                if (!gravityNormal && currentGravity == -2 )
                 {
                     if (DEBUG) System.out.println("Tilt: 0 (RETURN TO UPRIGHT)");
                     gravityNormal = true;
@@ -175,7 +181,7 @@ public class EEGMonitor extends Thread {
                 if (DEBUG) System.out.print(" Tilt: 2 (Up)");
                 return 2; //Up
             } else {
-                if (!gravityNormal && currentTilt == 2 )
+                if (!gravityNormal && currentGravity == 2 )
                 {
                     if (DEBUG) System.out.println("Tilt: 0 (RETURN TO UPRIGHT)");
                     gravityNormal = true;
@@ -195,15 +201,11 @@ public class EEGMonitor extends Thread {
      * @return integer reflecting tilt direction (-1 = Left, 1 = Right, -2 = Down, 2 = Up)
      */
     public int getTiltDirection() {
-        int tilt = 0;
-        synchronized (this) {
-            tilt = interpretGyro();
+        currentGravity = requestedGravity;
+        if (currentGravity == 10) {
+            currentGravity = 0;
         }
-        currentTilt = tilt;
-        if (currentTilt == 10) {
-            currentTilt = 0;
-        }
-        return tilt;
+        return requestedGravity;
     }
 
 
@@ -212,7 +214,7 @@ public class EEGMonitor extends Thread {
      *
      * @return integer 1 if excitement is above 50%, 0 otherwise
      */
-    private int interpretFrustration() {
+    private int interpretExcitement() {
         if (DEBUG) System.out.println("\nShort term excitement: " + excitementShort);
         if (DEBUG) System.out.println("Frustration: " + frustrationShort);
 
@@ -226,14 +228,14 @@ public class EEGMonitor extends Thread {
 
     /**
      * Public getter-method for stress (whichever metric we decide
-     * to use will be set in the 'interpretFrustration() method).
+     * to use will be set in the 'interpretExcitement() method).
      *
      * @return 1 if stress is high, 0 otherwise.  **Will change, with gameplay testing.**
      */
     public int getStressLevel() {
         int stress = 0;
         synchronized (this) {
-            stress = interpretFrustration();
+            stress = interpretExcitement();
         }
         return stress;
     }

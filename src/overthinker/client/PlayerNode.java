@@ -1,14 +1,10 @@
 package overthinker.client;
 
-import com.jme3.bullet.control.BetterCharacterControl;
-import com.jme3.bullet.control.GhostControl;
 import com.jme3.effect.ParticleEmitter;
 import com.jme3.input.InputManager;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
-import org.omg.Dynamic.Parameter;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 /**
@@ -16,7 +12,7 @@ import java.util.ArrayList;
  */
 abstract class PlayerNode extends Node
 {
-  ArrayList<String> actionStrings = new ArrayList<String>();
+  ArrayList<String> actionStrings = new ArrayList<>();
 
   public PlayerNode(String name)
   {
@@ -79,10 +75,11 @@ abstract class PlayerNode extends Node
 
   }
 
-  public ParticleEmitter getDustEmitter()
+  public ParticleEmitter getDustEmitterRight()
   {
     return null;
   }
+  public ParticleEmitter getDustEmitterLeft(){return null;}
 
   public boolean getShrink()
   {

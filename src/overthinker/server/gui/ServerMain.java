@@ -14,7 +14,7 @@ import java.io.IOException;
 /**
  * Created by Peter on 11/11/2014.
  */
-public class ServerMain extends SimpleApplication {
+class ServerMain extends SimpleApplication {
     private Server myServer = null;
     private static final boolean DEBUG = true;
 

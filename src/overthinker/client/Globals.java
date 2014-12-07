@@ -36,13 +36,7 @@ public class Globals
    */
   public static void setUpTimer()
   {
-    ActionListener taskPerformer = new ActionListener()
-    {
-      public void actionPerformed(ActionEvent evt)
-      {
-        timerCt++;
-      }
-    };
+    ActionListener taskPerformer = evt -> timerCt++;
     timer = new Timer(TIMER_DELAY, taskPerformer);
   }
 

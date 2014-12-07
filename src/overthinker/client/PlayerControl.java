@@ -8,7 +8,6 @@ import com.jme3.math.Quaternion;
 import com.jme3.math.Ray;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Node;
-import com.jme3.terrain.geomipmap.TerrainQuad;
 
 import java.util.ArrayList;
 
@@ -21,9 +20,10 @@ public class PlayerControl extends BetterCharacterControl
   private AudioNode audio_jump;
   private float camDir = 0;
 
-  private ArrayList<AudioNode> audioList = new ArrayList<AudioNode>();
+  private ArrayList<AudioNode> audioList = new ArrayList<>();
 
   private boolean gravityLeft = false, gravityRight = false, gravityForward = false, gravityBack = false;
+  private boolean changeInGravity = false;
 
   /**
    * Class constructor
@@ -36,6 +36,7 @@ public class PlayerControl extends BetterCharacterControl
     super(radius, height, mass);
     setApplyPhysicsLocal(true);
     initAudio(a);
+
   }
 
   /**
@@ -73,6 +74,7 @@ public class PlayerControl extends BetterCharacterControl
       gravityBack = isPressed;
       setWalkDirection(new Vector3f(0,0,0));
     }
+    changeInGravity = true;
   }
 
   public void turn(float dir)
@@ -83,7 +85,7 @@ public class PlayerControl extends BetterCharacterControl
     setViewDirection(turn.mult(getViewDirection()));
   }
 
-  public boolean checkGravity(boolean nodeOnGround, Vector3f playerTranslation, Node colNode)
+  public boolean checkGravity(boolean nodeOnGround, Vector3f playerTranslation, Node colNode, Node pivot, Node camNode)
   {
     boolean onGround = nodeOnGround;
     Vector3f dir;
@@ -100,7 +102,7 @@ public class PlayerControl extends BetterCharacterControl
         onGround = false;
       }
       else onGround = true;
-      setGravity(new Vector3f(Globals.GRAVITY, 0, -Globals.GRAVITY));
+      setGravity(new Vector3f(Globals.GRAVITY, 1, -Globals.GRAVITY));
     }
     else if (gravityForward && gravityRight)
     {
@@ -108,12 +110,9 @@ public class PlayerControl extends BetterCharacterControl
       dir = new Vector3f(-1,0,-1);
       Ray ray = new Ray(playerTranslation, dir);
       colNode.collideWith(ray, coll);
-      if ((coll.size() > 0 && coll.getClosestCollision().getDistance() > getHeight() + Globals.GROUND_RAY_ALLOWANCE) || coll.size() == 0)
-      {
-        onGround = false;
-      }
-      else onGround = true;
-      setGravity(new Vector3f(-Globals.GRAVITY, 0, -Globals.GRAVITY));
+      onGround = !((coll.size() > 0 && coll.getClosestCollision().getDistance() > getHeight() + Globals
+            .GROUND_RAY_ALLOWANCE) || coll.size() == 0);
+      setGravity(new Vector3f(-Globals.GRAVITY, 1, -Globals.GRAVITY));
     }
     else if (gravityBack && gravityRight)
     {
@@ -121,12 +120,9 @@ public class PlayerControl extends BetterCharacterControl
       dir = new Vector3f(-1,0,1);
       Ray ray = new Ray(playerTranslation, dir);
       colNode.collideWith(ray, coll);
-      if ((coll.size() > 0 && coll.getClosestCollision().getDistance() > getHeight() + Globals.GROUND_RAY_ALLOWANCE) || coll.size() == 0)
-      {
-        onGround = false;
-      }
-      else onGround = true;
-      setGravity(new Vector3f(-Globals.GRAVITY, 0, Globals.GRAVITY));
+      onGround = !((coll.size() > 0 && coll.getClosestCollision().getDistance() > getHeight() + Globals
+            .GROUND_RAY_ALLOWANCE) || coll.size() == 0);
+      setGravity(new Vector3f(-Globals.GRAVITY, 1, Globals.GRAVITY));
     }
     else if (gravityBack && gravityLeft)
     {
@@ -134,12 +130,9 @@ public class PlayerControl extends BetterCharacterControl
       dir = new Vector3f(1,0,1);
       Ray ray = new Ray(playerTranslation, dir);
       colNode.collideWith(ray, coll);
-      if ((coll.size() > 0 && coll.getClosestCollision().getDistance() > getHeight() + Globals.GROUND_RAY_ALLOWANCE) || coll.size() == 0)
-      {
-        onGround = false;
-      }
-      else onGround = true;
-      setGravity(new Vector3f(Globals.GRAVITY, 0, Globals.GRAVITY));
+      onGround = !((coll.size() > 0 && coll.getClosestCollision().getDistance() > getHeight() + Globals
+            .GROUND_RAY_ALLOWANCE) || coll.size() == 0);
+      setGravity(new Vector3f(Globals.GRAVITY, 1, Globals.GRAVITY));
     }
     else if (gravityLeft)
     {
@@ -147,12 +140,9 @@ public class PlayerControl extends BetterCharacterControl
       dir = new Vector3f(1,0,0);
       Ray rayL = new Ray(playerTranslation, dir);
       colNode.collideWith(rayL, coll);
-      if (coll.size() > 0 && coll.getClosestCollision().getDistance() > getHeight() + Globals.GROUND_RAY_ALLOWANCE || coll.size() == 0)
-      {
-        onGround = false;
-      }
-      else onGround = true;
-      setGravity(new Vector3f(Globals.GRAVITY, 0, 0));
+      onGround = !(coll.size() > 0 && coll.getClosestCollision().getDistance() > getHeight() + Globals
+            .GROUND_RAY_ALLOWANCE || coll.size() == 0);
+      setGravity(new Vector3f(Globals.GRAVITY, 1, 0));
     }
     else if (gravityRight)
     {
@@ -160,12 +150,8 @@ public class PlayerControl extends BetterCharacterControl
       dir = new Vector3f(-1,0,0);
       Ray rayR = new Ray(playerTranslation, dir);
       colNode.collideWith(rayR, coll);
-      if (coll.size() > 0 && coll.getClosestCollision().getDistance() > getHeight() + Globals.GROUND_RAY_ALLOWANCE || coll.size() == 0)
-      {
-        onGround = false;
-      }
-      else onGround = true;
-      setGravity(new Vector3f(-Globals.GRAVITY, 0, 0));
+      onGround = !(coll.size() > 0 && coll.getClosestCollision().getDistance() > getHeight() + Globals.GROUND_RAY_ALLOWANCE || coll.size() == 0);
+      setGravity(new Vector3f(-Globals.GRAVITY, 1, 0));
     }
     else if (gravityForward)
     {
@@ -174,12 +160,9 @@ public class PlayerControl extends BetterCharacterControl
       dir = new Vector3f(0,0,-1);
       Ray rayF = new Ray(playerTranslation, dir);
       colNode.collideWith(rayF, coll);
-      if ((coll.size() > 0 && coll.getClosestCollision().getDistance() > getHeight() + Globals.GROUND_RAY_ALLOWANCE) || coll.size() == 0)
-      {
-        onGround = false;
-      }
-      else onGround = true;
-      setGravity(new Vector3f(0, 0, -Globals.GRAVITY));
+      onGround = !((coll.size() > 0 && coll.getClosestCollision().getDistance() > getHeight() + Globals
+            .GROUND_RAY_ALLOWANCE) || coll.size() == 0);
+      setGravity(new Vector3f(0, 1, -Globals.GRAVITY));
     }
     else if (gravityBack)
     {
@@ -187,13 +170,8 @@ public class PlayerControl extends BetterCharacterControl
       dir = new Vector3f(0,0,1);
       Ray rayB = new Ray(playerTranslation, dir);
       colNode.collideWith(rayB, coll);
-      if ((coll.size() > 0 && coll.getClosestCollision().getDistance() > getHeight() + Globals.GROUND_RAY_ALLOWANCE) || coll.size() == 0)
-      {
-        onGround = false;
-      }
-
-      else onGround = true;
-      setGravity(new Vector3f(0, 0, Globals.GRAVITY));
+      onGround = !((coll.size() > 0 && coll.getClosestCollision().getDistance() > getHeight() + Globals.GROUND_RAY_ALLOWANCE) || coll.size() == 0);
+      setGravity(new Vector3f(0, 1, Globals.GRAVITY));
     }
     else
     {
@@ -202,12 +180,14 @@ public class PlayerControl extends BetterCharacterControl
       Ray rayD = new Ray(playerTranslation, dir);
 
       colNode.collideWith(rayD, coll);
-      if ((coll.size() > 0 && coll.getClosestCollision().getDistance() > getHeight() + Globals.GROUND_RAY_ALLOWANCE) || coll.size() == 0)
-      {
-        onGround = false;
-      }
-      else onGround = true;
+      onGround = !((coll.size() > 0 && coll.getClosestCollision().getDistance() > getHeight() + Globals.GROUND_RAY_ALLOWANCE) || coll.size() == 0);
       setGravity(new Vector3f(0, -Globals.GRAVITY, 0));
+    }
+
+    if (changeInGravity)
+    {
+      setViewDirection(new Vector3f(0, 4, -18));
+      changeInGravity = false;
     }
 
     return onGround;
@@ -264,19 +244,21 @@ public class PlayerControl extends BetterCharacterControl
   public void initAudio(AssetManager assetManager)
   {
     //walking sounds
-    audio_footsteps = new AudioNode(assetManager, "overthinker/assets/sounds/footsteps.ogg",true);
+    audio_footsteps = new AudioNode(assetManager, "overthinker/assets/sounds/footsteps.ogg",false);
     audio_footsteps.setPositional(false);
     audio_footsteps.setLooping(true);
     audio_footsteps.setVolume(2);
     audioList.add(audio_footsteps);
 
     //jumping sound
-    audio_jump = new AudioNode(assetManager, "overthinker/assets/sounds/pop.ogg",false);
+    audio_jump = new AudioNode(assetManager, "overthinker/assets/sounds/jump.ogg",false);
     audio_jump.setPositional(false);
     audio_jump.setLooping(false);
-    audio_jump.setVolume(2);
+    audio_jump.setVolume(4);
     audioList.add(audio_jump);
   }
+
+
 
   public float getCamDir()
   {
@@ -300,5 +282,10 @@ public class PlayerControl extends BetterCharacterControl
   public void playJump()
   {
     audio_jump.playInstance();
+  }
+
+  public void setChangeInGravity(boolean val)
+  {
+    changeInGravity = val;
   }
 }

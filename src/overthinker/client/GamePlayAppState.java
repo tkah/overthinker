@@ -1,7 +1,6 @@
-package overthinker.client; /**
- * Created by Torran on 11/9/14.
- */
+package overthinker.client;
 
+import com.jme3.ai.navmesh.NavMesh;
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.app.state.AbstractAppState;
@@ -20,9 +19,13 @@ import com.jme3.input.FlyByCamera;
 import com.jme3.input.InputManager;
 import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.AnalogListener;
-import com.jme3.light.*;
+import com.jme3.light.AmbientLight;
+import com.jme3.light.DirectionalLight;
+import com.jme3.light.Light;
 import com.jme3.material.Material;
-import com.jme3.math.*;
+import com.jme3.math.ColorRGBA;
+import com.jme3.math.FastMath;
+import com.jme3.math.Vector3f;
 import com.jme3.network.Client;
 import com.jme3.network.Network;
 import com.jme3.network.serializing.Serializer;
@@ -46,23 +49,22 @@ import com.jme3.texture.Texture.WrapMode;
 import com.jme3.water.WaterFilter;
 import jme3utilities.Misc;
 import jme3utilities.sky.SkyControl;
-import overthinker.net.PlayerLocationChangeRequest;
-import overthinker.net.ModelUpdate;
-import overthinker.net.NewClientRequest;
-import overthinker.net.NewClientResponse;
+import overthinker.net.*;
 import overthinker.server.ServerModel;
+import overthinker.ai.*;
 
 import java.io.IOException;
-import java.util.Calendar;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 
 public class GamePlayAppState extends AbstractAppState
-  implements ActionListener, AnalogListener
+      implements ActionListener, AnalogListener
 {
-  private static final int SPHERE_RESOURCE_COUNT = 250;
-  private static final float SPHERE_RESOURCE_RADIUS = 1.0f;
-
+  public NavMesh navMesh;
+  public BulletAppState bulletAppState;
+  private static final int SPHERE_RESOURCE_COUNT = 1;
+  private static final float SPHERE_RESOURCE_RADIUS = 5.0f;
   private SimpleApplication app;
   private Camera cam;
   private Node rootNode;
@@ -73,11 +75,6 @@ public class GamePlayAppState extends AbstractAppState
   private ViewPort viewPort;
   private Listener listener;
   private SkyControl sc;
-
-  private Vector3f lightDir = new Vector3f(4.1f, -3.2f, 0.1f);
-  private AmbientLight ambientLight = null;
-  private DirectionalLight mainLight = null;
-
   private Node platformsNode;
   private Node keysNode;
   private Node collidableNode;
@@ -87,11 +84,18 @@ public class GamePlayAppState extends AbstractAppState
   private PlayerNode playerNode;
   private int playerType = 1;
   private int fadeStart = 0;
-
-  private float waterHeight = 20.0f;
-  private float waterHeightRate = 0.05f;
-
-  private BulletAppState bulletAppState;
+  private final String levelName = "pentamaze";
+  private String lvlNoWallsName = "_height-nowalls.png";
+  private String lvlHeightName = "_height.png";
+  private String lvlColorName = "_color-noalpha.png";
+  private float lvlTime;
+  private Vector3f lightDir;
+  private ColorRGBA lightIntensity;
+  private boolean needsExitDoor = true;
+  private AmbientLight ambientLight = null;
+  private DirectionalLight mainLight = null;
+  private final float waterHeight = 20.0f;
+  private float waterHeightRate = 0.00f;
   private LandscapeControl landscape;
 
   private FadeFilter fade;
@@ -101,35 +105,39 @@ public class GamePlayAppState extends AbstractAppState
   private TerrainQuad terrain;
   private Material mat_terrain;
 
-  private ArrayList<SphereResource> sphereResourceArrayList = new ArrayList<SphereResource>();
-  private ArrayList<SphereResource> sphereResourcesToShrink = new ArrayList<SphereResource>();
-  private Vector3f exitLocation = new Vector3f(7,122,-7);
-  private Vector3f[] keyLocArray = {new Vector3f(60, 65, -330), new Vector3f(35, 65, 345), new Vector3f(115, 65, -353)};
-  private Vector3f[] keyDoorLocArray = {new Vector3f(-293, 98, 143), new Vector3f(330, 98, -68), new Vector3f(-236, 98, 208)};
-  private Vector3f[] platLocArray = {new Vector3f(55, 81.65f, -295), new Vector3f(245, 81.65f, 120), new Vector3f(195, 102.45f, 75)};
-  private Vector3f[] platDoorLocArray = {new Vector3f(252, 133, -87), new Vector3f(202,133,139), new Vector3f(67,133,-245)};
-  private float[] keyDoorSizeXArray = {15f, 15f, 17f};
-  private float[] keyDoorRotationArray = {-55f, 100f, -43f};
-  private float[] platDoorSizeXArray = {16f, 17f, 21f};
-  private float[] platDoorRotationArray = {-70, 49, -10};
-  private float fogDensity = 2.0f; //0, 1.0, 1.5, 2.0
-  private ArrayList<Key> keys = new ArrayList<Key>();
-  private ArrayList<Door> keyDoors = new ArrayList<Door>();
-  private ArrayList<Door> platDoors = new ArrayList<Door>();
-  private ArrayList<Platform> platforms = new ArrayList<Platform>();
+  private final ArrayList<SphereResource> sphereResourceArrayList = new ArrayList<>();
+  private final ArrayList<SphereResource> sphereResourcesToShrink = new ArrayList<>();
+  private Vector3f exitLocation;
+  private Vector3f[] keyLocArray = null;
+  private Vector3f[] keyDoorLocArray = null;
+  private Vector3f[] platLocArray = null;
+  private Vector3f[] platDoorLocArray = null;
+  private float[] keyDoorSizeXArray;
+  private float[] keyDoorRotationArray;
+  private float[] platDoorSizeXArray;
+  private float[] platDoorRotationArray;
+  private final float fogDensity = 0.0f;// 0, 1.0, 1.5, 2.0
+  private final ArrayList<Key> keys = new ArrayList<>();
+  private final ArrayList<Door> keyDoors = new ArrayList<>();
+  private final ArrayList<Door> platDoors = new ArrayList<>();
+  private final ArrayList<Platform> platforms = new ArrayList<>();
 
-  /** Create AudioNodes **/
+  /**
+   * Create AudioNodes *
+   */
   private AudioNode audio_ocean;
   private AudioNode audio_collect;
 
-  /** Networking **/
+  /**
+   * Networking *
+   */
   private Client netClient;
   private ServerModel model;
   private Vector3f spawnLocation;
   private long activeVersion;
   private int clientIndex;
-  private int playerCount = 4;
-  private HashMap<Integer, OtherPlayer> otherPlayers = new HashMap<Integer, OtherPlayer>();
+  private final int playerCount = 4;
+  private final HashMap<Integer, OtherPlayer> otherPlayers = new HashMap<>();
 
   /**
    * Class initialization
@@ -137,6 +145,7 @@ public class GamePlayAppState extends AbstractAppState
   public void initialize(AppStateManager stateManager, Application app)
   {
     initNetClient();
+    stateManager.attach(new AiManager());
     super.initialize(stateManager, app);
     this.app = (SimpleApplication) app;
     this.cam = this.app.getCamera();
@@ -149,17 +158,19 @@ public class GamePlayAppState extends AbstractAppState
 
     /** Set up Physics */
     bulletAppState = new BulletAppState();
+    bulletAppState.setDebugEnabled(true);
     stateManager.attach(bulletAppState);
     resources = new Node("Resources");
     localRootNode = new Node("LocalRoot");
     localRootNode.attachChild(resources);
-    collidableNode = new Node ("CollidableNode");
-    keysNode = new Node ("KeyNode");
-    platformsNode = new Node ("PlatformsNode");
+    collidableNode = new Node("CollidableNode");
+    keysNode = new Node("KeyNode");
+    platformsNode = new Node("PlatformsNode");
     exitNode = new Node("ExitNode");
 
     flyCam.setMoveSpeed(100);
 
+    setUpLevel();
     createSphereResources();
     createOtherPlayers();
     createDoorsAndKeys();
@@ -168,7 +179,7 @@ public class GamePlayAppState extends AbstractAppState
     setUpLight();
     setUpPlayer();
 
-    fade = new FadeFilter(2); // 2 seconds
+    fade = new FadeFilter(2);//  2 seconds
     fpp.addFilter(fade);
     fogFilter = new FogFilter();
     fogFilter.setFogDistance(155);
@@ -190,53 +201,9 @@ public class GamePlayAppState extends AbstractAppState
     inputManager.setCursorVisible(false);
   }
 
-  private void createOtherPlayers() {
-    for(int i = 0; i < playerCount; i++)
-    {
-      System.out.println("Creating new Player Objects");
-      OtherPlayer otherPlayer = new OtherPlayer(Globals.PLAYER_SPHERE_START_RADIUS, i,
-              spawnLocation, assetManager);
-      bulletAppState.getPhysicsSpace().add(otherPlayer.getSphereResourcePhy());
-      otherPlayers.put(i, otherPlayer);
-      resources.attachChild(otherPlayer.getGeometry());
-      localRootNode.attachChild(otherPlayer.getGeometry());
-    }
-  }
-
-  private void initNetClient() {
-    try {
-
-      netClient = Network.connectToServer("localhost", 6143);
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-
-    ClientNetListener listener = new ClientNetListener(this);
-
-    Serializer.registerClass(PlayerLocationChangeRequest.class);
-    Serializer.registerClass(ModelUpdate.class);
-    Serializer.registerClass(NewClientRequest.class);
-    Serializer.registerClass(NewClientResponse.class);
-
-    netClient.addMessageListener(listener, ModelUpdate.class);
-    netClient.addMessageListener(listener, NewClientResponse.class);
-
-    netClient.start();
-
-    while(model == null)
-    {
-      netClient.send(new NewClientRequest());
-      System.out.println("Waiting For Model Data...");
-      try {
-        Thread.sleep(1000);
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-      }
-    }
-  }
-
   /**
    * Custom actions for mouse actions
+   *
    * @param binding - name of key binding
    * @param value   - movement value
    * @param tpf     - time per frame
@@ -248,6 +215,7 @@ public class GamePlayAppState extends AbstractAppState
 
   /**
    * Custom actions for key bindings
+   *
    * @param binding   - name of key binding
    * @param isPressed - is the binding active
    * @param tpf       - time per frame
@@ -259,45 +227,55 @@ public class GamePlayAppState extends AbstractAppState
 
   /**
    * Main event loop where most game actions occur and
-   *   non-action related collision detection with player handled
+   * non-action related collision detection with player handled
+   *
    * @param tpf - timer per frame
    */
   @Override
   public void update(float tpf)
   {
-    //Network update
-    sendPlayerLocation();
-    movePlayers();
+    System.out.println(cam.getLocation());
 
-    // Raise Water Level, to be controlled by EEG
-    //if (!playerNode.isSlowWater()) water.setWaterHeight(water.getWaterHeight() + Globals.WATER_HEIGHT_DEFAULT_RATE);
-    //else water.setWaterHeight(water.getWaterHeight() + Globals.WATER_HEIGHT_PLAYER_RATE);
+  //  Network update
+    sendPlayerLocation();
+    updatePlayers();
+
+     //Raise Water Level, to be controlled by EEG
+    if (!playerNode.isSlowWater()) water.setWaterHeight(water.getWaterHeight() + Globals.WATER_HEIGHT_DEFAULT_RATE);
+    else water.setWaterHeight(water.getWaterHeight() + Globals.WATER_HEIGHT_PLAYER_RATE);
 
     /* Testing */
-    //Water level from stress
-    if (playerType == 0) {
-      water.setWaterHeight(water.getWaterHeight() + playerNode.getWaterRate());
+//    Water level from stress
+    if (playerType == 0)
+    {
+      water.setWaterHeight(water.getWaterHeight() + model.getWaterRate());
     }
 
-    for (int i = 0; i < sphereResourceArrayList.size(); i++) {
-      SphereResource s = sphereResourceArrayList.get(i);
-      if (playerNode.getForwardGrav()) {
-        s.getSphereResourcePhy().setGravity(new Vector3f(0,0,-Globals.GRAVITY));
+    for (SphereResource s : sphereResourceArrayList)
+    {
+      if (model.isGravityForward())
+      {
+        s.getSphereResourcePhy().setGravity(new Vector3f(0, 0, -Globals.GRAVITY));
       }
-      else if (playerNode.getBackwardGrav()) {
-        s.getSphereResourcePhy().setGravity(new Vector3f(0,0,Globals.GRAVITY));
+      else if (model.isGravityBack())
+      {
+        s.getSphereResourcePhy().setGravity(new Vector3f(0, 0, Globals.GRAVITY));
       }
-      else if (playerNode.getRightGrav()) {
-        s.getSphereResourcePhy().setGravity(new Vector3f(-Globals.GRAVITY,0,0));
+      else if (model.isGravityRight())
+      {
+        s.getSphereResourcePhy().setGravity(new Vector3f(-Globals.GRAVITY, 0, 0));
       }
-      else if (playerNode.getLeftGrav()) {
-        s.getSphereResourcePhy().setGravity(new Vector3f(Globals.GRAVITY,0,0));
+      else if (model.isGravityLeft())
+      {
+        s.getSphereResourcePhy().setGravity(new Vector3f(Globals.GRAVITY, 0, 0));
       }
-      else s.getSphereResourcePhy().setGravity(new Vector3f(0,-Globals.GRAVITY,0));
+      else
+      {
+        s.getSphereResourcePhy().setGravity(new Vector3f(0, -Globals.GRAVITY, 0));
+      }
     }
-    /**/
 
-    //water.setWaterHeight(water.getWaterHeight() + waterHeightRate);
+    water.setWaterHeight(water.getWaterHeight() + waterHeightRate);
 
     fogFilter.setFogDensity(fogDensity);
 
@@ -307,15 +285,16 @@ public class GamePlayAppState extends AbstractAppState
       if (fade.getValue() == 0)
       {
         cam.setLocation(new Vector3f(exitLocation.getX(), exitLocation.getY() + 150, exitLocation.getZ()));
-        cam.lookAtDirection(new Vector3f(0,-1,0), new Vector3f(0, -1,0));
+        cam.lookAtDirection(new Vector3f(0, -1, 0), new Vector3f(0, -1, 0));
         flyCam.setEnabled(true);
         flyCam.setMoveSpeed(0);
       }
     }
 
-    // Player died
+//    TODO: Player died
     if (playerType == 1 && playerNode.getHeight() < .3f && !playerNode.isDead())
     {
+      netClient.send(new PlayerDeathRequest());
       fade.fadeOut();
       playerNode.setDead(true);
       bulletAppState.getPhysicsSpace().remove(playerNode);
@@ -324,12 +303,206 @@ public class GamePlayAppState extends AbstractAppState
     }
 
     playerNode.update(tpf);
-    for (Key k : keys) k.update(tpf);
-    if (playerType == 1) testCollisions(tpf);
+    for (Key k : keys)
+    {
+      k.update(tpf);
+    }
+    if (playerType == 1)
+    {
+      testCollisions(tpf);
+    }
 
-    //move the audio with the camera
+//    move the audio with the camera
     listener.setLocation(cam.getLocation());
     listener.setRotation(cam.getRotation());
+  }
+
+  /**
+   * Setter for water height. Water level always increasing.
+   * Value comes from EEG to determine just how fast.
+   * Range: .001 - .005
+   *
+   * @param val - water height value from EEG
+   */
+  public void setWaterHeight(float val)
+  {
+    waterHeightRate = val;
+  }
+
+  public void setPlayerType(int type)
+  {
+    playerType = type;
+  }
+
+  void setUpLevel()
+  {
+    lvlColorName = "overthinker/assets/terrains/" + levelName + lvlColorName;
+    lvlHeightName = "overthinker/assets/terrains/" + levelName + lvlHeightName;
+    lvlNoWallsName = "overthinker/assets/terrains/" + levelName + lvlNoWallsName;
+
+    switch (levelName)
+    {
+      case "circlemaze":
+        exitLocation = new Vector3f(7, 122, -7);
+        keyLocArray = new Vector3f[]{
+              new Vector3f(60, 65, -330), new Vector3f(35, 65, 345), new Vector3f(115, 65, -353)
+        };
+        keyDoorLocArray = new Vector3f[]{
+              new Vector3f(-293, 98, 143), new Vector3f(330, 98, -68), new Vector3f(-236, 98, 208)
+        };
+        platLocArray = new Vector3f[]{
+              new Vector3f(55, 81.65f, -295), new Vector3f(245, 81.65f, 120), new Vector3f(195, 102.45f, 75)
+        };
+        platDoorLocArray = new Vector3f[]{
+              new Vector3f(252, 133, -87), new Vector3f(202, 133, 139), new Vector3f(67, 133, -245)
+        };
+        keyDoorSizeXArray = new float[]{15f, 15f, 17f};
+        keyDoorRotationArray = new float[]{-55f, 100f, -43f};
+        platDoorSizeXArray = new float[]{16f, 17f, 21f};
+        platDoorRotationArray = new float[]{-70, 49, -10};
+        lvlTime = 12;
+        lightDir = new Vector3f(4.1f, -3.2f, 0.1f);
+        lightIntensity = ColorRGBA.White.clone().multLocal(1.1f);
+        break;
+      case "pentamaze":
+        exitLocation = new Vector3f(-5.5f, 102, -6);
+        keyLocArray = new Vector3f[]{
+              new Vector3f(-298.9f, 45, 360), new Vector3f(408.7f, 45, 15), new Vector3f(80, 45, -421)
+        };
+        keyDoorLocArray = new Vector3f[]{
+              new Vector3f(-238f, 100, -224.9f), new Vector3f(369, 100, 56.2f), new Vector3f(98, 100, -333.57f)
+        };
+        platLocArray = new Vector3f[]{
+              new Vector3f(-84, 81.65f, 273), new Vector3f(201, 81.65f, 122), new Vector3f(203, 102.45f, -18)
+        };
+        platDoorLocArray = new Vector3f[]{
+              new Vector3f(-156, 134, 188), new Vector3f(-50, 134, 247), new Vector3f(201, 134, 26)
+        };
+        keyDoorSizeXArray = new float[]{18f, 15f, 17f};
+        keyDoorRotationArray = new float[]{32, 68, -34};
+        platDoorSizeXArray = new float[]{16f, 16f, 17};
+        platDoorRotationArray = new float[]{-78, 0, 70};
+        lvlTime = 0;
+        lightDir = new Vector3f(.5f, -1, 0);
+        lightIntensity = ColorRGBA.White.clone().multLocal(.5f);
+        break;
+      case "radiomaze":
+        exitLocation = new Vector3f(.36f, 80.3f, -30);
+        platDoorLocArray = new Vector3f[]{
+              new Vector3f(-123, 124.8f, -216), new Vector3f(-89, 124.8f, 167), new Vector3f(125, 124.8f, -214)
+        };
+        platDoorSizeXArray = new float[]{16f, 18f, 16};
+        platDoorRotationArray = new float[]{36, -18, -30};
+        lvlTime = 15;
+        lightDir = new Vector3f(6.3f, -2.0f, 6.9f);
+        lightIntensity = ColorRGBA.White.clone().multLocal(1.3f);
+        waterHeightRate = .003f;
+        needsExitDoor = false;
+        break;
+    }
+  }
+
+  @Override
+  public void cleanup()
+  {
+    super.cleanup();
+    rootNode.detachChild(localRootNode);
+  }
+
+  public Client getNetClient()
+  {
+    return netClient;
+  }
+
+  public void handleNewClientResponse(NewClientResponse message)
+  {
+    System.out.println("Connected to server");
+    model = new ServerModel();
+    model.setPlayerLocations(message.getPlayerLocations());
+    model.setVersion(message.getVersion());
+    spawnLocation = message.getSpawnLocation();
+    clientIndex = message.getClientIndex();
+  }
+
+  public void updateModel(ModelUpdate message)
+  {
+    if (model != null)
+    {
+      model.setPlayerLocations(message.getPlayerLocations());
+      model.setPlayerAlive(message.getPlayerAlive());
+      model.setGravityRight(message.isGravityRight());
+      model.setGravityLeft(message.isGravityLeft());
+      model.setGravityForward(message.isGravityForward());
+      model.setGravityBack(message.isGravityBack());
+      model.setWaterRate(message.getWaterRate());
+      model.setVersion(message.version);
+    }
+  }
+
+  public Node getLocalRootNode()
+  {
+    return localRootNode;
+  }
+
+  public PlayerNode getPlayerNode()
+  {
+    return playerNode;
+  }
+
+  private void createOtherPlayers()
+  {
+    for (int i = 0; i < playerCount; i++)
+    {
+      System.out.println("Creating new Player Objects");
+      OtherPlayer otherPlayer = new OtherPlayer(Globals.PLAYER_SPHERE_START_RADIUS, i,
+                                                spawnLocation, assetManager);
+      bulletAppState.getPhysicsSpace().add(otherPlayer.getSphereResourcePhy());
+      otherPlayers.put(i, otherPlayer);
+      resources.attachChild(otherPlayer.getGeometry());
+      localRootNode.attachChild(otherPlayer.getGeometry());
+    }
+  }
+
+  private void initNetClient()
+  {
+    try
+    {
+
+      netClient = Network.connectToServer("localhost", 6143);
+    }
+    catch (IOException e)
+    {
+      e.printStackTrace();
+    }
+
+    ClientNetListener listener = new ClientNetListener(this);
+
+    Serializer.registerClass(ChangePlayerLocationRequest.class);
+    Serializer.registerClass(ChangeMapTiltRequest.class);
+    Serializer.registerClass(ChangeWaterRateRequest.class);
+    Serializer.registerClass(PlayerDeathRequest.class);
+    Serializer.registerClass(ModelUpdate.class);
+    Serializer.registerClass(NewClientRequest.class);
+    Serializer.registerClass(NewClientResponse.class);
+
+    netClient.addMessageListener(listener, ModelUpdate.class);
+    netClient.addMessageListener(listener, NewClientResponse.class);
+
+    netClient.start();
+
+    while (model == null)
+    {
+      netClient.send(new NewClientRequest());
+      System.out.println("Waiting For Model Data...");
+      try
+      {
+        Thread.sleep(1000);
+      }
+      catch (InterruptedException e)
+      {
+        e.printStackTrace();
+      }
+    }
   }
 
   private void testCollisions(float tpf)
@@ -358,7 +531,10 @@ public class GamePlayAppState extends AbstractAppState
         sphereResourcesToShrink.add(s);
         playerNode.setScaleStartTime(Globals.getTotSecs());
         playerNode.setPlayerNeedsScaling(true);
-        if (playerNode.getHeight() < Globals.MAX_PLAYER_SIZE) playerNode.scalePlayerUp();
+        if (playerNode.getHeight() < Globals.MAX_PLAYER_SIZE)
+        {
+          playerNode.scalePlayerUp();
+        }
       }
     }
 
@@ -385,7 +561,10 @@ public class GamePlayAppState extends AbstractAppState
 
     CollisionResults platResults = new CollisionResults();
     platformsNode.collideWith(playerNode.getGeometry().getWorldBound(), platResults);
-    for (Platform p : platforms) p.moveUp();
+    for (Platform p : platforms)
+    {
+      p.moveUp();
+    }
     if (platResults.size() > 0)
     {
       boolean onePressed = false;
@@ -396,9 +575,18 @@ public class GamePlayAppState extends AbstractAppState
         int id = platResults.getCollision(i).getGeometry().getUserData("id");
         Platform p = platforms.get(id);
         p.pressDown();
-        if (id == 0) onePressed = true;
-        if (id == 1) twoPressed = true;
-        if (id == 2) threePressed = true;
+        if (id == 0)
+        {
+          onePressed = true;
+        }
+        if (id == 1)
+        {
+          twoPressed = true;
+        }
+        if (id == 2)
+        {
+          threePressed = true;
+        }
       }
 
       if (onePressed && twoPressed)
@@ -427,11 +615,14 @@ public class GamePlayAppState extends AbstractAppState
 
     }
 
-    ArrayList<SphereResource> toRemove = new ArrayList<SphereResource>();
+    ArrayList<SphereResource> toRemove = new ArrayList<>();
     for (SphereResource s : sphereResourcesToShrink)
     {
-      if (s.getShrink()) s.setSphereToDisappear();
-      else if (!s.getShrink() && Globals.getTotSecs() - s.getStartShrinkTime() > 30)
+      if (s.getShrink())
+      {
+        s.setSphereToDisappear();
+      }
+      else if (Globals.getTotSecs() - s.getStartShrinkTime() > 30)
       {
         s.getGeometry().setLocalTranslation(new Vector3f(s.getX(), 200, s.getZ()));
         s.setSphereBack();
@@ -445,18 +636,24 @@ public class GamePlayAppState extends AbstractAppState
         s.getGeometry().removeFromParent();
       }
     }
-    for (SphereResource s : toRemove) sphereResourcesToShrink.remove(s);
+    toRemove.forEach(sphereResourcesToShrink::remove);
   }
 
-  private void movePlayers() {
-    if(activeVersion < model.getVersion())
+  private void updatePlayers()
+  {
+    if (activeVersion < model.getVersion())
     {
-      for(int i =0; i < playerCount; i++)
+      for (int i = 0; i < playerCount; i++)
       {
-        if(i != clientIndex)
+        if (i != clientIndex)
         {
-          if(model.getPlayerLocations().get(i) != null) {
+          if (model.getPlayerLocations().get(i) != null)
+          {
             otherPlayers.get(i).move(model.getPlayerLocations().get(i));
+          }
+          if (model.getPlayerAlive().get(i) != null && !model.getPlayerAlive().get(i))
+          {
+            otherPlayers.get(i).getGeometry().removeFromParent();
           }
         }
       }
@@ -464,21 +661,24 @@ public class GamePlayAppState extends AbstractAppState
     }
   }
 
-  private void sendPlayerLocation() {
-    PlayerLocationChangeRequest playerLocationChangeRequest = new PlayerLocationChangeRequest();
+  private void sendPlayerLocation()
+  {
+    ChangePlayerLocationRequest playerLocationChangeRequest = new ChangePlayerLocationRequest();
     playerLocationChangeRequest.setPlayerLocation(playerNode.getLocalTranslation());
     netClient.send(playerLocationChangeRequest);
   }
 
-  /** ---Initialization methods--- **/
+  /**
+   * ---Initialization methods--- *
+   */
   private void setUpLight()
   {
     mainLight = new DirectionalLight();
     mainLight.setName("main");
-    mainLight.setColor(ColorRGBA.White.clone().multLocal(1.1f));
+    mainLight.setColor(lightIntensity);
     mainLight.setDirection(lightDir);
     ambientLight = new AmbientLight();
-    //ambientLight.setColor(ColorRGBA.White.mult(1.2f));
+    ambientLight.setColor(ColorRGBA.White.mult(1.2f));
     ambientLight.setName("ambient");
 
     DirectionalLightShadowRenderer dlsr = new DirectionalLightShadowRenderer(assetManager, 1024, 3);
@@ -486,14 +686,20 @@ public class GamePlayAppState extends AbstractAppState
     viewPort.addProcessor(dlsr);
 
     sc = new SkyControl(assetManager, cam, 0.9f, true, true);
-    sc.getSunAndStars().setHour(12f);
+    sc.getSunAndStars().setHour(lvlTime);
     sc.getSunAndStars().setObserverLatitude(37.4046f * FastMath.DEG_TO_RAD);
     sc.getSunAndStars().setSolarLongitude(Calendar.FEBRUARY, 10);
     sc.setCloudiness(0.3f);
     for (Light light : rootNode.getLocalLightList())
     {
-      if (light.getName().equals("ambient")) sc.getUpdater().setAmbientLight((AmbientLight) light);
-      else if (light.getName().equals("main")) sc.getUpdater().setMainLight((DirectionalLight) light);
+      if (light.getName().equals("ambient"))
+      {
+        sc.getUpdater().setAmbientLight((AmbientLight) light);
+      }
+      else if (light.getName().equals("main"))
+      {
+        sc.getUpdater().setMainLight((DirectionalLight) light);
+      }
     }
 
     localRootNode.addLight(mainLight);
@@ -512,9 +718,11 @@ public class GamePlayAppState extends AbstractAppState
   {
     if (playerType == 0)
     {
-      playerNode = new OverNode("OverThinker");
-      cam.setLocation(new Vector3f(0,250,0));
-      cam.lookAtDirection(new Vector3f(0,-1,0), Vector3f.UNIT_Y);
+      playerNode = new OverNode("OverThinker", netClient);
+      cam.setLocation(new Vector3f(0, 250, 0));
+      cam.lookAtDirection(new Vector3f(0, -1, 0), Vector3f.UNIT_Y);
+      //TODO remove createSphereResources() after EEG testing is complete:
+      createSphereResources();
     }
     else
     {
@@ -535,12 +743,7 @@ public class GamePlayAppState extends AbstractAppState
 
   private void setUpExit()
   {
-    exitDoor = new Door("ExitDoor");
-    exitDoor.createDoor(assetManager, 15, 1, 15, 90, exitLocation);
-    collidableNode.attachChild(exitDoor);
-    bulletAppState.getPhysicsSpace().add(exitDoor.getPhy());
-
-    Sphere exitS = new Sphere(32,32,12);
+    Sphere exitS = new Sphere(32, 32, 12);
     Geometry geoS = new Geometry("ExitSphere", exitS);
 
     Material exitMat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
@@ -557,8 +760,8 @@ public class GamePlayAppState extends AbstractAppState
     flashEmitter.setMaterial(sparkMat);
     flashEmitter.setImagesX(2);
     flashEmitter.setImagesY(2);
-    flashEmitter.setStartColor(ColorRGBA.Yellow);
-    flashEmitter.setEndColor(ColorRGBA.White);
+    flashEmitter.setStartColor(ColorRGBA.Orange);
+    flashEmitter.setEndColor(ColorRGBA.Yellow);
     flashEmitter.setFacingVelocity(true);
     flashEmitter.setStartSize(.5f);
     flashEmitter.setEndSize(.5f);
@@ -576,56 +779,82 @@ public class GamePlayAppState extends AbstractAppState
     bloom.setExposurePower(1f);
     fpp.addFilter(bloom);
     exitNode.attachChild(geoS);
+
+    if (needsExitDoor)
+    {
+      exitDoor = new Door("ExitDoor");
+      exitDoor.createDoor(assetManager, 15, 1, 15, 90, exitLocation);
+      collidableNode.attachChild(exitDoor);
+      bulletAppState.getPhysicsSpace().add(exitDoor.getPhy());
+    }
+    else
+    {
+      localRootNode.attachChild(exitNode);
+    }
   }
 
   private void setUpLandscape()
   {
     /** Create terrain material and load four textures into it. */
     mat_terrain = new Material(assetManager,
-      "Common/MatDefs/Terrain/TerrainLighting.j3md");
+                               "Common/MatDefs/Terrain/TerrainLighting.j3md");
     mat_terrain.setBoolean("useTriPlanarMapping", false);
     mat_terrain.setFloat("Shininess", 0.0f);
     mat_terrain.setFloat("Ambient", 10.0f);
 
     /** Add ALPHA map (for red-blue-green coded splat textures) */
     mat_terrain.setTexture("AlphaMap", assetManager.loadTexture(
-            "overthinker/assets/terrains/tieredmaze1color.png"));
-    //mat_terrain.setTexture("AlphaMap_1", assetManager.loadTexture(
-    //  "overthinker.assets.assets/terrains/tieredmaze1color2.png"));
+          lvlColorName));
 
     /** Add GRASS texture into the red layer*/
     Texture grass = assetManager.loadTexture(
-      "Textures/Terrain/splat/grass.jpg");
+          "Textures/Terrain/splat/grass.jpg");
     grass.setWrap(WrapMode.Repeat);
     mat_terrain.setTexture("DiffuseMap", grass);
     mat_terrain.setFloat("DiffuseMap_0_scale", 64f);
 
     /** Add DIRT texture into the green layer*/
     Texture dirt = assetManager.loadTexture(
-      "Textures/Terrain/splat/dirt.jpg");
+          "Textures/Terrain/splat/dirt.jpg");
     dirt.setWrap(WrapMode.Repeat);
     mat_terrain.setTexture("DiffuseMap_1", dirt);
     mat_terrain.setFloat("DiffuseMap_1_scale", 32f);
 
     /** Add ROAD texture into the blue layer */
     Texture rock = assetManager.loadTexture(
-      "Textures/Terrain/splat/road.jpg");
+          "Textures/Terrain/splat/road.jpg");
     rock.setWrap(WrapMode.Repeat);
     mat_terrain.setTexture("DiffuseMap_2", rock);
     mat_terrain.setFloat("DiffuseMap_2_scale", 128f);
 
     /** Add Lava Rocks into alpha layer**/
     Texture lava = assetManager.loadTexture(
-            "overthinker/assets/textures/lava_texture-sm.jpg");
+          "overthinker/assets/textures/lava_texture-sm.jpg");
     lava.setWrap(WrapMode.Repeat);
     mat_terrain.setTexture("DiffuseMap_3", lava);
     mat_terrain.setFloat("DiffuseMap_3_scale", 128f);
 
-    /** Create the height map */
+
+    Node terrain1 = (Node) assetManager.loadModel("assets/terrains/tieredmaze.j3o");
+    terrain1.setLocalTranslation(0, 0, 0);
+    Geometry navGeom = (Geometry) terrain1.getChild("NavMesh");
+    navGeom.setMaterial(new Material(assetManager, "/Common/MatDefs/Misc/Unshaded.j3md"));
+    navGeom.setLocalTranslation(0, 1, 0);
+    localRootNode.attachChild(navGeom);
+    navMesh = new NavMesh(navGeom.getMesh());
+
+/** Create the height map */
     Texture heightMapImage;
 
-    if (playerType == 0) heightMapImage = assetManager.loadTexture("overthinker/assets/terrains/tieredmaze1_nowalls.png");
-    else heightMapImage = assetManager.loadTexture("overthinker/assets/terrains/tieredmaze1.png");
+    if (playerType == 0)
+    {
+      heightMapImage = assetManager.loadTexture(lvlNoWallsName);
+    }
+    else
+    {
+      heightMapImage = assetManager.loadTexture(lvlHeightName);
+    }
+
 
     AbstractHeightMap heightMap = null;
 
@@ -639,6 +868,7 @@ public class GamePlayAppState extends AbstractAppState
       e.printStackTrace();
     }
     int patchSize = 65;
+    assert heightMap != null;
     terrain = new TerrainQuad("my terrain", patchSize, 513, heightMap.getHeightMap());
 
     /** We give the terrain its material, position & scale it, and attach it. */
@@ -654,10 +884,10 @@ public class GamePlayAppState extends AbstractAppState
     TerrainLodControl control = new TerrainLodControl(terrain, app.getCamera());
     terrain.addControl(control);
 
-    // We set up collision detection for the scene by creating a
-    // compound collision shape and a static RigidBodyControl with mass zero.
+     //We set up collision detection for the scene by creating a
+//     compound collision shape and a static RigidBodyControl with mass zero.
     CollisionShape sceneShape =
-      CollisionShapeFactory.createMeshShape(terrain);
+          CollisionShapeFactory.createMeshShape(terrain);
     landscape = new LandscapeControl(sceneShape, 0, bulletAppState.getPhysicsSpace());
     terrain.addControl(landscape);
     bulletAppState.getPhysicsSpace().add(landscape);
@@ -671,23 +901,6 @@ public class GamePlayAppState extends AbstractAppState
     water.setWaterHeight(waterHeight);
     water.setDeepWaterColor(new ColorRGBA(0.0f, 0.5f, 0.5f, 1.0f));
     fpp.addFilter(water);
-  }
-
-  /**
-   * Setter for water height. Water level always increasing.
-   * Value comes from EEG to determine just how fast.
-   * Range: .001 - .005
-   *
-   * @param val - water height value from EEG
-   */
-  public void setWaterHeight (float val)
-  {
-    waterHeightRate = val;
-  }
-
-  public void setPlayerType(int type)
-  {
-    playerType = type;
   }
 
   private void createSphereResources()
@@ -705,83 +918,74 @@ public class GamePlayAppState extends AbstractAppState
 
   private void createDoorsAndKeys()
   {
-    for (int i = 0; i < keyDoorLocArray.length; i++)
+    if (keyDoorLocArray != null)
     {
-      Door door = new Door("Door_" + i);
-      door.createDoor(assetManager, keyDoorSizeXArray[i], 40, 1, keyDoorRotationArray[i], keyDoorLocArray[i]);
-      collidableNode.attachChild(door);
-      bulletAppState.getPhysicsSpace().add(door.getPhy());
-      keyDoors.add(door);
-      Key key = new Key("Key_" + i);
-      key.createKey(assetManager, keyLocArray[i]);
-      bulletAppState.getPhysicsSpace().add(key.getPhy());
-      keys.add(key);
-      keysNode.attachChild(key);
+      for (int i = 0; i < keyDoorLocArray.length; i++)
+      {
+        Door door = new Door("Door_" + i);
+        door.createDoor(assetManager, keyDoorSizeXArray[i], 40, 1, keyDoorRotationArray[i], keyDoorLocArray[i]);
+        collidableNode.attachChild(door);
+        bulletAppState.getPhysicsSpace().add(door.getPhy());
+        keyDoors.add(door);
+
+        Key key = new Key("Key_" + i);
+        key.createKey(assetManager, keyLocArray[i]);
+        bulletAppState.getPhysicsSpace().add(key.getPhy());
+        keys.add(key);
+        keysNode.attachChild(key);
+      }
+      collidableNode.attachChild(keysNode);
     }
-    collidableNode.attachChild(keysNode);
   }
 
   private void createPlatformsAndDoors()
   {
-    for (int i = 0; i < platLocArray.length; i++)
+    if (platLocArray != null)
     {
-      Platform plat = new Platform("Platform_" + i);
-      plat.createPlatform(assetManager, platLocArray[i], 2);
-      platformsNode.attachChild(plat);
-      bulletAppState.getPhysicsSpace().add(plat.getPhy());
-      platforms.add(plat);
-      Door door = new Door("Door_" + i);
-      door.createDoor(assetManager, platDoorSizeXArray[i], 40, 1, platDoorRotationArray[i], platDoorLocArray[i]);
-      collidableNode.attachChild(door);
-      bulletAppState.getPhysicsSpace().add(door.getPhy());
-      platDoors.add(door);
+      for (int i = 0; i < platLocArray.length; i++)
+      {
+        Platform plat = new Platform("Platform_" + i);
+        plat.createPlatform(assetManager, platLocArray[i], 2);
+        platformsNode.attachChild(plat);
+        bulletAppState.getPhysicsSpace().add(plat.getPhy());
+        platforms.add(plat);
+      }
+      collidableNode.attachChild(platformsNode);
     }
-    collidableNode.attachChild(platformsNode);
+
+    if (platDoorLocArray != null)
+    {
+      for (int i = 0; i < platDoorLocArray.length; i++)
+      {
+        Door door = new Door("Door_" + i);
+        door.createDoor(assetManager, platDoorSizeXArray[i], 40, 1, platDoorRotationArray[i], platDoorLocArray[i]);
+        collidableNode.attachChild(door);
+        bulletAppState.getPhysicsSpace().add(door.getPhy());
+        platDoors.add(door);
+      }
+    }
   }
 
   private void initAudio()
   {
-    //collect object
-    audio_collect = new AudioNode(assetManager, "overthinker/assets/sounds/collect.ogg",false);
+
+  //  collect object
+    audio_collect = new AudioNode(assetManager, "overthinker/assets/sounds/collect.ogg", false);
     audio_collect.setPositional(false);
     audio_collect.setVolume(2);
     localRootNode.attachChild(audio_collect);
+
     if (playerNode.getAudio().size() > 0)
     {
-      for (AudioNode a : (ArrayList<AudioNode>) playerNode.getAudio())
-      {
-        localRootNode.attachChild(a);
-      }
+      ((ArrayList<AudioNode>) playerNode.getAudio()).forEach(localRootNode::attachChild);
     }
+
     //ambient map sounds
-    audio_ocean = new AudioNode(assetManager, "overthinker/assets/sounds/wavesLoop.ogg",true);
+    audio_ocean = new AudioNode(assetManager, "overthinker/assets/sounds/wavesLoop.ogg", false);
     audio_ocean.setLooping(true);
     audio_ocean.setPositional(true);
     audio_ocean.setVolume(1);
     localRootNode.attachChild(audio_ocean);
     audio_ocean.play();
-  }
-
-  @Override
-  public void cleanup()
-  {
-    super.cleanup();
-    rootNode.detachChild(localRootNode);
-  }
-
-  public void handleNewClientResponse(NewClientResponse message) {
-    System.out.println("Connected to server");
-    model = new ServerModel();
-    model.setPlayerLocations(message.getPlayerLocations());
-    model.setVersion(message.getVersion());
-    spawnLocation = message.getSpawnLocation();
-    clientIndex = message.getClientIndex();
-  }
-
-  public void updateModel(ModelUpdate message) {
-    if (model != null) {
-      model.setPlayerLocations(message.getPlayerLocations());
-      model.setVersion(message.version);
-    }
   }
 }

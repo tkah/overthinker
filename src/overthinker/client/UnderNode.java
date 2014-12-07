@@ -1,11 +1,10 @@
 package overthinker.client;
 
 import com.jme3.asset.AssetManager;
+import com.jme3.audio.AudioNode;
 import com.jme3.bullet.BulletAppState;
-import com.jme3.bullet.collision.shapes.SphereCollisionShape;
 import com.jme3.bullet.control.BetterCharacterControl;
 import com.jme3.bullet.control.GhostControl;
-import com.jme3.collision.CollisionResults;
 import com.jme3.effect.ParticleEmitter;
 import com.jme3.effect.ParticleMesh;
 import com.jme3.input.InputManager;
@@ -28,7 +27,6 @@ import com.jme3.scene.control.CameraControl;
 import com.jme3.scene.shape.Sphere;
 import com.jme3.terrain.geomipmap.TerrainQuad;
 import com.jme3.util.TangentBinormalGenerator;
-import org.lwjgl.Sys;
 
 import java.util.ArrayList;
 
@@ -37,7 +35,7 @@ import java.util.ArrayList;
  */
 public class UnderNode extends PlayerNode
 {
-  private static int DUST_PER_SEC = 100;
+
 
   private PlayerControl playerControl;
   private Sphere playerSphere;
@@ -47,7 +45,9 @@ public class UnderNode extends PlayerNode
   private CameraNode camNode;
   private Camera cam;
   private GhostControl camGhost;
-  private ParticleEmitter dustEmitter;
+  private ParticleEmitter dustEmitterRight;
+  private ParticleEmitter dustEmitterLeft;
+  private AudioNode warning_sound;
 
   // Possibly move to abstract class
   private TerrainQuad terrain;
@@ -86,7 +86,6 @@ public class UnderNode extends PlayerNode
     collidableNode = colNode;
 
     pivot = new Node("Pivot");
-    dustEmitter = new ParticleEmitter("dust emitter", ParticleMesh.Type.Triangle, 100);
   }
 
   public void onAction(String binding, boolean isPressed, float tpf)
@@ -151,8 +150,11 @@ public class UnderNode extends PlayerNode
     }
     else if (playerMat.getParam("Diffuse").getValue() !=  ColorRGBA.White) playerMat.setColor("Diffuse", ColorRGBA.White);
 
-    onGround = playerControl.checkGravity(onGround, getLocalTranslation(), collidableNode);
-    dustEmitter.setParticlesPerSec(0);
+    onGround = playerControl.checkGravity(onGround, getLocalTranslation(), collidableNode, pivot, camNode);
+    dustEmitterRight.setLowLife(0);
+    dustEmitterRight.setHighLife(0);
+    dustEmitterLeft.setLowLife(0);
+    dustEmitterLeft.setHighLife(0);
 
     if (left || right || up || down) rotation += tpf*rotSpeed;
 
@@ -185,9 +187,13 @@ public class UnderNode extends PlayerNode
 
   private void moveBall(float x, float z)
   {
+    //TODO: move quaternion to server so that other players can use for rotation
     Quaternion ballRotate = new Quaternion().fromAngleAxis(FastMath.DEG_TO_RAD * rotation, new Vector3f(x, 0, z));
     playerG.setLocalRotation(ballRotate);
-    dustEmitter.setParticlesPerSec(DUST_PER_SEC);
+    dustEmitterRight.setLowLife(.1f);
+    dustEmitterRight.setHighLife(1f);
+    dustEmitterLeft.setLowLife(.1f);
+    dustEmitterLeft.setHighLife(1f);
   }
 
   @Override
@@ -199,7 +205,6 @@ public class UnderNode extends PlayerNode
     playerControl.setScale(.99f);
     walkDirection.addLocal(new Vector3f(0, 0, .5f));
     playerControl.setWalkDirection(walkDirection);
-    dustEmitter.setParticlesPerSec(DUST_PER_SEC);
   }
 
   @Override
@@ -226,13 +231,18 @@ public class UnderNode extends PlayerNode
 
   public void flash(float tpf)
   {
-    if (doFlash != true)
+    warning_sound= new AudioNode(assetManager, "overthinker/assets/sounds/warning.ogg",false);
+    warning_sound.setPositional(false);
+    warning_sound.setLooping(true);
+    warning_sound.setVolume(2);
+    if (!doFlash)
     {
       doFlash = true;
       lastFlashWasRed = true;
       flashStartTime = Globals.getTotSecs();
       playerMat.setColor("Diffuse", ColorRGBA.Red);
       lastFlashDiff = Globals.getTotSecs() - flashStartTime;
+      warning_sound.play();
     }
     else if (Globals.getTotSecs() - flashStartTime >  lastFlashDiff)
     {
@@ -274,30 +284,55 @@ public class UnderNode extends PlayerNode
     playerControl = new PlayerControl(Globals.PLAYER_SPHERE_START_RADIUS, Globals.PLAYER_SPHERE_START_RADIUS, 10f, assetManager);
     playerControl.setJumpForce(new Vector3f(0,250,0));
     playerControl.setGravity(new Vector3f(0, -10, 0));
-    setLocalTranslation(new Vector3f(-340, 80, -400));
+    setLocalTranslation(new Vector3f(-183, 80, -431));
+    // Player Locs: 1,2,3 - Going counterclockwise from top-left
+    //Circle Start 1: -344, 80, -380
+    //Circle Start 2: 289, 80, 414.7f
+    //Circle Start 3: 381,80, -387.5f
+    //Radio Start 1: -260, 110, -390
+    //Radio Start 2: -170, 110, 350
+    //Radio Start 3: 260, 110, -390
+    //Penta Start 1: -183, 80, -431
+    //Penta Start 2: 360, 59, 450
+    //Penta Start 3: 345,80,-284
     addControl(playerControl);
     bulletAppState.getPhysicsSpace().add(playerControl);
 
+    dustEmitterRight = new ParticleEmitter("dust emitter right", ParticleMesh.Type.Triangle, 100);
+    dustEmitterLeft = new ParticleEmitter("dust emitter left", ParticleMesh.Type.Triangle, 100);
+
     Material dustMat = new Material(assetManager, "Common/MatDefs/Misc/Particle.j3md");
     dustMat.setTexture("Texture", assetManager.loadTexture("overthinker/assets/effects/smoke.png"));
-    dustEmitter.setLocalTranslation(new Vector3f(0, -getHeight() / 2, 0));
-    dustEmitter.setMaterial(dustMat);
-    dustEmitter.setImagesX(2);
-    dustEmitter.setImagesY(2);
-    dustEmitter.setStartColor(new ColorRGBA(.254f, .1568f, 0.098f, 1));   // brown
-    dustEmitter.setEndColor(new ColorRGBA(1f, 1f, 1f, 0.5f)); // white
-    dustEmitter.setFacingVelocity(true);
-    dustEmitter.setStartSize(.5f);
-    dustEmitter.setEndSize(.5f);
-    dustEmitter.setLowLife(.9f);
-    dustEmitter.setHighLife(1.1f);
-    dustEmitter.setRotateSpeed(4);
-    dustEmitter.getParticleInfluencer().setInitialVelocity(new Vector3f(0, 10, 0));
-    dustEmitter.setSelectRandomImage(true);
-    dustEmitter.setRandomAngle(true);
-    dustEmitter.getParticleInfluencer().setVelocityVariation(1.0f);
-    attachChild(dustEmitter);
+
+    dustEmitterRight.setMaterial(dustMat);
+    dustEmitterLeft.setMaterial(dustMat);
+
+    dustEmitterRight.setImagesX(2);
+    dustEmitterRight.setImagesY(2);
+    dustEmitterRight.setSelectRandomImage(true);
+    dustEmitterRight.setRandomAngle(true);
+    dustEmitterRight.setStartColor(new ColorRGBA(ColorRGBA.Brown));
+    dustEmitterRight.setEndColor(new ColorRGBA(ColorRGBA.Brown));
+    dustEmitterRight.getParticleInfluencer().setVelocityVariation(1f);
+
+    dustEmitterLeft.setImagesX(2);
+    dustEmitterLeft.setImagesY(2);
+    dustEmitterLeft.setSelectRandomImage(true);
+    dustEmitterLeft.setRandomAngle(true);
+    dustEmitterLeft.setStartColor(new ColorRGBA(ColorRGBA.Brown));
+    dustEmitterLeft.setEndColor(new ColorRGBA(ColorRGBA.Brown));
+    dustEmitterLeft.getParticleInfluencer().setVelocityVariation(1f);
+
+    dustEmitterRight.setLocalTranslation(-.3f, -1.7f, 0);
+    dustEmitterLeft.setLocalTranslation(.3f, -1.7f, 0);
+
+    attachChild(dustEmitterRight);
+    attachChild(dustEmitterLeft);
+
+
   }
+
+
 
   public ArrayList setUpControls(InputManager inputManager)
   {
@@ -354,8 +389,6 @@ public class UnderNode extends PlayerNode
     camNode.setControlDir(CameraControl.ControlDirection.SpatialToCamera);
     camNode.setLocalTranslation(new Vector3f(0, 4, -18));
     pivot.attachChild(camNode);
-    Quaternion quat = new Quaternion();
-    quat.lookAt(Vector3f.UNIT_Z, Vector3f.UNIT_Y);
     attachChild(pivot);
     camNode.setEnabled(true);
     pivot.getLocalRotation().fromAngleAxis(verticalAngle, Vector3f.UNIT_X);
@@ -414,15 +447,21 @@ public class UnderNode extends PlayerNode
   }
 
   @Override
-  public boolean getShrink()
+  public ParticleEmitter getDustEmitterRight()
   {
-    return shrink;
+   return dustEmitterRight;
   }
 
   @Override
-  public ParticleEmitter getDustEmitter()
+  public ParticleEmitter getDustEmitterLeft()
   {
-    return dustEmitter;
+    return dustEmitterLeft;
+  }
+
+  @Override
+  public boolean getShrink()
+  {
+    return shrink;
   }
 
   public ArrayList getAudio()

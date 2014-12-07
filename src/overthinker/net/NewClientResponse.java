@@ -3,9 +3,7 @@ package overthinker.net;
 import com.jme3.math.Vector3f;
 import com.jme3.network.AbstractMessage;
 import com.jme3.network.serializing.Serializable;
-import overthinker.levels.LevelType;
 
-import java.awt.*;
 import java.util.HashMap;
 
 /**

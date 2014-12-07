@@ -6,7 +6,6 @@ import com.jme3.bullet.collision.PhysicsCollisionListener;
 import com.jme3.bullet.collision.shapes.CollisionShape;
 import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.math.Vector3f;
-import com.jme3.scene.CameraNode;
 
 /**
  * Created by Torran on 11/20/14.
@@ -22,21 +21,14 @@ public class LandscapeControl extends RigidBodyControl implements PhysicsCollisi
 
   public void collision(PhysicsCollisionEvent event)
   {
-    if (event.getNodeA().getName().equals("player"))
+    if (event.getNodeA().getName().equals("player") || event.getNodeB().getName().equals("player")
+          && !event.getNodeA().getName().equals("AI") && !event.getNodeB().getName().equals("AI"))
     {
       final UnderNode node = (UnderNode) event.getNodeA();
-      if (!node.isOnGround() && node.getPlayerControl().getVelocity().getZ() < 1f)
+      if (!node.isOnGround() && node.getPlayerControl().getVelocity().getZ() < 1f && node.getPlayerControl()
+            .getVelocity().getZ() > 0)
       {
         node.getPlayerControl().setWalkDirection(new Vector3f(0, -5, -5));
-        node.pushOff = true;
-      }
-    }
-    else if (event.getNodeB().getName().equals("player"))
-    {
-      final UnderNode node = (UnderNode) event.getNodeB();
-      if (!node.isOnGround() && node.getPlayerControl().getVelocity().getZ() < 1f)
-      {
-        node.getPlayerControl().setWalkDirection(new Vector3f(0,-5,-5));
         node.pushOff = true;
       }
     }

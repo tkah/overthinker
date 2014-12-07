@@ -79,10 +79,10 @@ public abstract class Level {
     private boolean mapTiltForward = false;
     private boolean mapTiltBack = false;
 
-    private ArrayList<SphereResource> sphereResource = new ArrayList<SphereResource>();
-    private ArrayList<SphereResource> sphereResourcesToShrink = new ArrayList<SphereResource>();
-    private HashMap<Integer, OtherPlayer> otherPlayers = new HashMap<Integer, OtherPlayer>();
-    private ArrayList<Vector3f> spawnLocations = new ArrayList<Vector3f>();
+    private ArrayList<SphereResource> sphereResource = new ArrayList<>();
+    private ArrayList<SphereResource> sphereResourcesToShrink = new ArrayList<>();
+    private HashMap<Integer, OtherPlayer> otherPlayers = new HashMap<>();
+    private ArrayList<Vector3f> spawnLocations = new ArrayList<>();
 
     private Quaternion mapTilt = new Quaternion();
     private float rotation;
