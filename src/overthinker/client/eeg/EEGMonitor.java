@@ -154,7 +154,7 @@ public class EEGMonitor extends Thread {
                 if (!gravityNormal && currentGravity == -1 )
                 {
                     if (DEBUG) System.out.println("Tilt: 0 (RETURN TO UPRIGHT)");
-                    gravityNormal = true;
+                    //gravityNormal = true;
                     return 10;
                 }
                 if (DEBUG) System.out.print(" Tilt: 1 (Right)");
@@ -163,7 +163,7 @@ public class EEGMonitor extends Thread {
                 if (!gravityNormal && currentGravity == 1 )
                 {
                     if (DEBUG) System.out.println("Tilt: 0 (RETURN TO UPRIGHT)");
-                    gravityNormal = true;
+                    //gravityNormal = true;
                     return 10;
                 }
                 if (DEBUG) System.out.print(" Tilt: -1 (Left)");
@@ -175,7 +175,7 @@ public class EEGMonitor extends Thread {
                 if (!gravityNormal && currentGravity == -2 )
                 {
                     if (DEBUG) System.out.println("Tilt: 0 (RETURN TO UPRIGHT)");
-                    gravityNormal = true;
+                    //gravityNormal = true;
                     return 10;
                 }
                 if (DEBUG) System.out.print(" Tilt: 2 (Up)");
@@ -184,7 +184,7 @@ public class EEGMonitor extends Thread {
                 if (!gravityNormal && currentGravity == 2 )
                 {
                     if (DEBUG) System.out.println("Tilt: 0 (RETURN TO UPRIGHT)");
-                    gravityNormal = true;
+                    //gravityNormal = true;
                     return 10;
                 }
                 if (DEBUG) System.out.print(" Tilt: -2 (Down)");
@@ -203,8 +203,11 @@ public class EEGMonitor extends Thread {
     public int getTiltDirection() {
         currentGravity = requestedGravity;
         if (currentGravity == 10) {
+            gravityNormal = true;
             currentGravity = 0;
+            return requestedGravity;
         }
+        gravityNormal = false;
         return requestedGravity;
     }
 
