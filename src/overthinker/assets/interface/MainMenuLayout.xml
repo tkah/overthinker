@@ -49,7 +49,7 @@
 
     <screen id="loading">
         <layer childLayout="center" id="layer1" backgroundColor="#FFFFFF">
-            <image filename="overthinker/assets/interface/loading.png" height="20%" id="backgroundSky" width="20%">
+            <image filename="overthinker/assets/interface/loading.png" height="100%" id="backgroundSky" width="100%">
 
             </image>
         </layer>
@@ -57,7 +57,7 @@
 
     <screen id="waitingScreen">
         <layer childLayout="center" id="layer1" backgroundColor="#FFFFFF">
-            <image filename="overthinker/assets/interface/waitingScreen.png" height="20%" id="backgroundSky" width="20%">
+            <image filename="overthinker/assets/interface/waitingScreen.png" height="100%" id="backgroundSky" width="100%">
 
             </image>
         </layer>

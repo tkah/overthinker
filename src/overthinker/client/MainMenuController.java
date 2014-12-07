@@ -67,7 +67,7 @@ public class MainMenuController extends AbstractAppState implements ScreenContro
       try
       {
         app.enqueue(() -> {
-          nifty.gotoScreen("loading");
+          nifty.gotoScreen("waitingScreen");
           menu_music.stop();
           return null;
         }).get();
