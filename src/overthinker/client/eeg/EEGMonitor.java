@@ -222,7 +222,6 @@ public class EEGMonitor extends Thread {
         if (DEBUG) System.out.println("Frustration: " + frustrationShort);
 
         if (excitementShort > 1 || excitementShort < 0) {
-            //System.out.println("\n Headset excitement out of bounds! Calm your bosom!");
             return 0;
         }
         if (excitementShort > 0.5) return 1;
