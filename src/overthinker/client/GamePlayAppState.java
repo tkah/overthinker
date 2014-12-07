@@ -835,7 +835,7 @@ public class GamePlayAppState extends AbstractAppState
     mat_terrain.setFloat("DiffuseMap_3_scale", 128f);
 
 
-    Node terrain1 = (Node) assetManager.loadModel("assets/terrains/tieredmaze.j3o");
+    Node terrain1 = (Node) assetManager.loadModel("overthinker/assets/terrains/tieredmaze.j3o");
     terrain1.setLocalTranslation(0, 0, 0);
     Geometry navGeom = (Geometry) terrain1.getChild("NavMesh");
     navGeom.setMaterial(new Material(assetManager, "/Common/MatDefs/Misc/Unshaded.j3md"));
