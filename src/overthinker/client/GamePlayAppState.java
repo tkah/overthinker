@@ -252,15 +252,11 @@ public class GamePlayAppState extends AbstractAppState
     sendPlayerLocation();
     updatePlayers();
 
-     //Raise Water Level, to be controlled by EEG
-    if (!playerNode.isSlowWater()) water.setWaterHeight(water.getWaterHeight() + Globals.WATER_HEIGHT_DEFAULT_RATE);
-    else water.setWaterHeight(water.getWaterHeight() + Globals.WATER_HEIGHT_PLAYER_RATE);
-
     /* Testing */
     //Water level from stress
     //TODO: water height rate from excitement
     //water.setWaterHeight(water.getWaterHeight() + model.getWaterRate());
-    water.setWaterHeight(water.getWaterHeight() + waterHeightRate);
+    water.setWaterHeight(water.getWaterHeight() + model.getWaterRate());
 
     fogFilter.setFogDensity(fogDensity);
 
