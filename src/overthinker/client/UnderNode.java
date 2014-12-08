@@ -552,6 +552,16 @@ public class UnderNode extends PlayerNode
   }
 
   /**
+   * Set player physics height
+   * @param height - height to set
+   */
+  @Override
+  public void setHeight(float height)
+  {
+    playerControl.setHeight(height);
+  }
+
+  /**
    * Getter for player camera node
    * @return player camera node
    */

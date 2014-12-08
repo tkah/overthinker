@@ -248,4 +248,12 @@ abstract class PlayerNode extends Node
     return false;
   }
 
+  /**
+   * Set player physics height
+   * @param height - height to set
+   */
+  public void setHeight(float height)
+  {
+  }
+
 }

@@ -44,6 +44,16 @@ public class LandscapeControl extends RigidBodyControl implements PhysicsCollisi
         node.pushOff = true;
       }
     }
+    else if (event.getNodeA().getName().equals("player") && event.getNodeB().getName().equals("AI"))
+    {
+      final UnderNode node = (UnderNode) event.getNodeA();
+      node.setHeight(0.0f);
+    }
+    else if (event.getNodeB().getName().equals("player") && event.getNodeA().getName().equals("AI"))
+    {
+      final UnderNode node = (UnderNode) event.getNodeB();
+      node.setHeight(0.0f);
+    }
     /* To detect camera collisions with landscape, difficulties with fast moving cameras not repositioning correctly,
        not enough time to fully flesh out before due date
     else if (event.getNodeA().getName().equals("CameraNode"))

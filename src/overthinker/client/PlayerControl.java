@@ -272,6 +272,15 @@ public class PlayerControl extends BetterCharacterControl
   }
 
   /**
+   * Sett or physics height
+   * @param height - height to set
+   */
+  public void setHeight(float height)
+  {
+    this.height = height;
+  }
+
+  /**
    * Initializes player specific audio
    * @param assetManager - program's assetmanager
    */
