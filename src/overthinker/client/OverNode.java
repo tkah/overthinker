@@ -16,12 +16,15 @@ import java.util.ArrayList;
  */
 public class OverNode extends PlayerNode
 {
+  private final boolean DEBUG = true;
+
   private ArrayList<AudioNode> audioList = new ArrayList<>();
   private EEGMonitor monitor = new EEGMonitor();
   private float waterRate = 0;
   private int tiltDirection = 0;
   private boolean gravityLeft = false, gravityRight = false, gravityForward = false, gravityBack = false;
   //Left = -1, right = 1, forward = 2, back = -2, clear all flags = 10
+
   private Client netClient;
   private ChangeWaterRateRequest waterRateRequest = new ChangeWaterRateRequest();
 
@@ -34,15 +37,19 @@ public class OverNode extends PlayerNode
 
   public void update (float tpf) {
     if (monitor.updated) {
+      if (DEBUG) System.out.println("Updating from EEG: Entering method.");
+
       tiltDirection = monitor.getTiltDirection();
       if (tiltDirection == 10) {
         clearTilt();
       } else setTilt(tiltDirection);
+
       waterRate = monitor.getStressLevel() / 1000; //a rate of 1 fills instantly, eeg hovers around ~.5, so divide by 1000
+      if (DEBUG) System.out.println("Update from EEG: waterRate = "+waterRate);
       waterRateRequest.setWaterRate(waterRate);
       netClient.send(waterRateRequest);
-      //TODO create netClient to send waterRate and tiltDirection
-      monitor.updated = false;
+
+      //monitor.updated = false;
     }
   }
 

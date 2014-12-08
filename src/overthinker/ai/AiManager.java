@@ -32,7 +32,7 @@ public class AiManager extends AbstractAppState
     stateManager.getState(GamePlayAppState.class).bulletAppState.getPhysicsSpace().addAll(aiPlayer);
     stateManager.getState(GamePlayAppState.class).getLocalRootNode().attachChild(aiPlayer);
 
-    aiPlayer.phys.warp(new Vector3f(-182, 85, -433));
+    aiPlayer.phys.warp(new Vector3f(0, 150, 0));
 
     NavMesh navMesh = stateManager.getState(GamePlayAppState.class).navMesh;
     navi = new NavMeshPathfinder(navMesh);

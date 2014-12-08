@@ -74,15 +74,18 @@ public class UnderNode extends PlayerNode
   private boolean shrink = false;
   private boolean left = false, right = false, up = false, down = false, slowWater = false, jump = false;
 
+  int id;
+
   private Vector3f walkDirection = new Vector3f();
 
-  public UnderNode(String name, Camera cam, TerrainQuad terrain, AssetManager assetManager, BulletAppState bulletAppState, Node colNode)
+  public UnderNode(String name, Camera cam, TerrainQuad terrain, AssetManager assetManager, BulletAppState bulletAppState, Node colNode, int id)
   {
     super(name);
     this.cam = cam;
     this.terrain = terrain;
     this.assetManager = assetManager;
     this.bulletAppState = bulletAppState;
+    this.id = id;
     collidableNode = colNode;
 
     pivot = new Node("Pivot");
@@ -271,7 +274,10 @@ public class UnderNode extends PlayerNode
     playerSphere.setTextureMode(Sphere.TextureMode.Projected);
     TangentBinormalGenerator.generate(playerSphere);
     playerMat = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
-    playerMat.setTexture("DiffuseMap", assetManager.loadTexture("overthinker/assets/textures/striated_rock_texture.JPG"));
+    if (id == 0) playerMat.setTexture("DiffuseMap", assetManager.loadTexture("overthinker/assets/textures/striated_rock_texture.JPG"));
+    else if (id == 1) playerMat.setTexture("DiffuseMap", assetManager.loadTexture("overthinker/assets/textures/stone_texture.JPG"));
+    else if (id == 2) playerMat.setTexture("DiffuseMap", assetManager.loadTexture("overthinker/assets/textures/barnacles_texture.JPG"));
+    else System.out.println("UnderNode: setUpPlayer - id error");
     playerMat.setTexture("NormalMap", assetManager.loadTexture("Textures/Terrain/Pond/Pond_normal.png"));
     playerMat.setBoolean("UseMaterialColors", true);
     playerMat.setColor("Diffuse", ColorRGBA.White.clone());
@@ -284,7 +290,7 @@ public class UnderNode extends PlayerNode
     playerControl = new PlayerControl(Globals.PLAYER_SPHERE_START_RADIUS, Globals.PLAYER_SPHERE_START_RADIUS, 10f, assetManager);
     playerControl.setJumpForce(new Vector3f(0,250,0));
     playerControl.setGravity(new Vector3f(0, -10, 0));
-    setLocalTranslation(new Vector3f(-183, 80, -431));
+    //setLocalTranslation(new Vector3f(-183, 80, -431));
     // Player Locs: 1,2,3 - Going counterclockwise from top-left
     //Circle Start 1: -344, 80, -380
     //Circle Start 2: 289, 80, 414.7f
