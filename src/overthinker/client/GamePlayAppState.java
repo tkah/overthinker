@@ -312,6 +312,8 @@ public class GamePlayAppState extends AbstractAppState
 
     }
 
+
+
     playerNode.update(tpf);
     for (Key k : keys)
     {
