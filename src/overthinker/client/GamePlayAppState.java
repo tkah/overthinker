@@ -184,7 +184,6 @@ public class GamePlayAppState extends AbstractAppState
     flyCam.setMoveSpeed(100);
 
     setUpLevel();
-    createSphereResources();
     createOtherPlayers();
     createDoorsAndKeys();
     createPlatformsAndDoors();
@@ -252,6 +251,7 @@ public class GamePlayAppState extends AbstractAppState
     //Network update
     sendPlayerLocation();
     updatePlayers();
+    updateGravity();
 
     /* Testing */
     //Water level from stress
@@ -491,7 +491,7 @@ public class GamePlayAppState extends AbstractAppState
   {
     try
     {
-      netClient = Network.connectToServer("localhost",/*"192.168.1.131",*/ 6143);
+      netClient = Network.connectToServer("192.168.1.111", 6143);
     }
     catch (IOException e)
     {
@@ -665,6 +665,14 @@ public class GamePlayAppState extends AbstractAppState
       }
     }
     toRemove.forEach(sphereResourcesToShrink::remove);
+  }
+
+  private void updateGravity()
+  {
+    playerNode.getBCCControl().setGravityBack(model.isGravityBack());
+    playerNode.getBCCControl().setGravityForward(model.isGravityForward());
+    playerNode.getBCCControl().setGravityLeft(model.isGravityLeft());
+    playerNode.getBCCControl().setGravityRight(model.isGravityRight());
   }
 
   private void updatePlayers()

@@ -21,8 +21,8 @@ public class OverNode extends PlayerNode
   private final boolean DEBUG = true;
 
   private ArrayList<AudioNode> audioList = new ArrayList<>();
-  //private EEGMonitor monitor = new EEGMonitor();
-  private EEGSimulator monitor = new EEGSimulator();
+  private EEGMonitor monitor = new EEGMonitor();
+  //private EEGSimulator monitor = new EEGSimulator();
   private float waterRate = 0;
   private int tiltDirection = 0;
   private boolean gravityLeft = false, gravityRight = false, gravityForward = false, gravityBack = false;

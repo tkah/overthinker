@@ -644,10 +644,12 @@ public class UnderNode extends PlayerNode
    * Getter for player control
    * @return player control
    */
-  public BetterCharacterControl getBCControl()
+  @Override
+  public PlayerControl getBCCControl()
   {
     return playerControl;
   }
+
 
   /**
    * Listener for whether or not to fire jump sound
