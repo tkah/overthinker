@@ -69,8 +69,8 @@ public class GamePlayAppState extends AbstractAppState
 {
   public NavMesh navMesh;
   public BulletAppState bulletAppState;
-  private static final int SPHERE_RESOURCE_COUNT = 1;
-  private static final float SPHERE_RESOURCE_RADIUS = 5.0f;
+  private static final int SPHERE_RESOURCE_COUNT = 100;
+  private static final float SPHERE_RESOURCE_RADIUS = 1.5f;
   private SimpleApplication app;
   private Camera cam;
   private Node rootNode;
@@ -103,7 +103,7 @@ public class GamePlayAppState extends AbstractAppState
   private final float waterHeight = 20.0f;
   private float waterHeightRate = 0.00f;
   private LandscapeControl landscape;
-
+  private int playersDead = 0;
 
   private FadeFilter fade;
   private FilterPostProcessor fpp;
@@ -114,6 +114,7 @@ public class GamePlayAppState extends AbstractAppState
 
   private final ArrayList<SphereResource> sphereResourceArrayList = new ArrayList<>();
   private final ArrayList<SphereResource> sphereResourcesToShrink = new ArrayList<>();
+  private final boolean[] isDead = new boolean[]{false, false, false, false};
   private Vector3f exitLocation;
   private Vector3f[] keyLocArray = null;
   private Vector3f[] keyDoorLocArray = null;
@@ -260,7 +261,8 @@ public class GamePlayAppState extends AbstractAppState
       water.setWaterHeight(water.getWaterHeight() + model.getWaterRate());
     }
 
-    fogFilter.setFogDensity(fogDensity);
+    if (playersDead == 1) fogFilter.setFogDensity(1.0f);
+    if (playersDead == 2) fogFilter.setFogDensity(2);
 
     if (playerNode.isDead() && Globals.getTotSecs() - fadeStart > fade.getDuration())
     {
@@ -679,6 +681,11 @@ public class GamePlayAppState extends AbstractAppState
           }
           if (model.getPlayerAlive().get(i) != null && !model.getPlayerAlive().get(i))
           {
+            if (!isDead[i])
+            {
+              isDead[i] = true;
+              playersDead++;
+            }
             otherPlayers.get(i).getGeometry().removeFromParent();
           }
         }
