@@ -256,7 +256,9 @@ public class GamePlayAppState extends AbstractAppState
     //Water level from stress
     //TODO: water height rate from excitement
     //water.setWaterHeight(water.getWaterHeight() + model.getWaterRate());
-    water.setWaterHeight(water.getWaterHeight() + model.getWaterRate());
+    if(model.getPlayerLocations().get(3) != null) {
+      water.setWaterHeight(water.getWaterHeight() + model.getWaterRate());
+    }
 
     fogFilter.setFogDensity(fogDensity);
 
