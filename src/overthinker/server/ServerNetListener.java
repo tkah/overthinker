@@ -16,8 +16,7 @@ public class ServerNetListener implements MessageListener<HostedConnection> {
 
     public void messageReceived(HostedConnection source, Message message) {
         if (message instanceof NewClientRequest) {
-            if(Globals.DEBUG)System.out.println("New client request from: " + source.getAddress());
-            server.initClient(source);
+            server.initClient(source, (NewClientRequest) message);
         } else if (message instanceof ChangePlayerLocationRequest) {
             server.updatePlayerLocation(source, ((ChangePlayerLocationRequest) message).getPlayerLocation());
         } else if (message instanceof PlayerDeathRequest) {

@@ -3,6 +3,7 @@ package overthinker.server;
 
 import com.jme3.math.Vector3f;
 import com.jme3.network.*;
+import org.lwjgl.Sys;
 import overthinker.net.*;
 import com.jme3.app.SimpleApplication;
 import com.jme3.network.serializing.Serializer;
@@ -17,10 +18,9 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ServerMain extends SimpleApplication {
     private Server netServer;
     private ServerModel model;
-    private int clientCount = 0;
-    private static final int PLAYER_CAP = 4;
-    private static final Vector3f SPAWN_LOCATION = new Vector3f(340, 80, -400);
     private ConcurrentHashMap<HostedConnection, Integer> clientIndex = new ConcurrentHashMap<>();
+    private static final int PLAYER_CAP = 4;
+    private static final boolean DEBUG = true;
 
     public static void main(String[] args) {
         ServerMain app = new ServerMain();
@@ -43,8 +43,12 @@ public class ServerMain extends SimpleApplication {
     public void simpleUpdate(float tpf) {
 
         clientIndex.keySet().stream().filter(client -> !client.getServer().hasConnections()).forEach(client -> {
+            if(DEBUG) System.out.println("Disconnecting " + clientIndex.get(client));
+            model.getPlayerAlive().remove(clientIndex.get(client));
+            model.getPlayerLocations().remove(clientIndex.get(client));
+            model.setVersion(model.getVersion() + 1);
             clientIndex.remove(client);
-            clientCount--;
+            broadcastModelUpdate();
         });
     }
     public void broadcastModelUpdate()
@@ -83,26 +87,66 @@ public class ServerMain extends SimpleApplication {
         netServer.addMessageListener(listener, PlayerDeathRequest.class);
     }
 
-    public void initClient(HostedConnection source)
+    public void initClient(HostedConnection source, NewClientRequest message)
     {
+        if(DEBUG)System.out.println("New client request from: " + source.getAddress());
+
         NewClientResponse response = new NewClientResponse();
 
-        // Check if there is room on the current level
-        if(clientIndex.values().size() < PLAYER_CAP)
+        if(message.isEEG())
         {
-            model.getPlayerLocations().put(clientCount, SPAWN_LOCATION);
-            model.getPlayerAlive().put(clientCount, true);
-            clientIndex.put(source, clientCount);
-            response.setConnected(true);
-            response.setClientIndex(clientCount);
-            clientCount++;
-            model.setVersion(model.getVersion() + 1);
-            broadcastModelUpdate();
+            if(model.getPlayerLocations().get(PLAYER_CAP-1) == null)
+            {
+                model.getPlayerLocations().put(PLAYER_CAP-1, new Vector3f(0,0,0));
+                model.getPlayerAlive().put(PLAYER_CAP-1, true);
+                model.setVersion(model.getVersion() + 1);
+                clientIndex.put(source, PLAYER_CAP-1);
+                response.setConnected(true);
+                response.setClientIndex(PLAYER_CAP-1);
+                broadcastModelUpdate();
+            }
+            else response.setConnected(false);
+
         }
-        else response.setConnected(false);
+        else
+        {
+            boolean clientConnected = false;
+            for(int i = 0; i < PLAYER_CAP-1; i++)
+            {
+                if(model.getPlayerLocations().get(i) == null)
+                {
+                    clientConnected = true;
+                    model.getPlayerLocations().put(i, new Vector3f(0,0,0));
+                    model.getPlayerAlive().put(i, true);
+                    model.setVersion(model.getVersion() + 1);
+                    clientIndex.put(source, i);
+                    response.setConnected(true);
+                    response.setClientIndex(i);
+                    broadcastModelUpdate();
+                    break;
+                }
+            }
+            if(!clientConnected) response.setConnected(false);
+        }
+
+
+
+        // Check if there is room on the current level
+//        if(clientIndex.values().size() < PLAYER_CAP)
+//        {
+//            model.getPlayerLocations().put(clientCount, SPAWN_LOCATION);
+//            model.getPlayerAlive().put(clientCount, true);
+//            clientIndex.put(source, clientCount);
+//            response.setConnected(true);
+//            response.setClientIndex(clientCount);
+//            clientCount++;
+//            model.setVersion(model.getVersion() + 1);
+//            broadcastModelUpdate();
+//        }
+//        else response.setConnected(false);
 
         // Send response
-        response.setSpawnLocation(SPAWN_LOCATION);
+        response.setSpawnLocation(new Vector3f(0,0,0));
         response.setVersion(model.getVersion());
         response.setPlayerLocations(model.getPlayerLocations());
         netServer.broadcast(Filters.in(source), response);

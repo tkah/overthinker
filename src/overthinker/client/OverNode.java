@@ -4,6 +4,7 @@ import com.jme3.audio.AudioNode;
 import com.jme3.input.InputManager;
 import com.jme3.network.Client;
 import overthinker.client.eeg.EEGMonitor;
+import overthinker.client.eeg.EEGSimulator;
 import overthinker.net.ChangeMapTiltRequest;
 import overthinker.net.ChangeWaterRateRequest;
 
@@ -19,7 +20,8 @@ public class OverNode extends PlayerNode
   private final boolean DEBUG = true;
 
   private ArrayList<AudioNode> audioList = new ArrayList<>();
-  private EEGMonitor monitor = new EEGMonitor();
+  //private EEGMonitor monitor = new EEGMonitor();
+  private EEGSimulator monitor = new EEGSimulator();
   private float waterRate = 0;
   private int tiltDirection = 0;
   private boolean gravityLeft = false, gravityRight = false, gravityForward = false, gravityBack = false;
@@ -44,12 +46,10 @@ public class OverNode extends PlayerNode
         clearTilt();
       } else setTilt(tiltDirection);
 
-      waterRate = monitor.getStressLevel() / 1000; //a rate of 1 fills instantly, eeg hovers around ~.5, so divide by 1000
-      if (DEBUG) System.out.println("Update from EEG: waterRate = "+waterRate);
+      waterRate = monitor.getStressLevel() / 100; //a rate of 1 fills instantly, eeg hovers around ~.5, so divide by 1000
+      if (DEBUG) System.out.println("Update from EEG: waterRate = "+Float.toString(waterRate));
       waterRateRequest.setWaterRate(waterRate);
       netClient.send(waterRateRequest);
-
-      //monitor.updated = false;
     }
   }
 
