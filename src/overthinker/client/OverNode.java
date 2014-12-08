@@ -30,6 +30,7 @@ public class OverNode extends PlayerNode
   private float waterRate = 0;
   private int tiltDirection = 0;
   private boolean gravityLeft = false, gravityRight = false, gravityForward = false, gravityBack = false;
+  private boolean eegGrav = true;
   //Left = -1, right = 1, forward = 2, back = -2, clear all flags = 10
 
   private Client netClient;
@@ -55,11 +56,14 @@ public class OverNode extends PlayerNode
     if (monitor.updated) {
       if (DEBUG) System.out.println("Updating from EEG: Entering method.");
 
-      tiltDirection = monitor.getTiltDirection();
-      if (tiltDirection == 10) {
-        clearTilt();
-        setTilt(0);
-      } else setTilt(tiltDirection);
+      if (eegGrav)
+      {
+        tiltDirection = monitor.getTiltDirection();
+        if (tiltDirection == 10) {
+          clearTilt();
+          setTilt(0);
+        } else setTilt(tiltDirection);
+      }
 
       waterRate = monitor.getStressLevel() / 100; //a rate of 1 fills instantly, eeg hovers around ~.5, so divide by 1000
       if (DEBUG) System.out.println("Update from EEG: waterRate = "+Float.toString(waterRate));
@@ -87,6 +91,7 @@ public class OverNode extends PlayerNode
 
     if (binding.equals("GravityNorm"))
     {
+      eegGrav = !eegGrav;
       clearTilt();
       ChangeMapTiltRequest changeMapTiltRequest = new ChangeMapTiltRequest();
       changeMapTiltRequest.setRight(false);
