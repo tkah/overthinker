@@ -47,6 +47,7 @@ import com.jme3.terrain.heightmap.ImageBasedHeightMap;
 import com.jme3.texture.Texture;
 import com.jme3.texture.Texture.WrapMode;
 import com.jme3.water.WaterFilter;
+import de.lessvoid.nifty.Nifty;
 import jme3utilities.Misc;
 import jme3utilities.sky.SkyControl;
 import overthinker.net.*;
@@ -97,6 +98,7 @@ public class GamePlayAppState extends AbstractAppState
   private final float waterHeight = 20.0f;
   private float waterHeightRate = 0.00f;
   private LandscapeControl landscape;
+
 
   private FadeFilter fade;
   private FilterPostProcessor fpp;
@@ -306,7 +308,11 @@ public class GamePlayAppState extends AbstractAppState
       bulletAppState.getPhysicsSpace().remove(playerNode);
       playerNode.removeFromParent();
       fadeStart = Globals.getTotSecs();
+      UnderNode.stopWarningSound();
+
     }
+
+
 
     playerNode.update(tpf);
     for (Key k : keys)

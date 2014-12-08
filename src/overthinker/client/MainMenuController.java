@@ -90,7 +90,7 @@ public class MainMenuController extends AbstractAppState implements ScreenContro
       try
       {
         app.enqueue(() -> {
-          nifty.gotoScreen("loading");
+          nifty.gotoScreen("waitingScreen");
           menu_music.stop();
           return null;
         }).get();
@@ -112,20 +112,6 @@ public class MainMenuController extends AbstractAppState implements ScreenContro
     app.stop();
   }
 
-  public void setStartScreen()
-  {
-    nifty.gotoScreen("start");
-  }
-
-  public void setLoadingScreen()
-  {
-    nifty.gotoScreen("loading");
-  }
-
-  public void setLoadedScreen()
-  {
-    nifty.gotoScreen("loaded");
-  }
 
   public void bind(Nifty nifty, Screen screen)
   {
