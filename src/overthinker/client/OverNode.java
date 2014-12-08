@@ -117,24 +117,21 @@ public class OverNode extends PlayerNode
     ChangeMapTiltRequest changeMapTiltRequest = new ChangeMapTiltRequest();
     if (direction == 1) {
       clearTilt();
-      gravityRight = true;
       changeMapTiltRequest.setRight(true);
     }
     else if (direction == -1) {
       clearTilt();
-      gravityLeft = true;
       changeMapTiltRequest.setLeft(true);
     }
     else if (direction == 2) {
       clearTilt();
-      gravityForward = true;
       changeMapTiltRequest.setForward(true);
     }
     else if (direction == -2) {
       clearTilt();
-      gravityBack = true;
       changeMapTiltRequest.setBack(true);
     }
+    else if (direction == 0) return;
     netClient.send(changeMapTiltRequest);
   }
 

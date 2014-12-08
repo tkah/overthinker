@@ -120,15 +120,14 @@ public class EEGMonitor extends Thread {
                         if (DEBUG)
                             System.out.print(" GyroDelta[X]: " + gyroX.getValue() + " GyroDelta[Y]: " + gyroY.getValue());
 
-                        int temp = interpretGyro();
-                        if (temp != 0) requestedGravity = temp;
+                        requestedGravity= interpretGyro();
 
                         excitementShort = EmoState.INSTANCE.ES_AffectivGetExcitementShortTermScore(eState);
                         //interpretExcitement(); //may not be needed, depending on how OverNode.update() calls EEG
                         if (DEBUG)
                             System.out.print(", Frust: " + EmoState.INSTANCE.ES_AffectivGetFrustrationScore(eState));
                         if (DEBUG) System.out.println();
-                        if (LOG) log.writeLine(System.nanoTime()+" short term excitement: "+excitementShort);
+                        if (LOG) log.writeLine(System.nanoTime() + " short term excitement: " + excitementShort);
                     }
                 }
             }
@@ -173,44 +172,20 @@ public class EEGMonitor extends Thread {
         }
         if (Math.abs(xDelta) > MIN_GYRO_DELTA) {
             if (xDelta > 0) {
-                if (!gravityNormal && currentGravity == -1) {
-                    if (DEBUG) System.out.println("Tilt: 0 (RETURN TO UPRIGHT)");
-                    updated = false;
-                    return 10;
-                } else {
-                    if (DEBUG) System.out.print(" Tilt: 1 (Right)");
-                    return 1;
-                }
+                if (DEBUG) System.out.print(" Tilt: 1 (Right)");
+                return 1;
             } else {
-                if (!gravityNormal && currentGravity == 1) {
-                    if (DEBUG) System.out.println("Tilt: 0 (RETURN TO UPRIGHT)");
-                    updated = false;
-                    return 10;
-                } else {
-                    if (DEBUG) System.out.print(" Tilt: -1 (Left)");
-                    return -1;     //Left
-                }
+                if (DEBUG) System.out.print(" Tilt: -1 (Left)");
+                return -1;     //Left
             }
         }
         if (Math.abs(yDelta) > MIN_GYRO_DELTA) {
             if (yDelta > 0) {
-                if (!gravityNormal && currentGravity == -2) {
-                    if (DEBUG) System.out.println("Tilt: 0 (RETURN TO UPRIGHT)");
-                    updated = false;
-                    return 10;
-                } else {
                     if (DEBUG) System.out.print(" Tilt: 2 (Up)");
                     return 2; //Up
-                }
             } else {
-                if (!gravityNormal && currentGravity == 2) {
-                    if (DEBUG) System.out.println("Tilt: 0 (RETURN TO UPRIGHT)");
-                    updated = false;
-                    return 10;
-                } else {
                     if (DEBUG) System.out.print(" Tilt: -2 (Down)");
                     return -2; //Down
-                }
             }
         }
         if (DEBUG) System.out.println("Tilt: 0 (No tilt)");
@@ -224,12 +199,7 @@ public class EEGMonitor extends Thread {
      */
     public int getTiltDirection() {
         currentGravity = requestedGravity;
-        if (currentGravity == 10) {
-            gravityNormal = true;
-            currentGravity = 0;
-            return requestedGravity;
-        }
-        gravityNormal = false;
+
         return requestedGravity;
     }
 
