@@ -407,6 +407,7 @@ public class GamePlayAppState extends AbstractAppState
   {
     super.cleanup();
     rootNode.detachChild(localRootNode);
+    System.exit(0);
   }
 
   /**
