@@ -503,7 +503,9 @@ public class GamePlayAppState extends AbstractAppState
 
     while (model == null)
     {
-      netClient.send(new NewClientRequest());
+      NewClientRequest newClientRequest = new NewClientRequest();
+      if(playerType == 0) newClientRequest.setEEG(true);
+      netClient.send(newClientRequest);
       System.out.println("Waiting For Model Data...");
       try
       {
