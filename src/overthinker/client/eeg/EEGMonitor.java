@@ -12,8 +12,8 @@ import java.util.TimerTask;
  */
 public class EEGMonitor extends Thread {
 
-    private final boolean DEBUG = true;
-    private final boolean LOG = true; //Enables logging of eeg output.
+    private final boolean DEBUG = false;
+    private final boolean LOG = false; //Enables logging of eeg output.
     private final int MIN_GYRO_DELTA = 50;
 
     private Pointer eEvent = Edk.INSTANCE.EE_EmoEngineEventCreate();

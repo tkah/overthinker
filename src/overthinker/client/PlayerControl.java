@@ -158,6 +158,7 @@ public class PlayerControl extends BetterCharacterControl
     }
     else if (gravityLeft)
     {
+      System.out.println("playercontrol norm left");
       coll = new CollisionResults();
       dir = new Vector3f(1,0,0);
       Ray rayL = new Ray(playerTranslation, dir);
@@ -168,6 +169,7 @@ public class PlayerControl extends BetterCharacterControl
     }
     else if (gravityRight)
     {
+      System.out.println("playercontrol norm right");
       coll = new CollisionResults();
       dir = new Vector3f(-1,0,0);
       Ray rayR = new Ray(playerTranslation, dir);
@@ -188,6 +190,7 @@ public class PlayerControl extends BetterCharacterControl
     }
     else if (gravityBack)
     {
+      System.out.println("playercontrol norm back");
       coll = new CollisionResults();
       dir = new Vector3f(0,0,1);
       Ray rayB = new Ray(playerTranslation, dir);
@@ -197,6 +200,7 @@ public class PlayerControl extends BetterCharacterControl
     }
     else
     {
+      System.out.println("playercontrol norm grav");
       coll = new CollisionResults();
       dir = new Vector3f(0,-1,0);
       Ray rayD = new Ray(playerTranslation, dir);
