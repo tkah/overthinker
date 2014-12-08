@@ -54,6 +54,7 @@ public class OverNode extends PlayerNode
       tiltDirection = monitor.getTiltDirection();
       if (tiltDirection == 10) {
         clearTilt();
+        setTilt(0);
       } else setTilt(tiltDirection);
 
       waterRate = monitor.getStressLevel() / 100; //a rate of 1 fills instantly, eeg hovers around ~.5, so divide by 1000
@@ -113,7 +114,6 @@ public class OverNode extends PlayerNode
       clearTilt();
       gravityForward = true;
       changeMapTiltRequest.setForward(true);
-      return;
     }
     else if (direction == -2) {
       clearTilt();
