@@ -585,6 +585,7 @@ public class GamePlayAppState extends AbstractAppState
       }
     }
 
+    //TODO: Add doors/platforms to server?
     //Detect collisions with platforms
     CollisionResults platResults = new CollisionResults();
     platformsNode.collideWith(playerNode.getGeometry().getWorldBound(), platResults);
