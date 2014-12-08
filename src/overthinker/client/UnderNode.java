@@ -47,7 +47,7 @@ public class UnderNode extends PlayerNode
   private GhostControl camGhost;
   private ParticleEmitter dustEmitterRight;
   private ParticleEmitter dustEmitterLeft;
-  private AudioNode warning_sound;
+  private static AudioNode warning_sound;
 
   // Possibly move to abstract class
   private TerrainQuad terrain;
@@ -87,6 +87,7 @@ public class UnderNode extends PlayerNode
     this.bulletAppState = bulletAppState;
     this.id = id;
     collidableNode = colNode;
+    initWarningSound();
 
     pivot = new Node("Pivot");
   }
@@ -232,12 +233,24 @@ public class UnderNode extends PlayerNode
     else if (verticalAngle < minVerticalAngle) verticalAngle = minVerticalAngle;
   }
 
-  public void flash(float tpf)
-  {
+  public void initWarningSound(){
     warning_sound= new AudioNode(assetManager, "overthinker/assets/sounds/warning.ogg",false);
     warning_sound.setPositional(false);
     warning_sound.setLooping(true);
     warning_sound.setVolume(2);
+  }
+
+  public static void playWarningSound(){
+    warning_sound.play();
+  }
+
+  public static void stopWarningSound(){
+    warning_sound.stop();
+  }
+
+  public void flash(float tpf)
+  {
+
     if (!doFlash)
     {
       doFlash = true;
@@ -245,7 +258,7 @@ public class UnderNode extends PlayerNode
       flashStartTime = Globals.getTotSecs();
       playerMat.setColor("Diffuse", ColorRGBA.Red);
       lastFlashDiff = Globals.getTotSecs() - flashStartTime;
-      warning_sound.play();
+      playWarningSound();
     }
     else if (Globals.getTotSecs() - flashStartTime >  lastFlashDiff)
     {
