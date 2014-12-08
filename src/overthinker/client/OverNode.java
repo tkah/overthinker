@@ -2,6 +2,10 @@ package overthinker.client;
 
 import com.jme3.audio.AudioNode;
 import com.jme3.input.InputManager;
+import com.jme3.input.KeyInput;
+import com.jme3.input.MouseInput;
+import com.jme3.input.controls.KeyTrigger;
+import com.jme3.input.controls.MouseAxisTrigger;
 import com.jme3.network.Client;
 import overthinker.client.eeg.EEGMonitor;
 import overthinker.client.eeg.EEGSimulator;
@@ -18,7 +22,7 @@ import java.util.ArrayList;
  */
 public class OverNode extends PlayerNode
 {
-  private final boolean DEBUG = true;
+  private final boolean DEBUG = false;
 
   private ArrayList<AudioNode> audioList = new ArrayList<>();
   private EEGMonitor monitor = new EEGMonitor();
@@ -81,6 +85,17 @@ public class OverNode extends PlayerNode
   public void onAction(String binding, boolean isPressed, float tpf)
   {
 
+    if (binding.equals("GravityNorm"))
+    {
+      clearTilt();
+      ChangeMapTiltRequest changeMapTiltRequest = new ChangeMapTiltRequest();
+      changeMapTiltRequest.setRight(false);
+      changeMapTiltRequest.setLeft(false);
+      changeMapTiltRequest.setForward(false);
+      changeMapTiltRequest.setBack(false);
+      tiltDirection = 0;
+      netClient.send(changeMapTiltRequest);
+    }
   }
 
   /**
@@ -184,6 +199,9 @@ public class OverNode extends PlayerNode
    */
   public ArrayList setUpControls(InputManager inputManager)
   {
+    inputManager.addMapping("GravityNorm", new KeyTrigger(KeyInput.KEY_SPACE));
+    actionStrings.add("GravityNorm");
+
     return actionStrings;
   }
 }

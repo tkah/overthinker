@@ -491,7 +491,9 @@ public class GamePlayAppState extends AbstractAppState
   {
     try
     {
+
       netClient = Network.connectToServer("192.168.1.110", 6143);
+
     }
     catch (IOException e)
     {
@@ -669,10 +671,18 @@ public class GamePlayAppState extends AbstractAppState
 
   private void updateGravity()
   {
-    playerNode.getBCCControl().setGravityBack(model.isGravityBack());
-    playerNode.getBCCControl().setGravityForward(model.isGravityForward());
-    playerNode.getBCCControl().setGravityLeft(model.isGravityLeft());
-    playerNode.getBCCControl().setGravityRight(model.isGravityRight());
+    if (playerType == 1)
+    {
+      playerNode.getBCCControl().setGravityBack(model.isGravityBack());
+      playerNode.getBCCControl().setGravityForward(model.isGravityForward());
+      playerNode.getBCCControl().setGravityLeft(model.isGravityLeft());
+      playerNode.getBCCControl().setGravityRight(model.isGravityRight());
+
+      if (!model.isGravityBack() && !model.isGravityForward() && !model.isGravityRight() && !model.isGravityLeft())
+      {
+
+      }
+    }
   }
 
   private void updatePlayers()
@@ -762,8 +772,6 @@ public class GamePlayAppState extends AbstractAppState
       playerNode = new OverNode("OverThinker", netClient);
       cam.setLocation(new Vector3f(0, 250, 0));
       cam.lookAtDirection(new Vector3f(0, -1, 0), Vector3f.UNIT_Y);
-      //TODO remove createSphereResources() after EEG testing is complete:
-      createSphereResources();
     }
     else
     {

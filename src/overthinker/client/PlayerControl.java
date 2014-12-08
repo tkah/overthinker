@@ -205,7 +205,9 @@ public class PlayerControl extends BetterCharacterControl
     }
     else
     {
+
       System.out.println("PlayerControl default gravity");
+
       coll = new CollisionResults();
       dir = new Vector3f(0,-1,0);
       Ray rayD = new Ray(playerTranslation, dir);
