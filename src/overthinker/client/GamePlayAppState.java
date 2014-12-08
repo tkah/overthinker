@@ -673,7 +673,7 @@ public class GamePlayAppState extends AbstractAppState
     {
       for (int i = 0; i < playerCount; i++)
       {
-        if (i != clientIndex)
+        if (i != clientIndex && i != 3)
         {
           if (model.getPlayerLocations().get(i) != null)
           {
