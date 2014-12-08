@@ -29,7 +29,7 @@ public class ClientMain extends SimpleApplication {
        settings.setResolution(modes[camIndex].getWidth(),modes[camIndex].getHeight());
        settings.setFrequency(modes[camIndex].getRefreshRate());
        settings.setBitsPerPixel(modes[camIndex].getBitDepth());
-       settings.setSettingsDialogImage("overthinker/assets/interface/overthinker-title2.png");
+       //settings.setSettingsDialogImage("overthinker/assets/interface/overthinker-title2.png");
        settings.setTitle("Overthinker!");
 
 

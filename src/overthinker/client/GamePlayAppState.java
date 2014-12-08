@@ -116,6 +116,7 @@ public class GamePlayAppState extends AbstractAppState
   private float[] keyDoorRotationArray;
   private float[] platDoorSizeXArray;
   private float[] platDoorRotationArray;
+  private Vector3f[] playerSpawnPts;
   private final float fogDensity = 0.0f;// 0, 1.0, 1.5, 2.0
   private final ArrayList<Key> keys = new ArrayList<>();
   private final ArrayList<Door> keyDoors = new ArrayList<>();
@@ -234,7 +235,7 @@ public class GamePlayAppState extends AbstractAppState
   @Override
   public void update(float tpf)
   {
-    System.out.println(cam.getLocation());
+    //System.out.println(cam.getLocation());
 
   //  Network update
     sendPlayerLocation();
@@ -255,22 +256,27 @@ public class GamePlayAppState extends AbstractAppState
     {
       if (model.isGravityForward())
       {
+        System.out.println("fore");
         s.getSphereResourcePhy().setGravity(new Vector3f(0, 0, -Globals.GRAVITY));
       }
       else if (model.isGravityBack())
       {
+        System.out.println("back");
         s.getSphereResourcePhy().setGravity(new Vector3f(0, 0, Globals.GRAVITY));
       }
       else if (model.isGravityRight())
       {
+        System.out.println("right");
         s.getSphereResourcePhy().setGravity(new Vector3f(-Globals.GRAVITY, 0, 0));
       }
       else if (model.isGravityLeft())
       {
+        System.out.println("left");
         s.getSphereResourcePhy().setGravity(new Vector3f(Globals.GRAVITY, 0, 0));
       }
       else
       {
+        System.out.println("norm");
         s.getSphereResourcePhy().setGravity(new Vector3f(0, -Globals.GRAVITY, 0));
       }
     }
@@ -344,6 +350,7 @@ public class GamePlayAppState extends AbstractAppState
     {
       case "circlemaze":
         exitLocation = new Vector3f(7, 122, -7);
+        playerSpawnPts = new Vector3f[]{new Vector3f(-344, 80, -380), new Vector3f(289, 80, 414.7f), new Vector3f(381,80, -387.5f)};
         keyLocArray = new Vector3f[]{
               new Vector3f(60, 65, -330), new Vector3f(35, 65, 345), new Vector3f(115, 65, -353)
         };
@@ -366,6 +373,7 @@ public class GamePlayAppState extends AbstractAppState
         break;
       case "pentamaze":
         exitLocation = new Vector3f(-5.5f, 102, -6);
+        playerSpawnPts = new Vector3f[]{new Vector3f(-183, 80, -431), new Vector3f(360, 59, 450), new Vector3f(345,80,-284)};
         keyLocArray = new Vector3f[]{
               new Vector3f(-298.9f, 45, 360), new Vector3f(408.7f, 45, 15), new Vector3f(80, 45, -421)
         };
@@ -388,6 +396,7 @@ public class GamePlayAppState extends AbstractAppState
         break;
       case "radiomaze":
         exitLocation = new Vector3f(.36f, 80.3f, -30);
+        playerSpawnPts = new Vector3f[]{new Vector3f(-260, 110, -390), new Vector3f(-170, 110, 350), new Vector3f(260, 110, -390)};
         platDoorLocArray = new Vector3f[]{
               new Vector3f(-123, 124.8f, -216), new Vector3f(-89, 124.8f, 167), new Vector3f(125, 124.8f, -214)
         };
@@ -453,13 +462,16 @@ public class GamePlayAppState extends AbstractAppState
   {
     for (int i = 0; i < playerCount; i++)
     {
-      System.out.println("Creating new Player Objects");
-      OtherPlayer otherPlayer = new OtherPlayer(Globals.PLAYER_SPHERE_START_RADIUS, i,
-                                                spawnLocation, assetManager);
-      bulletAppState.getPhysicsSpace().add(otherPlayer.getSphereResourcePhy());
-      otherPlayers.put(i, otherPlayer);
-      resources.attachChild(otherPlayer.getGeometry());
-      localRootNode.attachChild(otherPlayer.getGeometry());
+      if (i != 3)
+      {
+        System.out.println("Creating new Player Objects");
+        OtherPlayer otherPlayer = new OtherPlayer(Globals.PLAYER_SPHERE_START_RADIUS, i,
+                spawnLocation, assetManager);
+        bulletAppState.getPhysicsSpace().add(otherPlayer.getSphereResourcePhy());
+        otherPlayers.put(i, otherPlayer);
+        resources.attachChild(otherPlayer.getGeometry());
+        localRootNode.attachChild(otherPlayer.getGeometry());
+      }
     }
   }
 
@@ -725,7 +737,8 @@ public class GamePlayAppState extends AbstractAppState
     }
     else
     {
-      playerNode = new UnderNode("player", cam, terrain, assetManager, bulletAppState, collidableNode);
+      playerNode = new UnderNode("player", cam, terrain, assetManager, bulletAppState, collidableNode, clientIndex);
+      playerNode.setLocalTranslation(playerSpawnPts[clientIndex]);
       flyCam.setEnabled(false);
       createSphereResources();
     }
@@ -842,7 +855,7 @@ public class GamePlayAppState extends AbstractAppState
     localRootNode.attachChild(navGeom);
     navMesh = new NavMesh(navGeom.getMesh());
 
-/** Create the height map */
+    /** Create the height map */
     Texture heightMapImage;
 
     if (playerType == 0)
