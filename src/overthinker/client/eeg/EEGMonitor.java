@@ -13,6 +13,7 @@ import java.util.TimerTask;
 public class EEGMonitor extends Thread {
 
     private final boolean DEBUG = true;
+    private final boolean LOG = true; //Enables logging of eeg output.
     private final int MIN_GYRO_DELTA = 50;
 
     private Pointer eEvent = Edk.INSTANCE.EE_EmoEngineEventCreate();
@@ -32,12 +33,15 @@ public class EEGMonitor extends Thread {
     private boolean gravityNormal = true;
     private Timer timer = new Timer();
 
+    private EEGLogger log;
+
     public volatile boolean updated = true;
     public float excitementShort = 0;
     public float frustrationShort = 0;
 
 
     public EEGMonitor() {
+        if (LOG) log = new EEGLogger();
         userID = new IntByReference(0);
         nSamplesTaken = new IntByReference(0);
 
@@ -124,7 +128,7 @@ public class EEGMonitor extends Thread {
                         if (DEBUG)
                             System.out.print(", Frust: " + EmoState.INSTANCE.ES_AffectivGetFrustrationScore(eState));
                         if (DEBUG) System.out.println();
-
+                        if (LOG) log.writeLine(System.nanoTime()+" short term excitement: "+excitementShort);
                     }
                 }
             }
@@ -140,6 +144,8 @@ public class EEGMonitor extends Thread {
         Edk.INSTANCE.EE_EngineDisconnect();
         Edk.INSTANCE.EE_EmoStateFree(eState);
         Edk.INSTANCE.EE_EmoEngineEventFree(eEvent);
+
+        log.closeStreams();
         if (DEBUG) System.out.println("Disconnected!");
     }
 
