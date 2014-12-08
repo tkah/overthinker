@@ -47,7 +47,6 @@ import com.jme3.terrain.heightmap.ImageBasedHeightMap;
 import com.jme3.texture.Texture;
 import com.jme3.texture.Texture.WrapMode;
 import com.jme3.water.WaterFilter;
-import de.lessvoid.nifty.Nifty;
 import jme3utilities.Misc;
 import jme3utilities.sky.SkyControl;
 import overthinker.net.*;
@@ -58,6 +57,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
+
+/**
+ * Class controls and initializes main client game play logic
+ *
+ * Created by Torran, Josh, Peter, Derek, Sid
+ */
 
 public class GamePlayAppState extends AbstractAppState
       implements ActionListener, AnalogListener
@@ -119,7 +124,7 @@ public class GamePlayAppState extends AbstractAppState
   private float[] platDoorSizeXArray;
   private float[] platDoorRotationArray;
   private Vector3f[] playerSpawnPts;
-  private final float fogDensity = 0.0f;// 0, 1.0, 1.5, 2.0
+  private final float fogDensity = 0.0f;// 0, 1.0, 2.0
   private final ArrayList<Key> keys = new ArrayList<>();
   private final ArrayList<Door> keyDoors = new ArrayList<>();
   private final ArrayList<Door> platDoors = new ArrayList<>();
@@ -144,6 +149,10 @@ public class GamePlayAppState extends AbstractAppState
 
   /**
    * Class initialization
+   * Initialization order is important
+   *
+   * @param stateManager - game state manager
+   * @param app          - the application
    */
   public void initialize(AppStateManager stateManager, Application app)
   {
@@ -239,7 +248,7 @@ public class GamePlayAppState extends AbstractAppState
   {
     //System.out.println(cam.getLocation());
 
-  //  Network update
+    //Network update
     sendPlayerLocation();
     updatePlayers();
 
@@ -248,41 +257,9 @@ public class GamePlayAppState extends AbstractAppState
     else water.setWaterHeight(water.getWaterHeight() + Globals.WATER_HEIGHT_PLAYER_RATE);
 
     /* Testing */
-//    Water level from stress
-    if (playerType == 0)
-    {
-      water.setWaterHeight(water.getWaterHeight() + model.getWaterRate());
-    }
-
-    for (SphereResource s : sphereResourceArrayList)
-    {
-      if (model.isGravityForward())
-      {
-        System.out.println("fore");
-        s.getSphereResourcePhy().setGravity(new Vector3f(0, 0, -Globals.GRAVITY));
-      }
-      else if (model.isGravityBack())
-      {
-        System.out.println("back");
-        s.getSphereResourcePhy().setGravity(new Vector3f(0, 0, Globals.GRAVITY));
-      }
-      else if (model.isGravityRight())
-      {
-        System.out.println("right");
-        s.getSphereResourcePhy().setGravity(new Vector3f(-Globals.GRAVITY, 0, 0));
-      }
-      else if (model.isGravityLeft())
-      {
-        System.out.println("left");
-        s.getSphereResourcePhy().setGravity(new Vector3f(Globals.GRAVITY, 0, 0));
-      }
-      else
-      {
-        System.out.println("norm");
-        s.getSphereResourcePhy().setGravity(new Vector3f(0, -Globals.GRAVITY, 0));
-      }
-    }
-
+    //Water level from stress
+    //TODO: water height rate from excitement
+    //water.setWaterHeight(water.getWaterHeight() + model.getWaterRate());
     water.setWaterHeight(water.getWaterHeight() + waterHeightRate);
 
     fogFilter.setFogDensity(fogDensity);
@@ -299,7 +276,6 @@ public class GamePlayAppState extends AbstractAppState
       }
     }
 
-//    TODO: Player died
     if (playerType == 1 && playerNode.getHeight() < .3f && !playerNode.isDead())
     {
       netClient.send(new PlayerDeathRequest());
@@ -309,10 +285,7 @@ public class GamePlayAppState extends AbstractAppState
       playerNode.removeFromParent();
       fadeStart = Globals.getTotSecs();
       UnderNode.stopWarningSound();
-
     }
-
-
 
     playerNode.update(tpf);
     for (Key k : keys)
@@ -324,7 +297,7 @@ public class GamePlayAppState extends AbstractAppState
       testCollisions(tpf);
     }
 
-//    move the audio with the camera
+    //move the audio with the camera
     listener.setLocation(cam.getLocation());
     listener.setRotation(cam.getRotation());
   }
@@ -341,11 +314,20 @@ public class GamePlayAppState extends AbstractAppState
     waterHeightRate = val;
   }
 
+  /**
+   * Sets the player type
+   * 0 = overthinker, 1 = underthinker
+   *
+   * @param type - player type
+   */
   public void setPlayerType(int type)
   {
     playerType = type;
   }
 
+  /**
+   * Set up level variables depending on level name
+   */
   void setUpLevel()
   {
     lvlColorName = "overthinker/assets/terrains/" + levelName + lvlColorName;
@@ -417,6 +399,9 @@ public class GamePlayAppState extends AbstractAppState
     }
   }
 
+  /**
+   * Override app state cleanup to clear after detaching
+   */
   @Override
   public void cleanup()
   {
@@ -424,11 +409,19 @@ public class GamePlayAppState extends AbstractAppState
     rootNode.detachChild(localRootNode);
   }
 
+  /**
+   * Net client getter
+   * @return the net client
+   */
   public Client getNetClient()
   {
     return netClient;
   }
 
+  /**
+   * Connect new client to server
+   * @param message - message from server
+   */
   public void handleNewClientResponse(NewClientResponse message)
   {
     System.out.println("Connected to server");
@@ -439,6 +432,10 @@ public class GamePlayAppState extends AbstractAppState
     clientIndex = message.getClientIndex();
   }
 
+  /**
+   * Updates model instance with information from server
+   * @param message - message from server
+   */
   public void updateModel(ModelUpdate message)
   {
     if (model != null)
@@ -454,11 +451,19 @@ public class GamePlayAppState extends AbstractAppState
     }
   }
 
+  /**
+   * Gett for localRootNode
+   * @return localRootNode
+   */
   public Node getLocalRootNode()
   {
     return localRootNode;
   }
 
+  /**
+   * Getter for player node
+   * @return playerNode
+   */
   public PlayerNode getPlayerNode()
   {
     return playerNode;
@@ -526,14 +531,15 @@ public class GamePlayAppState extends AbstractAppState
 
   private void testCollisions(float tpf)
   {
+    //Scale player down if at same point as water level
     if ((playerNode.getGeometry().getWorldTranslation().getY() <= water.getWaterHeight()) || playerNode.getShrink())
     {
       playerNode.scalePlayerDown(tpf);
     }
 
+    //Detect collisions with resource spheres
     CollisionResults results = new CollisionResults();
     resources.collideWith(playerNode.getGeometry().getWorldBound(), results);
-
     if (results.size() > 0)
     {
       audio_collect.play();
@@ -557,9 +563,9 @@ public class GamePlayAppState extends AbstractAppState
       }
     }
 
+    //Detect collisions with keys
     CollisionResults keyResults = new CollisionResults();
     keysNode.collideWith(playerNode.getGeometry().getWorldBound(), keyResults);
-
     if (keyResults.size() > 0)
     {
       CollisionResult closest = keyResults.getClosestCollision();
@@ -578,6 +584,7 @@ public class GamePlayAppState extends AbstractAppState
       }
     }
 
+    //Detect collisions with platforms
     CollisionResults platResults = new CollisionResults();
     platformsNode.collideWith(playerNode.getGeometry().getWorldBound(), platResults);
     for (Platform p : platforms)
@@ -624,6 +631,7 @@ public class GamePlayAppState extends AbstractAppState
       }
     }
 
+    //Detect collisions with exit
     CollisionResults exitResults = new CollisionResults();
     exitNode.collideWith(playerNode.getGeometry().getWorldBound(), exitResults);
     if (localRootNode.hasChild(exitNode) && exitResults.size() > 0)
@@ -905,7 +913,7 @@ public class GamePlayAppState extends AbstractAppState
     terrain.addControl(control);
 
      //We set up collision detection for the scene by creating a
-//     compound collision shape and a static RigidBodyControl with mass zero.
+     //compound collision shape and a static RigidBodyControl with mass zero.
     CollisionShape sceneShape =
           CollisionShapeFactory.createMeshShape(terrain);
     landscape = new LandscapeControl(sceneShape, 0, bulletAppState.getPhysicsSpace());
@@ -989,7 +997,7 @@ public class GamePlayAppState extends AbstractAppState
   private void initAudio()
   {
 
-  //  collect object
+    //collect object
     audio_collect = new AudioNode(assetManager, "overthinker/assets/sounds/collect.ogg", false);
     audio_collect.setPositional(false);
     audio_collect.setVolume(2);

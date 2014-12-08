@@ -13,7 +13,8 @@ import java.util.ArrayList;
 /**
  * This class defines the base methods and update process for the Overthinker client,
  * including the eeg data.
- * Created by Torran on 11/26/14.  EEG methods and misc added by Sid 10/3/14
+ *
+ * Created by Torran, Sid, Peter, Josh, Derek on 11/26/14.  EEG methods and misc added by Sid 12/3/14
  */
 public class OverNode extends PlayerNode
 {
@@ -30,6 +31,11 @@ public class OverNode extends PlayerNode
   private Client netClient;
   private ChangeWaterRateRequest waterRateRequest = new ChangeWaterRateRequest();
 
+  /**
+   * Class constructor
+   * @param name      - name of overthinker node
+   * @param netClient - client
+   */
   public OverNode(String name, Client netClient)
   {
     super(name);
@@ -37,6 +43,10 @@ public class OverNode extends PlayerNode
     this.netClient = netClient;
   }
 
+  /**
+   * Update method for overthinker
+   * @param tpf - frame rate
+   */
   public void update (float tpf) {
     if (monitor.updated) {
       if (DEBUG) System.out.println("Updating from EEG: Entering method.");
@@ -53,16 +63,20 @@ public class OverNode extends PlayerNode
     }
   }
 
+  /**
+   * Sets up player overnode player
+   */
   public void setUpPlayer()
   {
 
   }
 
-  public void onAnalog(String binding, float value, float tpf)
-  {
-
-  }
-
+  /**
+   * Action to take on key press
+   * @param binding   - name of key press binding
+   * @param isPressed - key is pressed or not pressed
+   * @param tpf       - frame rate
+   */
   public void onAction(String binding, boolean isPressed, float tpf)
   {
 
@@ -109,32 +123,65 @@ public class OverNode extends PlayerNode
     netClient.send(changeMapTiltRequest);
   }
 
+  /**
+   * Getter for water rate
+   * @return water rise rate
+   */
   @Override
   public float getWaterRate() {
     return waterRate;
   }
+
+  /**
+   * Getter for forward grav status
+   * @return forward gravity status
+   */
   @Override
   public boolean getForwardGrav() {
     return gravityForward;
   }
+
+  /**
+   * Getter for back gravity status
+   * @return back gravity status
+   */
   @Override
   public boolean getBackwardGrav() {
     return gravityBack;
   }
+
+  /**
+   * Getter for left gravity status
+   * @return left grav status
+   */
   @Override
   public boolean getLeftGrav() {
     return gravityLeft;
   }
+
+  /**
+   * Getter for right gravity status
+   * @return right grav status
+   */
   @Override
   public boolean getRightGrav() {
     return gravityRight;
   }
 
+  /**
+   * Getter for playerControl audio
+   * @return list of audio to add
+   */
   public ArrayList getAudio()
   {
     return audioList;
   }
 
+  /**
+   * Setter for overnode controls
+   * @param inputManager - program's input manager
+   * @return list of control
+   */
   public ArrayList setUpControls(InputManager inputManager)
   {
     return actionStrings;

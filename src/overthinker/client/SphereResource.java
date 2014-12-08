@@ -10,7 +10,9 @@ import com.jme3.scene.Geometry;
 import com.jme3.scene.shape.Sphere;
 
 /**
- * Created by Torran on 11/10/14.
+ * Class creates sphere resources which increase player size
+ *
+ * Created by Torran, Derek, Peter, Josh, Sid on 11/10/14.
  */
 public class SphereResource
 {
@@ -25,7 +27,14 @@ public class SphereResource
   private RigidBodyControl sphereResource_phy;
   private AssetManager assetManager;
 
-
+  /**
+   * Class constructor
+   * @param radius       - radius of resource
+   * @param x            - x-coord of resource
+   * @param z            - z-coord of resource
+   * @param id           - id of resource
+   * @param assetManager - program's asset manager
+   */
   public SphereResource(float radius, int x, int z, int id, AssetManager assetManager)
   {
     this.x = x;
@@ -54,32 +63,55 @@ public class SphereResource
     geom.addControl(sphereResource_phy);
   }
 
+  /**
+   * Getter for resource sphere object
+   * @return resource sphere object
+   */
   public Sphere getSphere()
   {
     return sphere;
   }
 
+  /**
+   * Getter for sphere geometry
+   * @return sphere geometry
+   */
   public Geometry getGeometry()
   {
     return geom;
   }
 
+  /**
+   * Getter for sphere physics object
+   * @return sphere physics object
+   */
   public RigidBodyControl getSphereResourcePhy()
   {
     return sphereResource_phy;
   }
 
+  /**
+   * Getter for sphere shrink
+   * @return true = shrink sphere, false = don't shrink
+   */
   public boolean getShrink()
   {
     return shrink;
   }
 
+  /**
+   * Setter for sphere shrink
+   * @param s  - true = shrink, false = don't shrink
+   */
   public void setShrink(boolean s)
   {
     if (s) startShrinkTime = Globals.getTotSecs();
     shrink = s;
   }
 
+  /**
+   * Sphere has collided with player, begin its disappearing animation
+   */
   public void setSphereToDisappear()
   {
     geom.scale(.9f);
@@ -88,6 +120,9 @@ public class SphereResource
     if(geom.getLocalScale().getY() <= .01) shrink = false;
   }
 
+  /**
+   * Enough time has passed since disappearing, return sphere to map
+   */
   public void setSphereBack()
   {
     geom.scale(100f);
@@ -95,16 +130,28 @@ public class SphereResource
     sphereResource_phy.getCollisionShape().setScale(new Vector3f(100,100,100));
   }
 
+  /**
+   * Getter for shrink start time
+   * @return when the sphere started to shrink
+   */
   public int getStartShrinkTime()
   {
     return startShrinkTime;
   }
 
+  /**
+   * Getter for sphere's x-coord
+   * @return sphere's x-coord
+   */
   public int getX()
   {
     return x;
   }
 
+  /**
+   * Getter for sphere's y-coord
+   * @return sphere's y-coord
+   */
   public int getZ()
   {
     return z;

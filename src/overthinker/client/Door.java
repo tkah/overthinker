@@ -11,16 +11,31 @@ import com.jme3.scene.Geometry;
 import com.jme3.scene.shape.Box;
 
 /**
- * Created by Torran on 11/30/14.
+ * Class creates door node objects for use as maze obstacles
+ *
+ * Created by Torran, Josh, Peter, Derek, Sid on 11/30/14.
  */
 public class Door extends NonPlayableObjectNode
 {
+  /**
+   * Class constructor
+   * @param name - name of door node
+   */
   public Door(String name)
   {
     super(name);
     phy = new RigidBodyControl(0f);
   }
 
+  /**
+   * Set up door object, called from GamePlayAppState
+   * @param assetManager - game's asset manager
+   * @param sizeX        - width of door
+   * @param sizeY        - height of door
+   * @param sizeZ        - depth of door
+   * @param rotate       - rotation of door
+   * @param loc          - door location
+   */
   public void createDoor(AssetManager assetManager, float sizeX, float sizeY, float sizeZ, float rotate, Vector3f loc)
   {
     this.loc = loc;

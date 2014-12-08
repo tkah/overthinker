@@ -12,7 +12,10 @@ import com.jme3.scene.Node;
 import java.util.ArrayList;
 
 /**
- * Created by Torran on 11/21/14.
+ * Class controls player movement in conjunction with UnderNode
+ * Largely in charge of physics aspects of movement - gravity, rotation
+ *
+ * Created by Torran, Sid, Peter, Josh, Derek on 11/21/14.
  */
 public class PlayerControl extends BetterCharacterControl
 {
@@ -52,6 +55,12 @@ public class PlayerControl extends BetterCharacterControl
     jump = true;
   }
 
+  /**
+   * Action to take when key pressed
+   * @param binding   - name of key pressed
+   * @param isPressed - status of key pressed
+   * @param tpf       - frame rate
+   */
   public void onAction(String binding, boolean isPressed, float tpf)
   {
     if (binding.equals("MapTiltForward"))
@@ -77,6 +86,10 @@ public class PlayerControl extends BetterCharacterControl
     changeInGravity = true;
   }
 
+  /**
+   * Turns player
+   * @param dir - direction to turn in
+   */
   public void turn(float dir)
   {
     camDir = dir;
@@ -85,6 +98,15 @@ public class PlayerControl extends BetterCharacterControl
     setViewDirection(turn.mult(getViewDirection()));
   }
 
+  /**
+   * Checks gravity status
+   * @param nodeOnGround      - is the node on the ground
+   * @param playerTranslation - player location
+   * @param colNode           - collision node
+   * @param pivot             - pivot node
+   * @param camNode           - camera node
+   * @return
+   */
   public boolean checkGravity(boolean nodeOnGround, Vector3f playerTranslation, Node colNode, Node pivot, Node camNode)
   {
     boolean onGround = nodeOnGround;
@@ -229,6 +251,10 @@ public class PlayerControl extends BetterCharacterControl
     gravityBack = val;
   }
 
+  /**
+   * Sets scale of player physics space
+   * @param size - the amount to scale by
+   */
   public void setScale (float size)
   {
     height *= size;
@@ -236,11 +262,19 @@ public class PlayerControl extends BetterCharacterControl
     rigidBody.setCollisionShape(getShape());
   }
 
+  /**
+   * Getter for physics height
+   * @return height of player physics space
+   */
   public float getHeight()
   {
     return height;
   }
 
+  /**
+   * Initializes player specific audio
+   * @param assetManager - program's assetmanager
+   */
   public void initAudio(AssetManager assetManager)
   {
     //walking sounds
@@ -258,13 +292,19 @@ public class PlayerControl extends BetterCharacterControl
     audioList.add(audio_jump);
   }
 
-
-
+  /**
+   * Getter for cam direction
+   * @return camera direction
+   */
   public float getCamDir()
   {
     return camDir;
   }
 
+  /**
+   * Getter for list of audio used by player
+   * @return list of audio used by player
+   */
   public ArrayList getAudio()
   {
     return audioList;
@@ -279,11 +319,18 @@ public class PlayerControl extends BetterCharacterControl
     }
   }
 
+  /**
+   * Plays jump sound
+   */
   public void playJump()
   {
     audio_jump.playInstance();
   }
 
+  /**
+   * Changes gravity
+   * @param val - gravity change
+   */
   public void setChangeInGravity(boolean val)
   {
     changeInGravity = val;

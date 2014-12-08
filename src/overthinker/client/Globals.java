@@ -6,7 +6,9 @@ import java.awt.event.ActionListener;
 import java.util.Random;
 
 /**
- * Created by Torran on 11/11/14.
+ * Class offers constants and other variables accessed by multiple classes
+ *
+ * Created by Torran, Sid, Josh, Peter, Derek on 11/11/14.
  */
 public class Globals
 {

@@ -31,12 +31,12 @@ import com.jme3.util.TangentBinormalGenerator;
 import java.util.ArrayList;
 
 /**
- * Created by Torran on 11/21/14.
+ * This class defines the base methods and update process for the Underthinker client
+ *
+ * Created by Torran, Josh, Sid, Peter, Derek on 11/21/14.
  */
 public class UnderNode extends PlayerNode
 {
-
-
   private PlayerControl playerControl;
   private Sphere playerSphere;
   private Geometry playerG;
@@ -78,6 +78,16 @@ public class UnderNode extends PlayerNode
 
   private Vector3f walkDirection = new Vector3f();
 
+  /**
+   * Class constructor
+   * @param name           - name of node
+   * @param cam            - player camera
+   * @param terrain        - map terrain
+   * @param assetManager   - program's asset manager
+   * @param bulletAppState - program's bullet app state
+   * @param colNode        - collidable node
+   * @param id             - node id
+   */
   public UnderNode(String name, Camera cam, TerrainQuad terrain, AssetManager assetManager, BulletAppState bulletAppState, Node colNode, int id)
   {
     super(name);
@@ -92,6 +102,13 @@ public class UnderNode extends PlayerNode
     pivot = new Node("Pivot");
   }
 
+  /**
+   * Defines actions to take on key change
+   * Jumping, moving etc
+   * @param binding   - name of key change
+   * @param isPressed - status of key changed
+   * @param tpf       - frame rate
+   */
   public void onAction(String binding, boolean isPressed, float tpf)
   {
     if (binding.equals("MapTiltBack") || binding.equals("MapTiltForward") ||
@@ -114,6 +131,14 @@ public class UnderNode extends PlayerNode
     }
   }
 
+  /**
+   * Defines actions to take on analog action
+   * Turning, zooming etc
+   * @param binding - name of analog action
+   * @param value   - value of action
+   * @param tpf     - frame rate
+   */
+  @Override
   public void onAnalog(String binding, float value, float tpf)
   {
     if (binding.equals("TurnLeft")) playerControl.turn(FastMath.PI * value);
@@ -136,16 +161,29 @@ public class UnderNode extends PlayerNode
     pivot.getLocalRotation().fromAngleAxis(verticalAngle, Vector3f.UNIT_X);
   }
 
+  /**
+   * Returns whether or not the node is on the ground
+   * @return true = on ground, false = not on ground
+   */
   public boolean isOnGround()
   {
     return onGround;
   }
 
+  /**
+   * Sets whether or not the player is on the ground
+   * @param status - true = on ground, false = not on ground
+   */
   public void setIsOnGround (boolean status)
   {
     onGround = status;
   }
 
+  /**
+   * Defines process for updating player node
+   * Movement, sound, rotation, scaling controlled here
+   * @param tpf - frame rate
+   */
   public void update(float tpf)
   {
     if (getHeight() < .6f)
@@ -189,6 +227,12 @@ public class UnderNode extends PlayerNode
     if (playerNeedsScalingUp && playerControl.getHeight() < Globals.MAX_PLAYER_SIZE) scalePlayerUp();
   }
 
+  /**
+   * Moves/rotates player
+   * Also, controls player dust emissions
+   * @param x - x val for rotation Quaternion
+   * @param z - y val for rotation Quaternion
+   */
   private void moveBall(float x, float z)
   {
     //TODO: move quaternion to server so that other players can use for rotation
@@ -200,6 +244,12 @@ public class UnderNode extends PlayerNode
     dustEmitterLeft.setHighLife(1f);
   }
 
+  /**
+   * Scales the player size down
+   * Happens upon collisions with water and the AI
+   *   as well as when player holds down 'E'
+   * @param tpf - frame rate
+   */
   @Override
   public void scalePlayerDown(float tpf)
   {
@@ -211,6 +261,10 @@ public class UnderNode extends PlayerNode
     playerControl.setWalkDirection(walkDirection);
   }
 
+  /**
+   * Scales player size up
+   * Happens when the player collides with resource objects
+   */
   @Override
   public void scalePlayerUp()
   {
@@ -233,6 +287,10 @@ public class UnderNode extends PlayerNode
     else if (verticalAngle < minVerticalAngle) verticalAngle = minVerticalAngle;
   }
 
+  /**
+   * Initializes warning sound
+   * Fires when player size very small
+   */
   public void initWarningSound(){
     warning_sound= new AudioNode(assetManager, "overthinker/assets/sounds/warning.ogg",false);
     warning_sound.setPositional(false);
@@ -240,14 +298,28 @@ public class UnderNode extends PlayerNode
     warning_sound.setVolume(2);
   }
 
+  /**
+   * Plays warning sound
+   * Fires when player size is too small
+   * Indicates imminent player death
+   */
   public static void playWarningSound(){
     warning_sound.play();
   }
 
+  /**
+   * Stops player warning sound
+   * Fires when player has increased in size enough to no longer be in danger
+   */
   public static void stopWarningSound(){
     warning_sound.stop();
   }
 
+  /**
+   * Flashes player's diffuse light red and white
+   * Used to notify player of impending death if scaling down continues
+   * @param tpf - frame rate
+   */
   public void flash(float tpf)
   {
 
@@ -278,6 +350,11 @@ public class UnderNode extends PlayerNode
   }
 
   /** ---Init Methods--- **/
+
+  /**
+   * Sets up player node
+   * Shape, geometry, physics, material and dust emitter all set here
+   */
   public void setUpPlayer()
   {
     setUpCamera(cam);
@@ -351,8 +428,11 @@ public class UnderNode extends PlayerNode
 
   }
 
-
-
+  /**
+   * Sets up player controls and their binding names
+   * @param inputManager - program's input manager
+   * @return list of player bindings
+   */
   public ArrayList setUpControls(InputManager inputManager)
   {
     // Mouse pivoting for 3rd person cam
@@ -402,6 +482,10 @@ public class UnderNode extends PlayerNode
     return actionStrings;
   }
 
+  /**
+   * Sets up third-person player camera
+   * @param cam - player's camera
+   */
   private void setUpCamera(Camera cam)
   {
     camNode = new CameraNode("CameraNode", cam);
@@ -418,89 +502,151 @@ public class UnderNode extends PlayerNode
     //bulletAppState.getPhysicsSpace().add(camGhost);
   }
 
+  /**
+   * Getter for player control
+   * @return player control
+   */
   public PlayerControl getPlayerControl()
   {
     return playerControl;
   }
 
+  /**
+   * Getter for player geometry
+   * @return player geometry
+   */
   @Override
   public Geometry getGeometry()
   {
     return playerG;
   }
 
+  /**
+   * Sets player's living status
+   * @param val - alive = false, dead = true
+   */
   @Override
   public void setDead(boolean val)
   {
     dead = val;
   }
 
+  /**
+   * Returns player's living status
+   * @return true = dead, false = alive
+   */
   @Override
   public boolean isDead()
   {
     return dead;
   }
 
+  /**
+   * Getter for player physics height
+   * @return player physics height
+   */
   @Override
   public float getHeight()
   {
     return playerControl.getHeight();
   }
 
+  /**
+   * Getter for player camera node
+   * @return player camera node
+   */
   @Override
   public Node getCamNode()
   {
     return camNode;
   }
 
+  /**
+   * Sets player scaling start time
+   * Used to later determine when to stop scaling player
+   * @param time scale start time
+   */
   @Override
   public void setScaleStartTime(int time)
   {
     scaleUpStartTime = time;
   }
 
+  /**
+   * Sets whether or not player needs to scale up. If yes, then scale, If no, then don't.
+   * @param val - true = player needs scaling, false = player doesn't need scaling
+   */
   @Override
   public void setPlayerNeedsScaling (boolean val)
   {
     playerNeedsScalingUp = val;
   }
 
+  /**
+   * Getter for player right dust emitter
+   * @return player's right dust emitter
+   */
   @Override
   public ParticleEmitter getDustEmitterRight()
   {
    return dustEmitterRight;
   }
 
+  /**
+   * Getter for player's left dust emitter
+   * @return player's left dust emitter
+   */
   @Override
   public ParticleEmitter getDustEmitterLeft()
   {
     return dustEmitterLeft;
   }
 
+  /**
+   * Getter for whether or not player needs to scale down
+   * @return true = scale down, false = don't scale down
+   */
   @Override
   public boolean getShrink()
   {
     return shrink;
   }
 
+  /**
+   * Getter for player audio
+   * @return list of player's audio
+   */
   public ArrayList getAudio()
   {
     return playerControl.getAudio();
   }
 
+  /**
+   * Getter for current camera angle from player node
+   * @return current cam angle
+   */
   public float getVerticleAngle()
   {
     return verticalAngle;
   }
 
+  /**
+   * Getter for player control
+   * @return player control
+   */
   public BetterCharacterControl getBCControl()
   {
     return playerControl;
   }
 
-  private ActionListener jumpActionListener = new ActionListener() {
+  /**
+   * Listener for whether or not to fire jump sound
+   */
+  private ActionListener jumpActionListener = new ActionListener()
+  {
     @Override
-    public void onAction(String name, boolean keyPressed, float v) {
+    public void onAction(String name, boolean keyPressed, float v)
+    {
       if (name.equals("Jump") && keyPressed)
         playerControl.playJump();
     }

@@ -9,7 +9,9 @@ import com.jme3.scene.Geometry;
 import com.jme3.scene.shape.Sphere;
 
 /**
- * Created by Torran on 11/25/14.
+ * Class creates other player representations for any given client
+ *
+ * Created by Torran, Peter, Sid, Derek, Josh on 11/25/14.
  */
 public class OtherPlayer
 {
@@ -21,7 +23,13 @@ public class OtherPlayer
   private RigidBodyControl sphere_phy;
   private AssetManager assetManager;
 
-
+  /**
+   * Class constructor
+   * @param radius         - radius of player sphere
+   * @param id             - player id
+   * @param playerLocation - starting location of player
+   * @param assetManager   - program's asset manager
+   */
   public OtherPlayer(float radius, int id, Vector3f playerLocation, AssetManager assetManager)
   {
     this.playerLocation = playerLocation;
@@ -50,21 +58,37 @@ public class OtherPlayer
     geom.addControl(sphere_phy);
   }
 
+  /**
+   * Getter for sphere object
+   * @return sphere object
+   */
   public Sphere getSphere()
   {
     return sphere;
   }
 
+  /**
+   * Getter for sphere geometry
+   * @return sphere geometry
+   */
   public Geometry getGeometry()
   {
     return geom;
   }
 
+  /**
+   * Getter for sphere physics
+   * @return sphere physics
+   */
   public RigidBodyControl getSphereResourcePhy()
   {
     return sphere_phy;
   }
 
+  /**
+   * Scales sphere
+   * @param scale - amount to scale object by
+   */
   public void scale(float scale)
   {
     geom.scale(scale);
@@ -72,6 +96,10 @@ public class OtherPlayer
     sphere_phy.getCollisionShape().setScale(new Vector3f(scale,scale,scale));
   }
 
+  /**
+   * Moves player object around screen
+   * @param move - vector location
+   */
   public void move(Vector3f move)
   {
     //TODO: Rotation conditional on movement direction and size

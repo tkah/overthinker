@@ -14,7 +14,9 @@ import com.jme3.scene.Geometry;
 import com.jme3.scene.shape.Box;
 
 /**
- * Created by Torran on 11/30/14.
+ * Class creates key node objects for use as maze obstacles
+ *
+ * Created by Torran, Derek, Josh, Sid, Peter on 11/30/14.
  */
 public class Key extends NonPlayableObjectNode
 {
@@ -25,6 +27,10 @@ public class Key extends NonPlayableObjectNode
   private float updateSparkHeight;
   private boolean moveUp = false;
 
+  /**
+   * Class constructor
+   * @param name - name of key node
+   */
   public Key(String name)
   {
     super(name);
@@ -38,6 +44,11 @@ public class Key extends NonPlayableObjectNode
     geo.setUserData("id", id);
   }
 
+  /**
+   * Create key node
+   * @param assetManager - program's asset manager
+   * @param loc          - location of key
+   */
   public void createKey(AssetManager assetManager, Vector3f loc)
   {
     Material keyMat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
@@ -77,11 +88,19 @@ public class Key extends NonPlayableObjectNode
     attachChild(sparkEmitter);
   }
 
+  /**
+   * Getter for key particle emitter
+   * @return key particle emitter
+   */
   public ParticleEmitter getParticleEmitter()
   {
     return sparkEmitter;
   }
 
+  /**
+   * Update method for key, rotates and bobs key up and down
+   * @param tpf - frame rate
+   */
   public void update(float tpf)
   {
     rotation += tpf*rotSpeed;

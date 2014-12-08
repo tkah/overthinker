@@ -13,13 +13,19 @@ import com.jme3.scene.Geometry;
 import com.jme3.scene.shape.Cylinder;
 
 /**
- * Created by Torran on 12/1/14.
+ * Class creates a platform node for use as an obstacle
+ *
+ * Created by Torran, Peter, Josh, Derek, Sid on 12/1/14.
  */
 public class Platform extends NonPlayableObjectNode
 {
   private Cylinder platform;
   private CylinderCollisionShape pCol;
 
+  /**
+   * Class constructor
+   * @param name - name of node
+   */
   public Platform(String name)
   {
     super(name);
@@ -32,6 +38,12 @@ public class Platform extends NonPlayableObjectNode
     geo.setUserData("id", id);
   }
 
+  /**
+   * Creates platform
+   * @param assetManager - program's asset manager
+   * @param loc          - location of platform
+   * @param width        - width of platform
+   */
   public void createPlatform(AssetManager assetManager, Vector3f loc, float width)
   {
     platform.updateGeometry(platform.getAxisSamples(), platform.getRadialSamples(), width, width, platform.getHeight(), true, false);
@@ -54,6 +66,10 @@ public class Platform extends NonPlayableObjectNode
     attachChild(geo);
   }
 
+  /**
+   * Move platform down as if it were pressed
+   * Called when player hits platform
+   */
   public void pressDown()
   {
     Vector3f down = new Vector3f(loc.getX(), loc.getY() - .45f, loc.getZ());
@@ -62,6 +78,10 @@ public class Platform extends NonPlayableObjectNode
     phy.setPhysicsLocation(phyDown);
   }
 
+  /**
+   * Move platform up as if it were released
+   * Called when player is no longer touching platform
+   */
   public void moveUp()
   {
     Vector3f up = new Vector3f(loc.getX(), loc.getY(), loc.getZ());
