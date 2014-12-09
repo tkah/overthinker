@@ -67,10 +67,9 @@ import java.util.HashMap;
 public class GamePlayAppState extends AbstractAppState
       implements ActionListener, AnalogListener
 {
+  public AbstractHeightMap heightMap;
   public NavMesh navMesh;
   public BulletAppState bulletAppState;
-  private static final int SPHERE_RESOURCE_COUNT = 100;
-  private static final float SPHERE_RESOURCE_RADIUS = 1.5f;
   private SimpleApplication app;
   private Camera cam;
   private Node rootNode;
@@ -109,7 +108,7 @@ public class GamePlayAppState extends AbstractAppState
   private FilterPostProcessor fpp;
   private WaterFilter water;
   private FogFilter fogFilter;
-  private TerrainQuad terrain;
+  public TerrainQuad terrain;
   private Material mat_terrain;
 
   private final ArrayList<SphereResource> sphereResourceArrayList = new ArrayList<>();
@@ -135,7 +134,6 @@ public class GamePlayAppState extends AbstractAppState
    * Create AudioNodes *
    */
   private AudioNode audio_ocean;
-  private AudioNode audio_collect;
 
   /**
    * Networking *
@@ -171,8 +169,8 @@ public class GamePlayAppState extends AbstractAppState
 
     /** Set up Physics */
     bulletAppState = new BulletAppState();
-    bulletAppState.setDebugEnabled(true);
     stateManager.attach(bulletAppState);
+    stateManager.attach(new ResourceManager());
     resources = new Node("Resources");
     localRootNode = new Node("LocalRoot");
     localRootNode.attachChild(resources);
@@ -540,32 +538,6 @@ public class GamePlayAppState extends AbstractAppState
       playerNode.scalePlayerDown(tpf);
     }
 
-    //Detect collisions with resource spheres
-    CollisionResults results = new CollisionResults();
-    resources.collideWith(playerNode.getGeometry().getWorldBound(), results);
-    if (results.size() > 0)
-    {
-      audio_collect.play();
-      CollisionResult closest = results.getClosestCollision();
-      System.out.println("What was hit? " + closest.getGeometry().getName());
-
-      boolean isHit = closest.getGeometry().getUserData("isHit");
-      if (!isHit)
-      {
-        int sResId = closest.getGeometry().getUserData("id");
-        closest.getGeometry().setUserData("isHit", true);
-        SphereResource s = sphereResourceArrayList.get(sResId);
-        s.setShrink(true);
-        sphereResourcesToShrink.add(s);
-        playerNode.setScaleStartTime(Globals.getTotSecs());
-        playerNode.setPlayerNeedsScaling(true);
-        if (playerNode.getHeight() < Globals.MAX_PLAYER_SIZE)
-        {
-          playerNode.scalePlayerUp();
-        }
-      }
-    }
-
     //Detect collisions with keys
     CollisionResults keyResults = new CollisionResults();
     keysNode.collideWith(playerNode.getGeometry().getWorldBound(), keyResults);
@@ -780,7 +752,6 @@ public class GamePlayAppState extends AbstractAppState
       playerNode = new UnderNode("player", cam, terrain, assetManager, bulletAppState, collidableNode, clientIndex);
       playerNode.setLocalTranslation(playerSpawnPts[clientIndex]);
       flyCam.setEnabled(false);
-      createSphereResources();
     }
     playerNode.setUpPlayer();
     ArrayList<String> actionStrings = playerNode.setUpControls(inputManager);
@@ -907,8 +878,7 @@ public class GamePlayAppState extends AbstractAppState
       heightMapImage = assetManager.loadTexture(lvlHeightName);
     }
 
-
-    AbstractHeightMap heightMap = null;
+    heightMap = null;
 
     try
     {
@@ -953,19 +923,6 @@ public class GamePlayAppState extends AbstractAppState
     water.setWaterHeight(waterHeight);
     water.setDeepWaterColor(new ColorRGBA(0.0f, 0.5f, 0.5f, 1.0f));
     fpp.addFilter(water);
-  }
-
-  private void createSphereResources()
-  {
-    for (int i = 0; i < SPHERE_RESOURCE_COUNT; i++)
-    {
-      int x = Globals.getRandInt(Globals.MAP_WIDTH * 2) - Globals.MAP_WIDTH;
-      int z = Globals.getRandInt(Globals.MAP_HEIGHT * 2) - Globals.MAP_HEIGHT;
-      SphereResource sRes = new SphereResource(SPHERE_RESOURCE_RADIUS, x, z, i, assetManager);
-      bulletAppState.getPhysicsSpace().add(sRes.getSphereResourcePhy());
-      sphereResourceArrayList.add(sRes);
-      resources.attachChild(sRes.getGeometry());
-    }
   }
 
   private void createDoorsAndKeys()
@@ -1020,13 +977,6 @@ public class GamePlayAppState extends AbstractAppState
 
   private void initAudio()
   {
-
-    //collect object
-    audio_collect = new AudioNode(assetManager, "overthinker/assets/sounds/collect.ogg", false);
-    audio_collect.setPositional(false);
-    audio_collect.setVolume(2);
-    localRootNode.attachChild(audio_collect);
-
     if (playerNode.getAudio().size() > 0)
     {
       ((ArrayList<AudioNode>) playerNode.getAudio()).forEach(localRootNode::attachChild);

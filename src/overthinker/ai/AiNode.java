@@ -17,7 +17,6 @@ import com.jme3.util.TangentBinormalGenerator;
 class AiNode extends Node
 {
   public final BetterCharacterControl phys;
-  private final Node pivot;
   private final int id;
   private final AssetManager assetManager;
 
@@ -26,7 +25,7 @@ class AiNode extends Node
     super("AI");
     this.assetManager = assetManager;
     this.id = id;
-    pivot = new Node("pivot");
+    Node pivot = new Node("pivot");
     phys = new BetterCharacterControl(2f, 4f, 1f);
     phys.setGravity(Vector3f.UNIT_Y.mult(-50));
     attachChild(pivot);
