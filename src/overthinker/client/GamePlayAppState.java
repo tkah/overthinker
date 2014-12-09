@@ -171,6 +171,7 @@ public class GamePlayAppState extends AbstractAppState
 
     /** Set up Physics */
     bulletAppState = new BulletAppState();
+    bulletAppState.setThreadingType(BulletAppState.ThreadingType.PARALLEL);
     stateManager.attach(bulletAppState);
     resources = new Node("Resources");
     localRootNode = new Node("LocalRoot");
