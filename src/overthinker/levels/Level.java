@@ -16,7 +16,7 @@ import com.jme3.scene.shape.Sphere;
 import com.jme3.terrain.geomipmap.TerrainQuad;
 import com.jme3.water.WaterFilter;
 import overthinker.client.Globals;
-import overthinker.client.SphereResource;
+import overthinker.old.SphereResource;
 import overthinker.client.OtherPlayer;
 
 import java.util.ArrayList;

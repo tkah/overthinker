@@ -1,4 +1,4 @@
-package overthinker.client;
+package overthinker.old;
 
 import com.jme3.asset.AssetManager;
 import com.jme3.bullet.control.RigidBodyControl;
@@ -8,6 +8,7 @@ import com.jme3.math.Vector3f;
 import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.shape.Sphere;
+import overthinker.client.Globals;
 
 /**
  * Class creates sphere resources which increase player size

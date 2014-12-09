@@ -50,6 +50,7 @@ import com.jme3.water.WaterFilter;
 import jme3utilities.Misc;
 import jme3utilities.sky.SkyControl;
 import overthinker.net.*;
+import overthinker.old.SphereResource;
 import overthinker.server.ServerModel;
 import overthinker.ai.*;
 
@@ -171,7 +172,6 @@ public class GamePlayAppState extends AbstractAppState
     /** Set up Physics */
     bulletAppState = new BulletAppState();
     stateManager.attach(bulletAppState);
-    stateManager.attach(new ResourceManager());
     resources = new Node("Resources");
     localRootNode = new Node("LocalRoot");
     localRootNode.attachChild(resources);
@@ -189,6 +189,8 @@ public class GamePlayAppState extends AbstractAppState
     setUpLandscape();
     setUpLight();
     setUpPlayer();
+
+    stateManager.attach(new ResourceManager());
 
     fade = new FadeFilter(2);//  2 seconds
     fpp.addFilter(fade);

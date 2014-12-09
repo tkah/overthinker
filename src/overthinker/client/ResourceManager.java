@@ -130,4 +130,10 @@ public class ResourceManager extends AbstractAppState
     return id++;
   }
 
+  @Override
+  public void cleanup()
+  {
+    worldNode.detachAllChildren();
+    super.cleanup();
+  }
 }
