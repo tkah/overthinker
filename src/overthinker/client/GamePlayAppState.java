@@ -257,8 +257,8 @@ public class GamePlayAppState extends AbstractAppState
     //Water level from stress
     //TODO: water height rate from excitement
     //water.setWaterHeight(water.getWaterHeight() + model.getWaterRate());
-    if(model.getPlayerLocations().get(3) != null) {
-      water.setWaterHeight(water.getWaterHeight() + model.getWaterRate());
+    if(model.getWaterRate() > 0) {
+      water.setWaterHeight(model.getWaterRate());
     }
 
     if (playersDead == 1) fogFilter.setFogDensity(1.0f);
@@ -588,6 +588,7 @@ public class GamePlayAppState extends AbstractAppState
     }
 
     //TODO: Add doors/platforms to server?
+    //TODO: Torran - remove platform doors when only two players alive
     //Detect collisions with platforms
     CollisionResults platResults = new CollisionResults();
     platformsNode.collideWith(playerNode.getGeometry().getWorldBound(), platResults);

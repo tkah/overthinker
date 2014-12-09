@@ -28,9 +28,10 @@ public class OverNode extends PlayerNode
   private EEGMonitor monitor = new EEGMonitor();
   //private EEGSimulator monitor = new EEGSimulator();
   private float waterRate = 0;
+  private float waterHeight = 20;
   private int tiltDirection = 0;
   private boolean gravityLeft = false, gravityRight = false, gravityForward = false, gravityBack = false;
-  private boolean eegGrav = true;
+  private boolean eegGrav = false;
   //Left = -1, right = 1, forward = 2, back = -2, clear all flags = 10
 
   private Client netClient;
@@ -66,8 +67,9 @@ public class OverNode extends PlayerNode
       }
 
       waterRate = monitor.getStressLevel() / 100; //a rate of 1 fills instantly, eeg hovers around ~.5, so divide by 1000
+      waterHeight += waterRate;
       if (DEBUG) System.out.println("Update from EEG: waterRate = "+Float.toString(waterRate));
-      waterRateRequest.setWaterRate(waterRate);
+      waterRateRequest.setWaterRate(waterHeight);
       netClient.send(waterRateRequest);
     }
   }

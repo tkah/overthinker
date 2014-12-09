@@ -30,7 +30,7 @@ public class EEGSimulator extends Thread{
             requestedGravity = values[randomIndex.nextInt(6)];
             excitementShort = randomDouble.nextFloat();
             try {
-                Thread.sleep(500);
+                Thread.sleep(5000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

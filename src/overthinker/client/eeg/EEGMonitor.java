@@ -12,7 +12,7 @@ import java.util.TimerTask;
  */
 public class EEGMonitor extends Thread {
 
-    private final boolean DEBUG = false;
+    private final boolean DEBUG = true;
     private final boolean LOG = false; //Enables logging of eeg output.
     private final int MIN_GYRO_DELTA = 50;
 
@@ -123,9 +123,9 @@ public class EEGMonitor extends Thread {
                         requestedGravity = interpretGyro();
 
                         excitementShort = EmoState.INSTANCE.ES_AffectivGetExcitementShortTermScore(eState);
+                        System.out.println("Short term excitement: "+excitementShort);
                         //interpretExcitement(); //may not be needed, depending on how OverNode.update() calls EEG
-                        if (DEBUG)
-                            System.out.print(", Frust: " + EmoState.INSTANCE.ES_AffectivGetFrustrationScore(eState));
+
                         if (DEBUG) System.out.println();
                         if (LOG) log.writeLine(System.nanoTime() + " short term excitement: " + excitementShort);
                     }
@@ -188,7 +188,7 @@ public class EEGMonitor extends Thread {
                     return -2; //Down
             }
         }
-        if (DEBUG) System.out.println("Tilt: 0 (No tilt)");
+        if (DEBUG) System.out.println("Tilt: 0 (No tilt) fell through");
         return 0;
     }
 
