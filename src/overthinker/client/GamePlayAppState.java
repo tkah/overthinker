@@ -879,7 +879,7 @@ public class GamePlayAppState extends AbstractAppState
         Door door = new Door("Door_" + i);
         door.createDoor(assetManager, keyDoorSizeXArray[i], 40, 1, keyDoorRotationArray[i], keyDoorLocArray[i]);
         collidableNode.attachChild(door);
-        bulletAppState.getPhysicsSpace().add(door.getPhy());
+        //bulletAppState.getPhysicsSpace().add(door.getPhy());
         keyDoors.add(door);
 
         Key key = new Key("Key_" + i);
@@ -914,7 +914,7 @@ public class GamePlayAppState extends AbstractAppState
         Door door = new Door("Door_" + i);
         door.createDoor(assetManager, platDoorSizeXArray[i], 40, 1, platDoorRotationArray[i], platDoorLocArray[i]);
         collidableNode.attachChild(door);
-        bulletAppState.getPhysicsSpace().add(door.getPhy());
+        //bulletAppState.getPhysicsSpace().add(door.getPhy());
         platDoors.add(door);
       }
     }
