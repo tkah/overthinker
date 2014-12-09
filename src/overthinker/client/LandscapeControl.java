@@ -40,8 +40,8 @@ public class LandscapeControl extends RigidBodyControl implements PhysicsCollisi
       if (!node.isOnGround() && node.getPlayerControl().getVelocity().getZ() < 1f && node.getPlayerControl()
             .getVelocity().getZ() > 0)
       {
-        //node.getPlayerControl().setWalkDirection(new Vector3f(0, -5, -5));
-        //node.pushOff = true;
+        node.getPlayerControl().setWalkDirection(new Vector3f(0, -5, -5));
+        node.pushOff = true;
       }
     }
     else if (event.getNodeA().getName().equals("player") && event.getNodeB().getName().equals("AI"))

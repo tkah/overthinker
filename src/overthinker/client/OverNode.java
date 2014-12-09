@@ -31,7 +31,7 @@ public class OverNode extends PlayerNode
   private float waterHeight = 20;
   private int tiltDirection = 0;
   private boolean gravityLeft = false, gravityRight = false, gravityForward = false, gravityBack = false;
-  private boolean eegGrav = false;
+  private boolean eegGrav = true;
   //Left = -1, right = 1, forward = 2, back = -2, clear all flags = 10
 
   private Client netClient;
