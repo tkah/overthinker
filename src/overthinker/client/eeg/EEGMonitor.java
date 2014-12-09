@@ -120,7 +120,7 @@ public class EEGMonitor extends Thread {
                         if (DEBUG)
                             System.out.print(" GyroDelta[X]: " + gyroX.getValue() + " GyroDelta[Y]: " + gyroY.getValue());
 
-                        requestedGravity= interpretGyro();
+                        requestedGravity = interpretGyro();
 
                         excitementShort = EmoState.INSTANCE.ES_AffectivGetExcitementShortTermScore(eState);
                         //interpretExcitement(); //may not be needed, depending on how OverNode.update() calls EEG
@@ -200,7 +200,7 @@ public class EEGMonitor extends Thread {
     public int getTiltDirection() {
         currentGravity = requestedGravity;
 
-        return requestedGravity;
+        return currentGravity;
     }
 
 
