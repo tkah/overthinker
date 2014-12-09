@@ -3,7 +3,6 @@ package overthinker.server;
 
 import com.jme3.math.Vector3f;
 import com.jme3.network.*;
-import org.lwjgl.Sys;
 import overthinker.net.*;
 import com.jme3.app.SimpleApplication;
 import com.jme3.network.serializing.Serializer;
@@ -13,8 +12,12 @@ import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Created by Peter on 11/11/2014.
+ * This class is the game server startup class used connect and disconnect clients as well as manage and distribute
+ * the game state to and from connected clients.
+ *
+ * @author Peter, Torran, Josh, Sid, Derek
  */
+
 public class ServerMain extends SimpleApplication {
     private Server netServer;
     private ServerModel model;
@@ -22,6 +25,11 @@ public class ServerMain extends SimpleApplication {
     private static final int PLAYER_CAP = 4;
     private static final boolean DEBUG = true;
 
+    /**
+     * Entry point to the server. Starts the servers initialization and network listening.
+     *
+     * @param args - none needed
+     */
     public static void main(String[] args) {
         ServerMain app = new ServerMain();
         app.start(JmeContext.Type.Headless);
@@ -51,6 +59,10 @@ public class ServerMain extends SimpleApplication {
             broadcastModelUpdate();
         });
     }
+
+    /**
+     * Used to send the current model to all connected clients.
+     */
     public void broadcastModelUpdate()
     {
         ModelUpdate modelUpdate = new ModelUpdate();
@@ -65,28 +77,12 @@ public class ServerMain extends SimpleApplication {
         netServer.broadcast(modelUpdate);
     }
 
-    private void initModel() {
-        model = new ServerModel();
-    }
-
-    private void initNetServer() {
-        ServerNetListener listener = new ServerNetListener(this);
-
-        Serializer.registerClass(ChangePlayerLocationRequest.class);
-        Serializer.registerClass(ChangeMapTiltRequest.class);
-        Serializer.registerClass(ChangeWaterRateRequest.class);
-        Serializer.registerClass(PlayerDeathRequest.class);
-        Serializer.registerClass(ModelUpdate.class);
-        Serializer.registerClass(NewClientRequest.class);
-        Serializer.registerClass(NewClientResponse.class);
-
-        netServer.addMessageListener(listener, NewClientRequest.class);
-        netServer.addMessageListener(listener, ChangePlayerLocationRequest.class);
-        netServer.addMessageListener(listener, ChangeMapTiltRequest.class);
-        netServer.addMessageListener(listener, ChangeWaterRateRequest.class);
-        netServer.addMessageListener(listener, PlayerDeathRequest.class);
-    }
-
+    /**
+     * Used to manage the addition of a new client to the server.
+     *
+     * @param source - HostedConnection collected by the server networking listener.
+     * @param message - NewClientRequest message received by the server networking listener.
+     */
     public void initClient(HostedConnection source, NewClientRequest message)
     {
         if(DEBUG)System.out.println("New client request from: " + source.getAddress());
@@ -128,23 +124,6 @@ public class ServerMain extends SimpleApplication {
             }
             if(!clientConnected) response.setConnected(false);
         }
-
-
-
-        // Check if there is room on the current level
-//        if(clientIndex.values().size() < PLAYER_CAP)
-//        {
-//            model.getPlayerLocations().put(clientCount, SPAWN_LOCATION);
-//            model.getPlayerAlive().put(clientCount, true);
-//            clientIndex.put(source, clientCount);
-//            response.setConnected(true);
-//            response.setClientIndex(clientCount);
-//            clientCount++;
-//            model.setVersion(model.getVersion() + 1);
-//            broadcastModelUpdate();
-//        }
-//        else response.setConnected(false);
-
         // Send response
         response.setSpawnLocation(new Vector3f(0,0,0));
         response.setVersion(model.getVersion());
@@ -153,16 +132,32 @@ public class ServerMain extends SimpleApplication {
 
     }
 
+    /**
+     * Returns the current model held by the server.
+     *
+     * @return - Current server model.
+     */
     public ServerModel getModel() {
         return model;
     }
 
+    /**
+     * Used to update a players location on request from the server networking listener.
+     *
+     * @param source - HostedConnected received in the server networking listener.
+     * @param playerLocation - The new location of the source client.
+     */
     public void updatePlayerLocation(HostedConnection source, Vector3f playerLocation) {
         model.getPlayerLocations().replace(clientIndex.get(source), playerLocation);
         model.setVersion(model.getVersion() + 1);
         broadcastModelUpdate();
     }
 
+    /**
+     * Used to update the given client to a death state.
+     *
+     * @param source - Client to kill.
+     */
     public void handlePlayerDeath(HostedConnection source)
     {
         model.getPlayerAlive().replace(clientIndex.get(source), false);
@@ -170,6 +165,11 @@ public class ServerMain extends SimpleApplication {
         broadcastModelUpdate();
     }
 
+    /**
+     * Used to update the servers gravity tilt. This message is only used by the Overthinker.
+     *
+     * @param message - ChangeMapTiltRequest given by the Overthinker.
+     */
     public void updateMapTilt(ChangeMapTiltRequest message) {
         model.setGravityRight(message.isRight());
         model.setGravityLeft(message.isLeft());
@@ -180,9 +180,36 @@ public class ServerMain extends SimpleApplication {
     }
 
 
+    /**
+     * Used to update the water rate (level). Only updated by the Overthinker.
+     *
+     * @param message - ChangeWaterRateRequest given by the Overthinker.
+     */
     public void updateWaterRate(ChangeWaterRateRequest message) {
         model.setWaterRate(message.getWaterRate());
         model.setVersion(model.getVersion() + 1);
         broadcastModelUpdate();
+    }
+
+    private void initModel() {
+        model = new ServerModel();
+    }
+
+    private void initNetServer() {
+        ServerNetListener listener = new ServerNetListener(this);
+
+        Serializer.registerClass(ChangePlayerLocationRequest.class);
+        Serializer.registerClass(ChangeMapTiltRequest.class);
+        Serializer.registerClass(ChangeWaterRateRequest.class);
+        Serializer.registerClass(PlayerDeathRequest.class);
+        Serializer.registerClass(ModelUpdate.class);
+        Serializer.registerClass(NewClientRequest.class);
+        Serializer.registerClass(NewClientResponse.class);
+
+        netServer.addMessageListener(listener, NewClientRequest.class);
+        netServer.addMessageListener(listener, ChangePlayerLocationRequest.class);
+        netServer.addMessageListener(listener, ChangeMapTiltRequest.class);
+        netServer.addMessageListener(listener, ChangeWaterRateRequest.class);
+        netServer.addMessageListener(listener, PlayerDeathRequest.class);
     }
 }
