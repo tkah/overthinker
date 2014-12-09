@@ -18,6 +18,7 @@ import de.lessvoid.nifty.Nifty;
 import de.lessvoid.nifty.screen.Screen;
 import de.lessvoid.nifty.screen.ScreenController;
 
+
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -27,17 +28,13 @@ public class MainMenuController extends AbstractAppState implements ScreenContro
 {
 
   private SimpleApplication app;
-  private Camera cam;
-  private Node rootNode;
   private AssetManager assetManager;
   private InputManager inputManager;
   private ViewPort guiViewPort;
   private AudioRenderer audioRenderer;
   private AppStateManager stateManager;
-  private Node sceneNode;
   private Nifty nifty;
   private NiftyJmeDisplay nDisplay;
-  private BulletAppState bulletAppState;
   private AudioNode menu_music;
 
 
@@ -47,8 +44,6 @@ public class MainMenuController extends AbstractAppState implements ScreenContro
     super.initialize(stateManager, app);
     this.stateManager = stateManager;
     this.app = (SimpleApplication) app;
-    this.cam = this.app.getCamera();
-    this.rootNode = this.app.getRootNode();
     this.assetManager = this.app.getAssetManager();
     this.inputManager = this.app.getInputManager();
     this.guiViewPort = this.app.getGuiViewPort();
@@ -90,7 +85,7 @@ public class MainMenuController extends AbstractAppState implements ScreenContro
       try
       {
         app.enqueue(() -> {
-          nifty.gotoScreen("waitingScreen");
+          nifty.gotoScreen("OverWaitingScreen");
           menu_music.stop();
           return null;
         }).get();
@@ -117,6 +112,8 @@ public class MainMenuController extends AbstractAppState implements ScreenContro
   {
     System.out.println("bind(" + screen.getScreenId() + ") ");
   }
+
+
 
   public void onStartScreen()
   {
