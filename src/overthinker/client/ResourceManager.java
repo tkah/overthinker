@@ -79,7 +79,7 @@ public class ResourceManager extends AbstractAppState
   private void handleRespawn(float tpf)
   {
     time += tpf;
-    if (time > 10)
+    if (time > Globals.SPHERE_RESPAWN_RATE)
     {
       time = 0;
       Arrays.stream(resources).filter(Resource::isCollected).forEach(r -> {

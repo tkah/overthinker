@@ -25,6 +25,7 @@ public class Globals
   public static final float GROUND_RAY_ALLOWANCE = 0.8f;
   public static final int SPHERE_RESOURCE_COUNT = 100;
   public static final float SPHERE_RESOURCE_RADIUS = 1.5f;
+  public static final int SPHERE_RESPAWN_RATE = 100;
   public static final float WATER_HEIGHT_DEFAULT_RATE = 0.005f;
   public static final float WATER_HEIGHT_PLAYER_RATE = 0.001f; // Should be somewhat lower than the DEFAULT_RATE,
                                                                 // but water height should continue increase no matter what
