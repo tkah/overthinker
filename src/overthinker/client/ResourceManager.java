@@ -89,23 +89,21 @@ public class ResourceManager extends AbstractAppState
     }
   }
 
-  private void handleCollision()
-  {
+  private void handleCollision() {
     CollisionResults results = new CollisionResults();
-    resourceNode.collideWith(playerNode.getGeometry().getWorldBound(), results);
-    if (results.size() > 0)
-    {
-      Resource closest = (Resource) results.getClosestCollision().getGeometry();
-      if (!closest.isCollected())
-      {
-        audio_collect.playInstance();
-        closest.setCollected(true);
-        resourceNode.detachChild(closest);
-        playerNode.setScaleStartTime(Globals.getTotSecs());
-        playerNode.setPlayerNeedsScaling(true);
-        if (playerNode.getHeight() < Globals.MAX_PLAYER_SIZE)
-        {
-          playerNode.scalePlayerUp();
+    if (playerNode instanceof UnderNode) {
+      //resourceNode.collideWith(playerNode.getGeometry().getWorldBound(), results);
+      if (results.size() > 0) {
+        Resource closest = (Resource) results.getClosestCollision().getGeometry();
+        if (!closest.isCollected()) {
+          audio_collect.playInstance();
+          closest.setCollected(true);
+          resourceNode.detachChild(closest);
+          playerNode.setScaleStartTime(Globals.getTotSecs());
+          playerNode.setPlayerNeedsScaling(true);
+          if (playerNode.getHeight() < Globals.MAX_PLAYER_SIZE) {
+            playerNode.scalePlayerUp();
+          }
         }
       }
     }

@@ -121,7 +121,7 @@ public class EEGMonitor extends Thread {
                             System.out.print(" GyroDelta[X]: " + gyroX.getValue() + " GyroDelta[Y]: " + gyroY.getValue());
 
                         requestedGravity = interpretGyro();
-
+                        Edk.INSTANCE.EE_EmoEngineEventGetEmoState(eEvent, eState);
                         excitementShort = EmoState.INSTANCE.ES_AffectivGetExcitementShortTermScore(eState);
                         System.out.println("Short term excitement: "+excitementShort);
                         //interpretExcitement(); //may not be needed, depending on how OverNode.update() calls EEG
@@ -209,12 +209,12 @@ public class EEGMonitor extends Thread {
      *
      * @return integer 1 if excitement is above 50%, 0 otherwise
      */
-    private int interpretExcitement() {
+    private float interpretExcitement() {
         if (DEBUG) System.out.println("\nShort term excitement: " + excitementShort);
 
         if (excitementShort > 1 || excitementShort < 0) {
             if (DEBUG) System.out.println("Excitement out of bounds! ( 0 < x < 1");
-            return 0;
+            return 0.2f;
         }
         if (excitementShort > 0.5) return 1;
         else {
@@ -228,8 +228,8 @@ public class EEGMonitor extends Thread {
      *
      * @return 1 if stress is high, 0 otherwise.  **Will change, with gameplay testing.**
      */
-    public int getStressLevel() {
-        int stress = 0;
+    public float getStressLevel() {
+        float stress = 0;
         synchronized (this) {
             stress = interpretExcitement();
         }

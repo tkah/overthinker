@@ -266,9 +266,9 @@ public class GamePlayAppState extends AbstractAppState
     if (playersDead == 1 && playerCount >= 3 && !levelName.equals("radiomaze"))
     {
       //Remove platform doors when not enough players to do co-op obstacles
-      Door d1 = platDoors.get(1);
-      Door d2 = platDoors.get(2);
-      Door d3 = platDoors.get(3);
+      Door d1 = platDoors.get(0);
+      Door d2 = platDoors.get(1);
+      Door d3 = platDoors.get(2);
       d1.removeFromParent();
       d2.removeFromParent();
       d3.removeFromParent();
