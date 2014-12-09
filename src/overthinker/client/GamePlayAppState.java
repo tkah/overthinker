@@ -84,9 +84,9 @@ public class GamePlayAppState extends AbstractAppState
   private Node platformsNode;
   private Node keysNode;
   private Node collidableNode;
-  private Node resources;
   private Node exitNode;
   private Door exitDoor;
+  private Node resources;
   private PlayerNode playerNode;
   private int playerType = 1;
   private int fadeStart = 0;
@@ -173,9 +173,8 @@ public class GamePlayAppState extends AbstractAppState
     bulletAppState = new BulletAppState();
     bulletAppState.setThreadingType(BulletAppState.ThreadingType.PARALLEL);
     stateManager.attach(bulletAppState);
-    resources = new Node("Resources");
     localRootNode = new Node("LocalRoot");
-    localRootNode.attachChild(resources);
+    localRootNode.attachChild((resources = new Node()));
     collidableNode = new Node("CollidableNode");
     keysNode = new Node("KeyNode");
     platformsNode = new Node("PlatformsNode");
@@ -652,29 +651,6 @@ public class GamePlayAppState extends AbstractAppState
       playerNode.removeFromParent();
       finished = true;
     }
-
-    ArrayList<SphereResource> toRemove = new ArrayList<>();
-    for (SphereResource s : sphereResourcesToShrink)
-    {
-      if (s.getShrink())
-      {
-        s.setSphereToDisappear();
-      }
-      else if (Globals.getTotSecs() - s.getStartShrinkTime() > 30)
-      {
-        s.getGeometry().setLocalTranslation(new Vector3f(s.getX(), 200, s.getZ()));
-        s.setSphereBack();
-        resources.attachChild(s.getGeometry());
-        toRemove.add(s);
-      }
-      else
-      {
-        s.setShrink(false);
-        s.getGeometry().setUserData("isHit", false);
-        s.getGeometry().removeFromParent();
-      }
-    }
-    toRemove.forEach(sphereResourcesToShrink::remove);
   }
 
   private void updateGravity()
