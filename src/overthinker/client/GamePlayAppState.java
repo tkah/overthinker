@@ -392,6 +392,7 @@ public class GamePlayAppState extends AbstractAppState
   public void handleNewClientResponse(NewClientResponse message)
   {
     System.out.println("Connected to server");
+    model = new ServerModel();
     model.setPlayerLocations(message.getPlayerLocations());
     model.setVersion(message.getVersion());
     spawnLocation = message.getSpawnLocation();

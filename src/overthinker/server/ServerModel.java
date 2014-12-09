@@ -18,12 +18,18 @@ public class ServerModel {
 
     private long version;
 
+
+    public ServerModel() {
+
+    }
+
     /**
      * Constructs a new model with given client locations and a starting version number.
      *
      * @param playerLocations - locations of all clients
      * @param version - version of this model
      */
+
     public ServerModel(HashMap<Integer, Vector3f> playerLocations, long version)
     {
         this.playerLocations = playerLocations;
