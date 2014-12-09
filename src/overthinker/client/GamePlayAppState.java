@@ -521,13 +521,10 @@ public class GamePlayAppState extends AbstractAppState
       int id = closest.getGeometry().getUserData("id");
       for (int i = 0; i < keys.size(); i++)
       {
-        if (id == i)
-        {
           Key k = keys.get(i);
           k.removeFromParent();
           Door d = keyDoors.get(i);
           d.removeFromParent();
-        }
       }
     }
 
