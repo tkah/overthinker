@@ -1,70 +1,91 @@
 # Overthinker
 
-This will be a 4 player game, with one player (the “Overthinker”) wearing an EEG helmet and the other three on separate desktops.  Underthinkers (players without the EEG) may cooperate or compete towards a goal (depending on game mode), with the help from the Overthinker.
+Oberthinker is a multiplayer game where one player takes the role of the Overthinker, while the others take on the roles of the Underthinkers. Their relationship is one of cooperation, the Overthinker has information, and a bit of power, and the Underthinkers have the ability to walk around in the world. The goal is for the two to work together to overcome the obstacles presented to them by the Labyrinth.
 
 ## The Overthinker
 
-The Overthinker has access to information that the Underthinkers do not have access to. He coordinates the Underthinkers (the “Underthinkers”) together in an effort for the Underthinkers to overcome obstacles, avoid enemies, and escape from the maze.
+The Overthinker has access to information that the Underthinkers do not have access to. He coordinates the Underthinkers together in an effort for to overcome the Labyrinth and its obstacles, which include enemies, traps, and tricks. 
 
 The catch is that the Overthinker must keep his calm or risk the failing his team mates. The EEG is connected to the Overthinker, measuring his stress levels. If the Overthinker stays stressed for too long the game ends in failure.
 
 ## The Underthinkers
 
-The Underthinkers are trapped in the maze, and have to escape before time runs out, monsters catch them. The Underthinkers will navigate a maze, solving each of its puzzles with help from the Overthinker. While following the directions of the Overthinker the Underthinkers will have to overcome their own obstacles.
+The Underthinkers are trapped in the Labyrinth, and have to escape before the rising tide drowns them, or the Labyrinth monsters catch them. The Underthinkers will navigate the Labyrinth, solving each of its puzzles with help from the Overthinker. While following the directions of the Overthinker the Underthinkers will have to overcome their own obstacles.
 
 ## Conditions
 
-If an Underthinker fails the maze gets harder.
-If the Overthinker stresses out, the maze gets harder (or potentially ends the game).
+If an Underthinker dies the Labyrinth gets harder.
+If the Overthinker stresses out, the Labyrinth gets harder (or potentially ends the game).
 
 ## Game Design Stuff
 
-The Underthinkers have limited information, but can affect things inside the maze.
-The overthinker has tons of information (Underthinker location, enemy location, maze objective, etc…), but doesn’t have the capacity to affect the maze.
+The Underthinkers have limited information, but can affect things inside the Labyrinth.
+The Overthinker has tons of information (Underthinker location, enemy location, Labyrinth objective, etc…), but doesn’t have the capacity to affect the Labyrinth.
 
 Each game will include obstacles for the Underthinkers and the Overthinker.
+
+---
+
+# How to Run
+
+1. One computer must run a server (overthinker.server.ServerMain), which will listen on a PORT number.
+
+2. The other players will then choose who they would like to play as. Make sure the player who is playing the Overthinker obtains the eeg headset.
+
+3. Run the Client (overthinker.client.ClientMain), and choose your respective roles.
+
+4. Enjoy the game.
+
+---
 
 ## Program Design Rubric
 
 Each Underthinker will have their own 1st person view and movement.
 Overthinker will have a top down view
 
----
-
-## TODO:
+## Completed:
 
 ### Overthinker **:: Peter, Derek, Sid**
 
-* Read EEG data: **Peter, Derek, Sid**
-* Map EEG data to environment (distorted view, faster health drop, etc…) **Derek, Sid**
+* Read EEG data: **Peter, Sid**
+* Map EEG data to environment (distorted view, faster rising tide, etc…) **Sid, Derek, Peter**
 * Determine stress measurements: **Peter, Derek, Sid**
 * GUI (birds eye top down, Overthinker info) **Derek**
-* Navigation controls: **Peter,**
+* Navigation controls: **Peter**
+* Gyroscopic controls: **Sid**
 
 ### Underthinker **:: Josh, Torran**
 
-* 1st person view : **Josh, Torran**
+* 3rd person view : **Josh, Torran**
 * Movement (jump, left, right, etc…) : **Josh, Torran**
 * GUI (info feed? Other Underthinker deaths, emotes, Overthinker messages, etc...) : **Josh, Torran**
-* Environment interaction? (Open doors and such) : **Josh, Torran**
+* Environment interaction (Open doors, collect resources, etc...) : **Josh, Torran**
+* Physics (players react to changes in gravity created by the Overthinker) : **Torran**
 
 ### Game **:: Entire Group**
 
 * Learn engine use : **Josh, Torran**
-* Level layout is random? (Level design at least) **Torran**
-* Objective design (go here, collect this, avoid that, etc…) **Derek**
-* Environmental controls (response to EEG or Underthinker interaction)
-* Network communication: **Peter,**
-* Info feed implementation: **Peter,**
+* Create Levels : **Torran, Josh**
+* Objective design (keys, doors, gravity, fog) **Torran**
+* Gravity change obstacles: **Torran**
+* Environmental controls (response to EEG or Underthinker interaction) **Sid**
+* Network communication: **Peter**
+* Info feed implementation: **Peter**
 
 ### Other **:: Entire Group**
 
-* Models, arts, music, etc… (probably extra’s, but imperative for a game to feel complete imo): **Peter,  Torran**
-* Documentation, readme, etc…
-* Unit testing
+* Models, arts, music: **Peter,  Torran, Derek**
+* Documentation, readme: **Josh**
 
 ### Extra
 
-* Enemies (AI)
-* Export EEG data post game (record stress levels of Overthinker to file, possibly score how calm they stayed and such)
-* Overthinker adversarial mode
+* Enemies (AI): **Josh**
+* Export EEG data post game (record stress levels of Overthinker to file, possibly score how calm they stayed and such): **Sid**
+
+---
+
+## What Changed
+
+The original idea had a lot of aspects that didn't work as well as we had hoped. We started off with wanting a first person view with a hud, and ended up with a 3rd person view and no hud. Also, throughout the development several ideas were added. The Labyrinth became tiered, gained an AI, and started producing fog.
+
+The design aim that we used for the project, MVP, was a bit of a bust. It didn't help organize the code as much as we had hoped. It wasn't until late that we discovered some specific uses of the engine, specifically AppStates and the Entity design model. So some of the program has since been refactored to reflect these new ideas, while much of it remains in its previously mentioned form.

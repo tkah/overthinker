@@ -49,10 +49,10 @@ import com.jme3.texture.Texture.WrapMode;
 import com.jme3.water.WaterFilter;
 import jme3utilities.Misc;
 import jme3utilities.sky.SkyControl;
+import overthinker.ai.AiManager;
 import overthinker.net.*;
 import overthinker.old.SphereResource;
 import overthinker.server.ServerModel;
-import overthinker.ai.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -61,7 +61,7 @@ import java.util.HashMap;
 
 /**
  * Class controls and initializes main client game play logic
- *
+ * <p>
  * Created by Torran, Josh, Peter, Derek, Sid
  */
 
@@ -71,6 +71,7 @@ public class GamePlayAppState extends AbstractAppState
   public AbstractHeightMap heightMap;
   public NavMesh navMesh;
   public BulletAppState bulletAppState;
+  public TerrainQuad terrain;
   private SimpleApplication app;
   private Camera cam;
   private Node rootNode;
@@ -104,12 +105,10 @@ public class GamePlayAppState extends AbstractAppState
   private float waterHeightRate = 0.00f;
   private LandscapeControl landscape;
   private int playersDead = 0;
-
   private FadeFilter fade;
   private FilterPostProcessor fpp;
   private WaterFilter water;
   private FogFilter fogFilter;
-  public TerrainQuad terrain;
   private Material mat_terrain;
 
   private final ArrayList<SphereResource> sphereResourceArrayList = new ArrayList<>();
@@ -255,11 +254,15 @@ public class GamePlayAppState extends AbstractAppState
     updateGravity();
 
     //Water level from stress
-    if(model.getWaterRate() > 0) {
+    if (model.getWaterRate() > 0)
+    {
       water.setWaterHeight(model.getWaterRate());
     }
 
-    if (playersDead == 1) fogFilter.setFogDensity(1.0f);
+    if (playersDead == 1)
+    {
+      fogFilter.setFogDensity(1.0f);
+    }
     if (playersDead == 1 && playerCount >= 3 && !levelName.equals("radiomaze"))
     {
       //Remove platform doors when not enough players to do co-op obstacles
@@ -272,7 +275,10 @@ public class GamePlayAppState extends AbstractAppState
       exitDoor.removeFromParent();
       localRootNode.attachChild(exitNode);
     }
-    if (playersDead == 2) fogFilter.setFogDensity(2);
+    if (playersDead == 2)
+    {
+      fogFilter.setFogDensity(2);
+    }
 
     if (playerNode.isDead() && Globals.getTotSecs() - fadeStart > fade.getDuration())
     {
@@ -358,80 +364,6 @@ public class GamePlayAppState extends AbstractAppState
   }
 
   /**
-   * Set up level variables depending on level name
-   */
-  void setUpLevel()
-  {
-    lvlColorName = "overthinker/assets/terrains/" + levelName + lvlColorName;
-    lvlHeightName = "overthinker/assets/terrains/" + levelName + lvlHeightName;
-    lvlNoWallsName = "overthinker/assets/terrains/" + levelName + lvlNoWallsName;
-
-    switch (levelName)
-    {
-      case "circlemaze":
-        exitLocation = new Vector3f(7, 122, -7);
-        playerSpawnPts = new Vector3f[]{new Vector3f(-344, 80, -380), new Vector3f(289, 80, 414.7f), new Vector3f(381,80, -387.5f)};
-        keyLocArray = new Vector3f[]{
-              new Vector3f(60, 65, -330), new Vector3f(35, 65, 345), new Vector3f(115, 65, -353)
-        };
-        keyDoorLocArray = new Vector3f[]{
-              new Vector3f(-293, 98, 143), new Vector3f(330, 98, -68), new Vector3f(-236, 98, 208)
-        };
-        platLocArray = new Vector3f[]{
-              new Vector3f(55, 81.65f, -295), new Vector3f(245, 81.65f, 120), new Vector3f(195, 102.45f, 75)
-        };
-        platDoorLocArray = new Vector3f[]{
-              new Vector3f(252, 133, -87), new Vector3f(202, 133, 139), new Vector3f(67, 133, -245)
-        };
-        keyDoorSizeXArray = new float[]{15f, 15f, 17f};
-        keyDoorRotationArray = new float[]{-55f, 100f, -43f};
-        platDoorSizeXArray = new float[]{16f, 17f, 21f};
-        platDoorRotationArray = new float[]{-70, 49, -10};
-        lvlTime = 12;
-        lightDir = new Vector3f(4.1f, -3.2f, 0.1f);
-        lightIntensity = ColorRGBA.White.clone().multLocal(1.1f);
-        break;
-      case "pentamaze":
-        exitLocation = new Vector3f(-5.5f, 102, -6);
-        playerSpawnPts = new Vector3f[]{new Vector3f(-183, 80, -431), new Vector3f(360, 59, 450), new Vector3f(345,80,-284)};
-        keyLocArray = new Vector3f[]{
-              new Vector3f(-298.9f, 45, 360), new Vector3f(408.7f, 45, 15), new Vector3f(80, 45, -421)
-        };
-        keyDoorLocArray = new Vector3f[]{
-              new Vector3f(-238f, 100, -224.9f), new Vector3f(369, 100, 56.2f), new Vector3f(98, 100, -333.57f)
-        };
-        platLocArray = new Vector3f[]{
-              new Vector3f(-84, 81.65f, 273), new Vector3f(201, 81.65f, 122), new Vector3f(203, 102.45f, -18)
-        };
-        platDoorLocArray = new Vector3f[]{
-              new Vector3f(-156, 134, 188), new Vector3f(-50, 134, 247), new Vector3f(201, 134, 26)
-        };
-        keyDoorSizeXArray = new float[]{18f, 15f, 17f};
-        keyDoorRotationArray = new float[]{32, 68, -34};
-        platDoorSizeXArray = new float[]{16f, 16f, 17};
-        platDoorRotationArray = new float[]{-78, 0, 70};
-        lvlTime = 0;
-        lightDir = new Vector3f(.5f, -1, 0);
-        lightIntensity = ColorRGBA.White.clone().multLocal(.5f);
-        break;
-      case "radiomaze":
-        exitLocation = new Vector3f(.36f, 80.3f, -30);
-        playerSpawnPts = new Vector3f[]{new Vector3f(-260, 110, -390), new Vector3f(-170, 110, 350), new Vector3f(260, 110, -390)};
-        platDoorLocArray = new Vector3f[]{
-              new Vector3f(-123, 124.8f, -216), new Vector3f(-89, 124.8f, 167), new Vector3f(125, 124.8f, -214)
-        };
-        platDoorSizeXArray = new float[]{16f, 18f, 16};
-        platDoorRotationArray = new float[]{36, -18, -30};
-        lvlTime = 15;
-        lightDir = new Vector3f(6.3f, -2.0f, 6.9f);
-        lightIntensity = ColorRGBA.White.clone().multLocal(1.3f);
-        waterHeightRate = .003f;
-        needsExitDoor = false;
-        break;
-    }
-  }
-
-  /**
    * Override app state cleanup to clear after detaching
    */
   @Override
@@ -444,6 +376,7 @@ public class GamePlayAppState extends AbstractAppState
 
   /**
    * Net client getter
+   *
    * @return the net client
    */
   public Client getNetClient()
@@ -453,6 +386,7 @@ public class GamePlayAppState extends AbstractAppState
 
   /**
    * Connect new client to server
+   *
    * @param message - message from server
    */
   public void handleNewClientResponse(NewClientResponse message)
@@ -467,6 +401,7 @@ public class GamePlayAppState extends AbstractAppState
 
   /**
    * Updates model instance with information from server
+   *
    * @param message - message from server
    */
   public void updateModel(ModelUpdate message)
@@ -486,6 +421,7 @@ public class GamePlayAppState extends AbstractAppState
 
   /**
    * Gett for localRootNode
+   *
    * @return localRootNode
    */
   public Node getLocalRootNode()
@@ -495,6 +431,7 @@ public class GamePlayAppState extends AbstractAppState
 
   /**
    * Getter for player node
+   *
    * @return playerNode
    */
   public PlayerNode getPlayerNode()
@@ -510,7 +447,7 @@ public class GamePlayAppState extends AbstractAppState
       {
         System.out.println("Creating new Player Objects");
         OtherPlayer otherPlayer = new OtherPlayer(Globals.PLAYER_SPHERE_START_RADIUS, i,
-                spawnLocation, assetManager);
+                                                  spawnLocation, assetManager);
         bulletAppState.getPhysicsSpace().add(otherPlayer.getSphereResourcePhy());
         otherPlayers.put(i, otherPlayer);
         resources.attachChild(otherPlayer.getGeometry());
@@ -550,7 +487,10 @@ public class GamePlayAppState extends AbstractAppState
     while (model == null)
     {
       NewClientRequest newClientRequest = new NewClientRequest();
-      if(playerType == 0) newClientRequest.setEEG(true);
+      if (playerType == 0)
+      {
+        newClientRequest.setEEG(true);
+      }
       netClient.send(newClientRequest);
       System.out.println("Waiting For Model Data...");
       try
@@ -916,8 +856,8 @@ public class GamePlayAppState extends AbstractAppState
     TerrainLodControl control = new TerrainLodControl(terrain, app.getCamera());
     terrain.addControl(control);
 
-     //We set up collision detection for the scene by creating a
-     //compound collision shape and a static RigidBodyControl with mass zero.
+    //We set up collision detection for the scene by creating a
+    //compound collision shape and a static RigidBodyControl with mass zero.
     CollisionShape sceneShape =
           CollisionShapeFactory.createMeshShape(terrain);
     landscape = new LandscapeControl(sceneShape, 0, bulletAppState.getPhysicsSpace());
@@ -999,5 +939,85 @@ public class GamePlayAppState extends AbstractAppState
     audio_ocean.setVolume(1);
     localRootNode.attachChild(audio_ocean);
     audio_ocean.play();
+  }
+
+  /**
+   * Set up level variables depending on level name
+   */
+  void setUpLevel()
+  {
+    lvlColorName = "overthinker/assets/terrains/" + levelName + lvlColorName;
+    lvlHeightName = "overthinker/assets/terrains/" + levelName + lvlHeightName;
+    lvlNoWallsName = "overthinker/assets/terrains/" + levelName + lvlNoWallsName;
+
+    switch (levelName)
+    {
+      case "circlemaze":
+        exitLocation = new Vector3f(7, 122, -7);
+        playerSpawnPts = new Vector3f[]{
+              new Vector3f(-344, 80, -380), new Vector3f(289, 80, 414.7f), new Vector3f(381, 80, -387.5f)
+        };
+        keyLocArray = new Vector3f[]{
+              new Vector3f(60, 65, -330), new Vector3f(35, 65, 345), new Vector3f(115, 65, -353)
+        };
+        keyDoorLocArray = new Vector3f[]{
+              new Vector3f(-293, 98, 143), new Vector3f(330, 98, -68), new Vector3f(-236, 98, 208)
+        };
+        platLocArray = new Vector3f[]{
+              new Vector3f(55, 81.65f, -295), new Vector3f(245, 81.65f, 120), new Vector3f(195, 102.45f, 75)
+        };
+        platDoorLocArray = new Vector3f[]{
+              new Vector3f(252, 133, -87), new Vector3f(202, 133, 139), new Vector3f(67, 133, -245)
+        };
+        keyDoorSizeXArray = new float[]{15f, 15f, 17f};
+        keyDoorRotationArray = new float[]{-55f, 100f, -43f};
+        platDoorSizeXArray = new float[]{16f, 17f, 21f};
+        platDoorRotationArray = new float[]{-70, 49, -10};
+        lvlTime = 12;
+        lightDir = new Vector3f(4.1f, -3.2f, 0.1f);
+        lightIntensity = ColorRGBA.White.clone().multLocal(1.1f);
+        break;
+      case "pentamaze":
+        exitLocation = new Vector3f(-5.5f, 102, -6);
+        playerSpawnPts = new Vector3f[]{
+              new Vector3f(-183, 80, -431), new Vector3f(360, 59, 450), new Vector3f(345, 80, -284)
+        };
+        keyLocArray = new Vector3f[]{
+              new Vector3f(-298.9f, 45, 360), new Vector3f(408.7f, 45, 15), new Vector3f(80, 45, -421)
+        };
+        keyDoorLocArray = new Vector3f[]{
+              new Vector3f(-238f, 100, -224.9f), new Vector3f(369, 100, 56.2f), new Vector3f(98, 100, -333.57f)
+        };
+        platLocArray = new Vector3f[]{
+              new Vector3f(-84, 81.65f, 273), new Vector3f(201, 81.65f, 122), new Vector3f(203, 102.45f, -18)
+        };
+        platDoorLocArray = new Vector3f[]{
+              new Vector3f(-156, 134, 188), new Vector3f(-50, 134, 247), new Vector3f(201, 134, 26)
+        };
+        keyDoorSizeXArray = new float[]{18f, 15f, 17f};
+        keyDoorRotationArray = new float[]{32, 68, -34};
+        platDoorSizeXArray = new float[]{16f, 16f, 17};
+        platDoorRotationArray = new float[]{-78, 0, 70};
+        lvlTime = 0;
+        lightDir = new Vector3f(.5f, -1, 0);
+        lightIntensity = ColorRGBA.White.clone().multLocal(.5f);
+        break;
+      case "radiomaze":
+        exitLocation = new Vector3f(.36f, 80.3f, -30);
+        playerSpawnPts = new Vector3f[]{
+              new Vector3f(-260, 110, -390), new Vector3f(-170, 110, 350), new Vector3f(260, 110, -390)
+        };
+        platDoorLocArray = new Vector3f[]{
+              new Vector3f(-123, 124.8f, -216), new Vector3f(-89, 124.8f, 167), new Vector3f(125, 124.8f, -214)
+        };
+        platDoorSizeXArray = new float[]{16f, 18f, 16};
+        platDoorRotationArray = new float[]{36, -18, -30};
+        lvlTime = 15;
+        lightDir = new Vector3f(6.3f, -2.0f, 6.9f);
+        lightIntensity = ColorRGBA.White.clone().multLocal(1.3f);
+        waterHeightRate = .003f;
+        needsExitDoor = false;
+        break;
+    }
   }
 }
