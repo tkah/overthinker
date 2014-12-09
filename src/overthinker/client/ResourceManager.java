@@ -92,7 +92,7 @@ public class ResourceManager extends AbstractAppState
   private void handleCollision() {
     CollisionResults results = new CollisionResults();
     if (playerNode instanceof UnderNode) {
-      //resourceNode.collideWith(playerNode.getGeometry().getWorldBound(), results);
+      resourceNode.collideWith(playerNode.getGeometry().getWorldBound(), results);
       if (results.size() > 0) {
         Resource closest = (Resource) results.getClosestCollision().getGeometry();
         if (!closest.isCollected()) {
