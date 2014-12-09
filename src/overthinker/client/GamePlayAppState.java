@@ -460,9 +460,7 @@ public class GamePlayAppState extends AbstractAppState
   {
     try
     {
-
-      netClient = Network.connectToServer("localhost", 6143);
-
+      netClient = Network.connectToServer("10.80.35.217", 6143);
     }
     catch (IOException e)
     {
