@@ -220,6 +220,7 @@ public class UnderNode extends PlayerNode
     playerControl.addMovementSound((up || down || left || right));
 
     if (onGround || pushOff) playerControl.setWalkDirection(walkDirection);
+    //playerControl.setWalkDirection(walkDirection); //To Delete
     pushOff = false;
     //else playerControl.setWalkDirection(walkDirection.set(0,0,0));
 
