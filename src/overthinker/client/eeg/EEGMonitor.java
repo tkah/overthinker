@@ -122,6 +122,7 @@ public class EEGMonitor extends Thread {
 
                         requestedGravity = interpretGyro();
 
+                        Edk.INSTANCE.EE_EmoEngineEventGetEmoState(eEvent, eState);
                         excitementShort = EmoState.INSTANCE.ES_AffectivGetExcitementShortTermScore(eState);
                         System.out.println("Short term excitement: "+excitementShort);
                         //interpretExcitement(); //may not be needed, depending on how OverNode.update() calls EEG
