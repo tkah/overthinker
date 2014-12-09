@@ -90,7 +90,7 @@ public class GamePlayAppState extends AbstractAppState
   private PlayerNode playerNode;
   private int playerType = 1;
   private int fadeStart = 0;
-  private final String levelName = "pentamaze";
+  private String levelName = "pentamaze";
   private String lvlNoWallsName = "_height-nowalls.png";
   private String lvlHeightName = "_height.png";
   private String lvlColorName = "_color-noalpha.png";
@@ -130,6 +130,7 @@ public class GamePlayAppState extends AbstractAppState
   private final ArrayList<Door> keyDoors = new ArrayList<>();
   private final ArrayList<Door> platDoors = new ArrayList<>();
   private final ArrayList<Platform> platforms = new ArrayList<>();
+  private boolean finished = false;
 
   /**
    * Create AudioNodes *
@@ -253,15 +254,24 @@ public class GamePlayAppState extends AbstractAppState
     updatePlayers();
     updateGravity();
 
-    /* Testing */
     //Water level from stress
-    //TODO: water height rate from excitement
-    //water.setWaterHeight(water.getWaterHeight() + model.getWaterRate());
     if(model.getWaterRate() > 0) {
       water.setWaterHeight(model.getWaterRate());
     }
 
     if (playersDead == 1) fogFilter.setFogDensity(1.0f);
+    if (playersDead == 1 && playerCount >= 3 && !levelName.equals("radiomaze"))
+    {
+      //Remove platform doors when not enough players to do co-op obstacles
+      Door d1 = platDoors.get(1);
+      Door d2 = platDoors.get(2);
+      Door d3 = platDoors.get(3);
+      d1.removeFromParent();
+      d2.removeFromParent();
+      d3.removeFromParent();
+      exitDoor.removeFromParent();
+      localRootNode.attachChild(exitNode);
+    }
     if (playersDead == 2) fogFilter.setFogDensity(2);
 
     if (playerNode.isDead() && Globals.getTotSecs() - fadeStart > fade.getDuration())
@@ -273,7 +283,17 @@ public class GamePlayAppState extends AbstractAppState
         cam.lookAtDirection(new Vector3f(0, -1, 0), new Vector3f(0, -1, 0));
         flyCam.setEnabled(true);
         flyCam.setMoveSpeed(0);
+
+        if (playerCount - playersDead <= 1)
+        {
+          //TODO: add detach app state and redirect to start menu for loss
+        }
       }
+    }
+
+    if (finished && fade.getValue() == 0)
+    {
+      //TODO: add detach app state and redirect to start menu for win
     }
 
     if (playerType == 1 && playerNode.getHeight() < .3f && !playerNode.isDead())
@@ -316,6 +336,7 @@ public class GamePlayAppState extends AbstractAppState
 
   /**
    * Sets the player type
+   * Called from MainMenu before adding app state
    * 0 = overthinker, 1 = underthinker
    *
    * @param type - player type
@@ -323,6 +344,17 @@ public class GamePlayAppState extends AbstractAppState
   public void setPlayerType(int type)
   {
     playerType = type;
+  }
+
+  /**
+   * Sets the level
+   * Called from MainMenu before adding app state
+   *
+   * @param name - level name: radiomaze, pentamaze, circlemaze
+   */
+  public void setLevelName(String name)
+  {
+    levelName = name;
   }
 
   /**
@@ -588,7 +620,6 @@ public class GamePlayAppState extends AbstractAppState
     }
 
     //TODO: Add doors/platforms to server?
-    //TODO: Torran - remove platform doors when only two players alive
     //Detect collisions with platforms
     CollisionResults platResults = new CollisionResults();
     platformsNode.collideWith(playerNode.getGeometry().getWorldBound(), platResults);
@@ -644,7 +675,7 @@ public class GamePlayAppState extends AbstractAppState
       fade.fadeOut();
       bulletAppState.getPhysicsSpace().remove(playerNode);
       playerNode.removeFromParent();
-
+      finished = true;
     }
 
     ArrayList<SphereResource> toRemove = new ArrayList<>();
