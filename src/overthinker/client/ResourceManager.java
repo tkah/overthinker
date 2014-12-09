@@ -66,6 +66,7 @@ public class ResourceManager extends AbstractAppState
 
   /**
    * Updates as the game loops.
+   *
    * @param tpf time per frame
    */
   @Override
@@ -92,20 +93,23 @@ public class ResourceManager extends AbstractAppState
   private void handleCollision()
   {
     CollisionResults results = new CollisionResults();
-    resourceNode.collideWith(playerNode.getGeometry().getWorldBound(), results);
-    if (results.size() > 0)
+    if (playerNode instanceof UnderNode)
     {
-      Resource closest = (Resource) results.getClosestCollision().getGeometry();
-      if (!closest.isCollected())
+      resourceNode.collideWith(playerNode.getGeometry().getWorldBound(), results);
+      if (results.size() > 0)
       {
-        audio_collect.playInstance();
-        closest.setCollected(true);
-        resourceNode.detachChild(closest);
-        playerNode.setScaleStartTime(Globals.getTotSecs());
-        playerNode.setPlayerNeedsScaling(true);
-        if (playerNode.getHeight() < Globals.MAX_PLAYER_SIZE)
+        Resource closest = (Resource) results.getClosestCollision().getGeometry();
+        if (!closest.isCollected())
         {
-          playerNode.scalePlayerUp();
+          audio_collect.playInstance();
+          closest.setCollected(true);
+          resourceNode.detachChild(closest);
+          playerNode.setScaleStartTime(Globals.getTotSecs());
+          playerNode.setPlayerNeedsScaling(true);
+          if (playerNode.getHeight() < Globals.MAX_PLAYER_SIZE)
+          {
+            playerNode.scalePlayerUp();
+          }
         }
       }
     }
