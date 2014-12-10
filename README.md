@@ -40,7 +40,7 @@ Each game will include obstacles for the Underthinkers and the Overthinker.
 
 # NOTES ON SETUP
 
-Server IP address is set in GamePlayAppState.initNetClient(), and can be set to localhost if all the clients will be run on the same machine.
+Server IP address is set in Globals.java as the DEFAULT_SERVER variable. It is currently set to "localhost" for testing all clients on the same machine.
 
 The edk.dll file must be in the Windows build path--in our case, Windows/System32/edk.dll --if the headset is being used with the Overthinker.  Underthinker players do not need to set this
 up, so Underthinkers can run on different OS's.  We tested on Windows 7 and Mac OSX.
