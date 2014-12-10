@@ -272,6 +272,9 @@ public class GamePlayAppState extends AbstractAppState
       d1.removeFromParent();
       d2.removeFromParent();
       d3.removeFromParent();
+      bulletAppState.getPhysicsSpace().remove(d1);
+      bulletAppState.getPhysicsSpace().remove(d2);
+      bulletAppState.getPhysicsSpace().remove(d3);
       exitDoor.removeFromParent();
       localRootNode.attachChild(exitNode);
     }
@@ -292,14 +295,14 @@ public class GamePlayAppState extends AbstractAppState
 
         if (playerCount - playersDead <= 1)
         {
-          //TODO: add detach app state and redirect to start menu for loss
+          //add detach app state and redirect to start menu for loss
         }
       }
     }
 
     if (finished && fade.getValue() == 0)
     {
-      //TODO: add detach app state and redirect to start menu for win
+      //add detach app state and redirect to start menu for win
     }
 
     if (playerType == 1 && playerNode.getHeight() < .3f && !playerNode.isDead())
@@ -521,14 +524,18 @@ public class GamePlayAppState extends AbstractAppState
       int id = closest.getGeometry().getUserData("id");
       for (int i = 0; i < keys.size(); i++)
       {
+        if (id == i)
+        {
           Key k = keys.get(i);
           k.removeFromParent();
+          bulletAppState.getPhysicsSpace().remove(k);
           Door d = keyDoors.get(i);
           d.removeFromParent();
+          bulletAppState.getPhysicsSpace().remove(d);
+        }
       }
     }
 
-    //TODO: Add doors/platforms to server?
     //Detect collisions with platforms
     CollisionResults platResults = new CollisionResults();
     platformsNode.collideWith(playerNode.getGeometry().getWorldBound(), platResults);
@@ -564,6 +571,7 @@ public class GamePlayAppState extends AbstractAppState
       {
         Door d = platDoors.get(0);
         d.removeFromParent();
+        bulletAppState.getPhysicsSpace().remove(d);
       }
       else if (threePressed)
       {
@@ -571,6 +579,8 @@ public class GamePlayAppState extends AbstractAppState
         Door d3 = platDoors.get(2);
         d2.removeFromParent();
         d3.removeFromParent();
+        bulletAppState.getPhysicsSpace().remove(d2);
+        bulletAppState.getPhysicsSpace().remove(d3);
         exitDoor.removeFromParent();
         localRootNode.attachChild(exitNode);
       }
@@ -879,7 +889,7 @@ public class GamePlayAppState extends AbstractAppState
         Door door = new Door("Door_" + i);
         door.createDoor(assetManager, keyDoorSizeXArray[i], 40, 1, keyDoorRotationArray[i], keyDoorLocArray[i]);
         collidableNode.attachChild(door);
-        //bulletAppState.getPhysicsSpace().add(door.getPhy());
+        bulletAppState.getPhysicsSpace().add(door.getPhy());
         keyDoors.add(door);
 
         Key key = new Key("Key_" + i);
@@ -914,7 +924,7 @@ public class GamePlayAppState extends AbstractAppState
         Door door = new Door("Door_" + i);
         door.createDoor(assetManager, platDoorSizeXArray[i], 40, 1, platDoorRotationArray[i], platDoorLocArray[i]);
         collidableNode.attachChild(door);
-        //bulletAppState.getPhysicsSpace().add(door.getPhy());
+        bulletAppState.getPhysicsSpace().add(door.getPhy());
         platDoors.add(door);
       }
     }

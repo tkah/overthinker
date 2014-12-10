@@ -30,7 +30,7 @@ Each game will include obstacles for the Underthinkers and the Overthinker.
 
 1. One computer must run a server (overthinker.server.ServerMain), which will listen on a PORT number.
 
-2. The other players will then choose who they would like to play as. Make sure the player who is playing the Overthinker obtains the eeg headset.
+2. The other players (4 max) will then choose who they would like to play as. Make sure the player who is playing the Overthinker (limited to 1) obtains the eeg headset.
 
 3. Run the Client (overthinker.client.ClientMain), and choose your respective roles.
 
@@ -70,7 +70,7 @@ Overthinker will have a top down view
 
 * 3rd person view : **Josh, Torran**
 * Movement (jump, left, right, etc…) : **Josh, Torran**
-* GUI (info feed? Other Underthinker deaths, emotes, Overthinker messages, etc...) : **Josh, Torran**
+* GUI (Other Underthinker deaths, etc...) : **Derek, Josh, Torran**
 * Environment interaction (Open doors, collect resources, etc...) : **Josh, Torran**
 * Physics (players react to changes in gravity created by the Overthinker) : **Torran**
 
