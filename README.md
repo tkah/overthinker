@@ -48,6 +48,8 @@ up, so Underthinkers can run on different OS's.  We tested on Windows 7 and Mac 
 There is a boolean in the EEGMonitor.java file for enabling logging, it is on by default and saves to the Public Documents folder on Windows 7, or the current working
 directory on any other Windows system.
 
+Currently, there are three levels. These can be switched in by changing the "levelName" variable in GamePlayAppState to either "pentamaze", "radiomaze", or "circlemaze".
+
 --
 
 ## Program Design Rubric
