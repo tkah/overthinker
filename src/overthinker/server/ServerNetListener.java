@@ -1,19 +1,29 @@
 package overthinker.server;
 
 import com.jme3.network.*;
-import overthinker.client.Globals;
 import overthinker.net.*;
 
 /**
- * Created by Peter on 11/11/2014.
+ * Used by the server to listen on the network for client communication.
  */
 public class ServerNetListener implements MessageListener<HostedConnection> {
     private ServerMain server;
 
+    /**
+     * Constructs a network listener tied to the given server.
+     *
+     * @param server - linked server.
+     */
     public ServerNetListener(ServerMain server){
         this.server = server;
     }
 
+    /**
+     * Used to filter client to server communication and send messages to specific method on the server.
+     *
+     * @param source - Client sending a message.
+     * @param message - Message the client send.
+     */
     public void messageReceived(HostedConnection source, Message message) {
         if (message instanceof NewClientRequest) {
             server.initClient(source, (NewClientRequest) message);
