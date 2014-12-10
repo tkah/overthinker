@@ -8,12 +8,12 @@ import java.util.TimerTask;
 
 /**
  * Creates an Emotiv EEG engine to recieve and interpret
- * data from the headset.
+ * data from the headset.  Boolean "LOG" enables/disables write to log file.
  */
 public class EEGMonitor extends Thread {
 
-    private final boolean DEBUG = true;
-    private final boolean LOG = false; //Enables logging of eeg output.
+    private final boolean DEBUG = false;
+    private final boolean LOG = true; //Enables logging of eeg output.
     private final int MIN_GYRO_DELTA = 50;
 
     private Pointer eEvent = Edk.INSTANCE.EE_EmoEngineEventCreate();
@@ -124,11 +124,12 @@ public class EEGMonitor extends Thread {
 
                         Edk.INSTANCE.EE_EmoEngineEventGetEmoState(eEvent, eState);
                         excitementShort = EmoState.INSTANCE.ES_AffectivGetExcitementShortTermScore(eState);
-                        System.out.println("Short term excitement: "+excitementShort);
-                        //interpretExcitement(); //may not be needed, depending on how OverNode.update() calls EEG
+                        if (LOG) frustrationShort = EmoState.INSTANCE.ES_AffectivGetFrustrationScore(eState);
 
-                        if (DEBUG) System.out.println();
+                        if (DEBUG) System.out.println("Short term excitement: "+excitementShort);
+                        if (LOG) log.writeLine(" ");
                         if (LOG) log.writeLine(System.nanoTime() + " short term excitement: " + excitementShort);
+                        if (LOG) log.writeLine(System.nanoTime() + " frustration level: "+ frustrationShort);
                     }
                 }
             }
@@ -174,7 +175,7 @@ public class EEGMonitor extends Thread {
         if (Math.abs(xDelta) > MIN_GYRO_DELTA) {
             if (xDelta > 0) {
                 if (DEBUG) System.out.print(" Tilt: 1 (Right)");
-                return 1;
+                return 1;   //RIGHT
             } else {
                 if (DEBUG) System.out.print(" Tilt: -1 (Left)");
                 return -1;     //Left
@@ -210,12 +211,12 @@ public class EEGMonitor extends Thread {
      *
      * @return integer 1 if excitement is above 50%, 0 otherwise
      */
-    private int interpretExcitement() {
+    private float interpretExcitement() {
         if (DEBUG) System.out.println("\nShort term excitement: " + excitementShort);
 
         if (excitementShort > 1 || excitementShort < 0) {
             if (DEBUG) System.out.println("Excitement out of bounds! ( 0 < x < 1");
-            return 0;
+            return 0.2f;
         }
         if (excitementShort > 0.5) return 1;
         else {
@@ -229,8 +230,8 @@ public class EEGMonitor extends Thread {
      *
      * @return 1 if stress is high, 0 otherwise.  **Will change, with gameplay testing.**
      */
-    public int getStressLevel() {
-        int stress = 0;
+    public float getStressLevel() {
+        float stress = 0;
         synchronized (this) {
             stress = interpretExcitement();
         }

@@ -38,6 +38,18 @@ Each game will include obstacles for the Underthinkers and the Overthinker.
 
 ---
 
+# NOTES ON SETUP
+
+Server IP address is set in GamePlayAppState.initNetClient(), and can be set to localhost if all the clients will be run on the same machine.
+
+The edk.dll file must be in the Windows build path--in our case, Windows/System32/edk.dll --if the headset is being used with the Overthinker.  Underthinker players do not need to set this
+up, so Underthinkers can run on different OS's.  We tested on Windows 7 and Mac OSX.
+
+There is a boolean in the EEGMonitor.java file for enabling logging, it is on by default and saves to the Public Documents folder on Windows 7, or the current working
+directory on any other Windows system.
+
+--
+
 ## Program Design Rubric
 
 Each Underthinker will have their own 1st person view and movement.

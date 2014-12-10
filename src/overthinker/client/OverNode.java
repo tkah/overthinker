@@ -16,7 +16,8 @@ import java.util.ArrayList;
 
 /**
  * This class defines the base methods and update process for the Overthinker client,
- * including the eeg data.
+ * including the eeg data.  To simulate EEG input without a headset, change "monitor"
+ * to be an EEGSimulator object rather than an EEGMonitor object.
  *
  * Created by Torran, Sid, Peter, Josh, Derek on 11/26/14.  EEG methods and misc added by Sid 12/3/14
  */
@@ -66,7 +67,7 @@ public class OverNode extends PlayerNode
         } else setTilt(tiltDirection);
       }
 
-      waterRate = monitor.getStressLevel() / 100; //a rate of 1 fills instantly, eeg hovers around ~.5, so divide by 1000
+      waterRate = monitor.getStressLevel() / 100; //a rate of 1 fills instantly, eeg hovers around ~.5, so divide by 100
       waterHeight += waterRate;
       if (DEBUG) System.out.println("Update from EEG: waterRate = "+Float.toString(waterRate));
       waterRateRequest.setWaterRate(waterHeight);
