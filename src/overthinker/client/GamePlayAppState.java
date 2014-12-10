@@ -68,8 +68,6 @@ import java.util.HashMap;
 public class GamePlayAppState extends AbstractAppState
       implements ActionListener, AnalogListener
 {
-
-
   public AbstractHeightMap heightMap;
   public NavMesh navMesh;
   public BulletAppState bulletAppState;
