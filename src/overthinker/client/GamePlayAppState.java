@@ -68,6 +68,8 @@ import java.util.HashMap;
 public class GamePlayAppState extends AbstractAppState
       implements ActionListener, AnalogListener
 {
+
+
   public AbstractHeightMap heightMap;
   public NavMesh navMesh;
   public BulletAppState bulletAppState;
@@ -463,7 +465,8 @@ public class GamePlayAppState extends AbstractAppState
   {
     try
     {
-      netClient = Network.connectToServer("192.168.1.121", 6143);
+      String ip = Globals.IP_ADDRESS.length() > 1 ?  Globals.IP_ADDRESS : Globals.DEFAULT_SERVER;
+      netClient = Network.connectToServer(ip, 6143);
     }
     catch (IOException e)
     {
