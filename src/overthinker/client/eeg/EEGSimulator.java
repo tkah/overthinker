@@ -2,10 +2,11 @@ package overthinker.client.eeg;
 
 import java.util.Random;
 import java.util.Timer;
-import java.util.TimerTask;
 
 /**
- * Created by sidholman on 12/8/14.
+ * For use on non-windows machines, or if no headset is available.
+ * Provides a demonstration of the EEG functionality.  Overnode.monitor
+ * must be changed from an EEGMonitor object to an EEGSimulator object.
  */
 public class EEGSimulator extends Thread{
 

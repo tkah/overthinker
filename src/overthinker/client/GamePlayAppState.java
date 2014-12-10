@@ -272,6 +272,9 @@ public class GamePlayAppState extends AbstractAppState
       d1.removeFromParent();
       d2.removeFromParent();
       d3.removeFromParent();
+      bulletAppState.getPhysicsSpace().remove(d1);
+      bulletAppState.getPhysicsSpace().remove(d2);
+      bulletAppState.getPhysicsSpace().remove(d3);
       exitDoor.removeFromParent();
       localRootNode.attachChild(exitNode);
     }
@@ -292,14 +295,14 @@ public class GamePlayAppState extends AbstractAppState
 
         if (playerCount - playersDead <= 1)
         {
-          //TODO: add detach app state and redirect to start menu for loss
+          //add detach app state and redirect to start menu for loss
         }
       }
     }
 
     if (finished && fade.getValue() == 0)
     {
-      //TODO: add detach app state and redirect to start menu for win
+      //add detach app state and redirect to start menu for win
     }
 
     if (playerType == 1 && playerNode.getHeight() < .3f && !playerNode.isDead())
@@ -460,7 +463,8 @@ public class GamePlayAppState extends AbstractAppState
   {
     try
     {
-      netClient = Network.connectToServer("10.80.35.217", 6143);
+      String ip = Globals.IP_ADDRESS.length() > 1 ?  Globals.IP_ADDRESS : Globals.DEFAULT_SERVER;
+      netClient = Network.connectToServer(ip, 6143);
     }
     catch (IOException e)
     {
@@ -525,13 +529,14 @@ public class GamePlayAppState extends AbstractAppState
         {
           Key k = keys.get(i);
           k.removeFromParent();
+          bulletAppState.getPhysicsSpace().remove(k);
           Door d = keyDoors.get(i);
           d.removeFromParent();
+          bulletAppState.getPhysicsSpace().remove(d);
         }
       }
     }
 
-    //TODO: Add doors/platforms to server?
     //Detect collisions with platforms
     CollisionResults platResults = new CollisionResults();
     platformsNode.collideWith(playerNode.getGeometry().getWorldBound(), platResults);
@@ -567,6 +572,7 @@ public class GamePlayAppState extends AbstractAppState
       {
         Door d = platDoors.get(0);
         d.removeFromParent();
+        bulletAppState.getPhysicsSpace().remove(d);
       }
       else if (threePressed)
       {
@@ -574,6 +580,8 @@ public class GamePlayAppState extends AbstractAppState
         Door d3 = platDoors.get(2);
         d2.removeFromParent();
         d3.removeFromParent();
+        bulletAppState.getPhysicsSpace().remove(d2);
+        bulletAppState.getPhysicsSpace().remove(d3);
         exitDoor.removeFromParent();
         localRootNode.attachChild(exitNode);
       }

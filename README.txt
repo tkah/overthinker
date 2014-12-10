@@ -1,4 +1,4 @@
-# Overthinker
+﻿# Overthinker
 
 Oberthinker is a multiplayer game where one player takes the role of the Overthinker, while the others take on the roles of the Underthinkers. Their relationship is one of cooperation, the Overthinker has information, and a bit of power, and the Underthinkers have the ability to walk around in the world. The goal is for the two to work together to overcome the obstacles presented to them by the Labyrinth.
 
@@ -28,24 +28,24 @@ Each game will include obstacles for the Underthinkers and the Overthinker.
 
 # How to Run
 
-1. One computer must run a server (overthinker.server.ServerMain), which will listen on a PORT number.
+1. One computer must run a server (overthinker.server.ServerMain), which will listen on a PORT number set in code (6143). 
 
-2. The other players (4 max) will then choose who they would like to play as. Make sure the player who is playing the Overthinker (limited to 1) obtains the eeg headset.
+2. The other players (4 max) need to be capable of connecting to the server. Globals.java contains an IP_ADDRESS string that should contains the IP address of the server. You'll have to change this manually. Otherwise the client will attempt to connect to the local host.
 
-3. Run the Client (overthinker.client.ClientMain), and choose your respective roles.
+2a. The Overthinker player must have the Emotiv dll available in their path. You can either add a system variable, or include it in the java library path. The dll is located in overthinker/libs/emotive/dll... Without this dll, the headset will not work, and will cause the game to crash for the Overthinker.
 
-4. Enjoy the game.
+3. The other players (4 max) will then choose who they would like to play as. Make sure the player who is playing the Overthinker (limited to 1) obtains the eeg headset.
+
+4. Run the Client (overthinker.client.ClientMain), and choose your respective roles.
+
+5. Enjoy the game.
 
 ---
 
 # NOTES ON SETUP
+The edk.dll file can be in the Windows build path--in our case, Windows/System32/edk.dll --if the headset is being used with the Overthinker.  Underthinker players do not need to set this up, so Underthinkers can run on different OS's.  We tested on Windows 7 and Mac OSX.
 
-Server IP address is set in Globals.java as the DEFAULT_SERVER variable. It is currently set to "localhost" for testing all clients on the same machine.
-
-The edk.dll file must be in the Windows build path--in our case, Windows/System32/edk.dll --if the headset is being used with the Overthinker.  Underthinker players do not need to set this
-up, so Underthinkers can run on different OS's.  We tested on Windows 7 and Mac OSX.
-
-The "jME3-utilities-assets.jar" archive must be added separately and individually--if asked, import it as 'classes.'  This include caused a lot of hiccups.
+The "jME3-utilities-assets.jar" archive may habe to be added separately and individually--if asked, import it as 'classes.'  This include caused a lot of hiccups.
 
 There is a boolean in the EEGMonitor.java file for enabling logging, it is on by default and saves to the Public Documents folder on Windows 7, or the current working
 directory on any other Windows system.
