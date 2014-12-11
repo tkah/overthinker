@@ -56,7 +56,7 @@ Currently, there are three levels. These can be switched in by changing the "lev
 
 ## Program Design Rubric
 
-Each Underthinker will have their own 1st person view and movement.
+Each Underthinker will have their own 3rd person view and movement.
 Overthinker will have a top down view
 
 ## Completed:
